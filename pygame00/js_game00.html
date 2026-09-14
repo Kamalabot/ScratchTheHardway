@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cat Movement Simulation (JS)</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #1e1e23;
+      color: #c8c8c8;
+      font-family: monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    #game-container {
+      position: relative;
+    }
+    canvas {
+      border: 1px solid #3c3c44;
+      background-color: #1e1e23;
+      display: block;
+    }
+    #ui-overlay {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      pointer-events: none;
+    }
+    #input-box {
+      pointer-events: auto;
+      background: #111;
+      border: 1px solid #555;
+      color: #ff0;
+      font-family: monospace;
+      font-size: 14px;
+      padding: 4px 8px;
+      margin-top: 6px;
+      outline: none;
+      width: 140px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="game-container">
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+  <div id="ui-overlay">
+    <div id="statusMsg">Enter target 'X Y' (e.g. 200 400) and press ENTER:</div>
+    <input id="input-box" type="text" placeholder="X Y" autofocus />
+    <div id="posMsg" style="margin-top: 6px; color: #969696;">Pos: (400, 300)</div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const canvas = document.getElementById("gameCanvas");
+  const ctx = canvas.getContext("2d");
+  const statusEl = document.getElementById("statusMsg");
+  const inputEl = document.getElementById("input-box");
+  const posEl = document.getElementById("posMsg");
+
+  const spriteSize = 64;
+  const speed = 250; // pixels per second
+
+  let currentPos = { x: canvas.width / 2, y: canvas.height / 2 };
+  let targetPos = { x: currentPos.x, y: currentPos.y };
+  let isMoving = false;
+  let lastTime = performance.now();
+
+  // Native browser SVG image loader
+  let spriteLoaded = false;
+  const catSprite = new Image();
+  
+  catSprite.onload = function() {
+    console.log("[INFO] SVG sprite loaded successfully.");
+    spriteLoaded = true;
+  };
+  
+  catSprite.onerror = function(err) {
+    console.error("[ERROR] Failed to load SVG sprite. Falling back to procedural box.", err);
+    spriteLoaded = false;
+  };
+
+  catSprite.src = "cat_a.svg";
+
+  inputEl.addEventListener("keydown", function(event) {
+    if (event.key === "Enter") {
+      const val = inputEl.value.trim();
+      console.log(`[INFO] Parsing input: "${val}"`);
+      
+      const parts = val.split(/\s+/);
+      if (parts.length === 2) {
+        const tx = parseFloat(parts[0]);
+        const ty = parseFloat(parts[1]);
+
+        if (!isNaN(tx) && !isNaN(ty) && tx >= 0 && tx <= canvas.width && ty >= 0 && ty <= canvas.height) {
+          targetPos = { x: tx, y: ty };
+          const dx = targetPos.x - currentPos.x;
+          const dy = targetPos.y - currentPos.y;
+          const dist = Math.hypot(dx, dy);
+
+          if (dist > 1.0) {
+            isMoving = true;
+            statusEl.textContent = `Moving to (${Math.round(tx)}, ${Math.round(ty)})...`;
+            console.log(`[INFO] Target accepted: (${tx}, ${ty}). Distance: ${dist.toFixed(2)}px`);
+          } else {
+            isMoving = false;
+            statusEl.textContent = "Already at coordinates. Enter target 'X Y':";
+          }
+        } else {
+          statusEl.textContent = `Out of bounds! Use: 0-${canvas.width} and 0-${canvas.height}`;
+          console.warn("[WARN] Input coordinates out of screen bounds.");
+        }
+      } else {
+        statusEl.textContent = "Invalid format! Enter two numbers: X Y";
+        console.warn("[WARN] Malformed input format.");
+      }
+      inputEl.value = "";
+    }
+  });
+
+  function gameLoop(now) {
+    const dt = (now - lastTime) / 1000;
+    lastTime = now;
+
+    // Movement Step
+    if (isMoving) {
+      const dx = targetPos.x - currentPos.x;
+      const dy = targetPos.y - currentPos.y;
+      const dist = Math.hypot(dx, dy);
+      const step = speed * dt;
+
+      if (dist <= step) {
+        currentPos.x = targetPos.x;
+        currentPos.y = targetPos.y;
+        isMoving = false;
+        statusEl.textContent = "Target reached. Enter next 'X Y':";
+        console.log(`[INFO] Destination reached: (${targetPos.x}, ${targetPos.y})`);
+      } else {
+        currentPos.x += (dx / dist) * step;
+        currentPos.y += (dy / dist) * step;
+      }
+      posEl.textContent = `Pos: (${Math.round(currentPos.x)}, ${Math.round(currentPos.y)})`;
+    }
+
+    // Render pass
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const drawX = currentPos.x - spriteSize / 2;
+    const drawY = currentPos.y - spriteSize / 2;
+
+    if (spriteLoaded) {
+      ctx.drawImage(catSprite, drawX, drawY, spriteSize, spriteSize);
+    } else {
+      // Procedural fallback
+      ctx.fillStyle = "#dc6432";
+      ctx.fillRect(drawX, drawY, spriteSize, spriteSize);
+    }
+
+    requestAnimationFrame(gameLoop);
+  }
+
+  requestAnimationFrame(function(now) {
+    lastTime = now;
+    gameLoop(now);
+  });
+})();
+</script>
+</body>
+</html>

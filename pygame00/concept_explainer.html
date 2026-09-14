@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>JS Game Engine Concepts Lab</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: #121316;
+      color: #e0e0e0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+    header {
+      padding: 10px 20px;
+      background: #1a1c23;
+      border-bottom: 1px solid #2a2d37;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    h1 {
+      font-size: 1.1rem;
+      color: #00d2ff;
+      letter-spacing: 0.5px;
+    }
+    #main-container {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 50px);
+    }
+    #viewport-pane {
+      flex: 1.1;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #2a2d37;
+      position: relative;
+    }
+    #canvas-wrapper {
+      flex: 1;
+      position: relative;
+      background: #0d0e11;
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    #hud {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: rgba(18, 19, 22, 0.85);
+      border: 1px solid #333742;
+      padding: 10px 14px;
+      border-radius: 6px;
+      pointer-events: none;
+      font-family: monospace;
+      font-size: 13px;
+    }
+    #hud span {
+      color: #00d2ff;
+    }
+    #controls-bar {
+      padding: 12px 16px;
+      background: #181a20;
+      border-top: 1px solid #2a2d37;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+    }
+    input[type="text"] {
+      background: #0d0e11;
+      border: 1px solid #333742;
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-family: monospace;
+      outline: none;
+      width: 160px;
+    }
+    input[type="text"]:focus {
+      border-color: #00d2ff;
+    }
+    button {
+      background: #252834;
+      border: 1px solid #3a3f50;
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    button:hover {
+      background: #333849;
+    }
+    #inspector-pane {
+      flex: 0.9;
+      display: flex;
+      flex-direction: column;
+      background: #15171e;
+    }
+    #memory-panel {
+      padding: 12px 16px;
+      background: #1a1c23;
+      border-bottom: 1px solid #2a2d37;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    .panel-title {
+      font-weight: bold;
+      color: #8f95a5;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      font-size: 11px;
+    }
+    .memory-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .memory-cell {
+      background: #0d0e11;
+      padding: 6px 8px;
+      border-radius: 4px;
+      border: 1px solid #252834;
+    }
+    .memory-cell .var-name {
+      color: #727b8f;
+      display: block;
+      margin-bottom: 2px;
+    }
+    .memory-cell .var-val {
+      color: #00d2ff;
+      font-weight: bold;
+    }
+    #code-panel {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      font-family: 'Consolas', 'Courier New', Courier, monospace;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .code-line {
+      display: flex;
+      padding: 1px 4px;
+      border-radius: 3px;
+      white-space: pre-wrap;
+    }
+    .code-line.active-line {
+      background: #2e3547;
+      border-left: 3px solid #00d2ff;
+      color: #fff;
+    }
+    .line-num {
+      width: 32px;
+      color: #4a5060;
+      user-select: none;
+      flex-shrink: 0;
+    }
+    .line-text {
+      flex: 1;
+    }
+    .c-kw { color: #e575bb; }
+    .c-fn { color: #61afef; }
+    .c-cm { color: #5c6370; font-style: italic; }
+    .c-str { color: #98c379; }
+    .c-num { color: #d19a66; }
+    .c-op { color: #56b6c2; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Interactive Concept Lab: Game Loops, Vectors & State in JS</h1>
+  <div style="font-size: 12px; color: #888;">Click canvas or enter X Y below</div>
+</header>
+
+<div id="main-container">
+  <div id="viewport-pane">
+    <div id="canvas-wrapper">
+      <canvas id="gameCanvas"></canvas>
+      <div id="hud">
+        Status: <span id="hud-status">IDLE</span><br>
+        Speed: <span id="hud-speed">250</span> px/s
+      </div>
+    </div>
+    <div id="controls-bar">
+      <label for="input-target">Target Coordinates:</label>
+      <input type="text" id="input-target" placeholder="e.g. 400 200" />
+      <button id="btn-submit">Dispatch Move</button>
+      <label style="margin-left: 10px;">Speed:</label>
+      <input type="range" id="slider-speed" min="50" max="600" value="250" style="cursor: pointer;" />
+    </div>
+  </div>
+
+  <div id="inspector-pane">
+    <div id="memory-panel">
+      <div class="panel-title">Active Memory Table (State Inspector)</div>
+      <div class="memory-grid">
+        <div class="memory-cell"><span class="var-name">pos.x</span><span id="mem-pos-x" class="var-val">0</span></div>
+        <div class="memory-cell"><span class="var-name">pos.y</span><span id="mem-pos-y" class="var-val">0</span></div>
+        <div class="memory-cell"><span class="var-name">target.x</span><span id="mem-tar-x" class="var-val">0</span></div>
+        <div class="memory-cell"><span class="var-name">target.y</span><span id="mem-tar-y" class="var-val">0</span></div>
+        <div class="memory-cell"><span class="var-name">dist</span><span id="mem-dist" class="var-val">0.0</span></div>
+        <div class="memory-cell"><span class="var-name">deltaTime (dt)</span><span id="mem-dt" class="var-val">0.000s</span></div>
+        <div class="memory-cell"><span class="var-name">isMoving</span><span id="mem-moving" class="var-val">false</span></div>
+        <div class="memory-cell"><span class="var-name">activeStage</span><span id="mem-stage" class="var-val">LOOP</span></div>
+      </div>
+    </div>
+
+    <div id="code-panel">
+      <div class="panel-title" style="margin-bottom: 8px;">Execution Tracer & Pedagogical Comments</div>
+      <div id="code-stream"></div>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
