@@ -41,18 +41,19 @@ def walk_to(target_x, target_y):
 # -----------------------------------------
 # 4. THE MAIN LOOP (Keeps Asking Forever)
 # -----------------------------------------
-print("--- TURTLE CONTROLLER ---")
+print("--- Objective: Is to read the code and figure out what is happening ---")
+print("--- Get student to list all the steps the turtle takes ---")
 print("Valid range: -200 to 200")
 print("Type 'exit' or 'q' anytime to stop.")
 
 while True:
-    user_x = input("\nEnter X position: ")
-    if user_x.lower() in ["exit", "q"]:
+    user_x = input("\nEnter X position: ") #Ask and Answer in same line
+    if user_x.lower() in ["exit", "q"]: # Checking if user wants to quit
         print("Goodbye!")
         break
 
-    user_y = input("Enter Y position: ")
-    if user_y.lower() in ["exit", "q"]:
+    user_y = input("Enter Y position: ") #Ask and Answer in same line
+    if user_y.lower() in ["exit", "q"]: # Checking if user wants to quit
         print("Goodbye!")
         break
 
