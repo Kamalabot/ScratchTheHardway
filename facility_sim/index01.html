@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aegis Void - Tactical Substation Command</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body, html { width: 100%; height: 100%; overflow: hidden; background: #03030c; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, monospace; }
+
+    #canvas-container { position: absolute; inset: 0; z-index: 1; }
+    canvas { display: block; width: 100%; height: 100%; }
+
+    #bg-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background: radial-gradient(circle at 50% 50%, #0d122b 0%, #02030a 100%);
+      overflow: hidden;
+    }
+    .nebula-cloud {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(90px);
+      opacity: 0.22;
+    }
+
+    /* Full Tactile Dashboard Frame */
+    #dashboard-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 24px 30px;
+      color: #e2e8f0;
+    }
+
+    .top-console {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      width: 100%;
+    }
+
+    .console-card {
+      background: rgba(13, 20, 38, 0.78);
+      border: 1px solid rgba(56, 189, 248, 0.28);
+      backdrop-filter: blur(14px);
+      padding: 14px 20px;
+      border-radius: 8px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55), inset 0 0 12px rgba(56, 189, 248, 0.06);
+      pointer-events: auto;
+      min-width: 290px;
+    }
+
+    .dash-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.8px;
+      color: #94a3b8;
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .telemetry-val {
+      font-size: 22px;
+      font-weight: 800;
+      font-family: 'Consolas', monospace;
+      letter-spacing: 1px;
+    }
+    .cyan-text { color: #38bdf8; text-shadow: 0 0 10px rgba(56, 189, 248, 0.4); }
+    .crimson-text { color: #f43f5e; text-shadow: 0 0 10px rgba(244, 63, 94, 0.4); }
+    .gold-text { color: #facc15; text-shadow: 0 0 10px rgba(250, 204, 21, 0.4); }
+    .emerald-text { color: #4ade80; text-shadow: 0 0 10px rgba(74, 222, 128, 0.4); }
+
+    /* Segmented Meter Displays */
+    .meter-bar {
+      width: 100%;
+      height: 8px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 3px;
+      overflow: hidden;
+      margin: 6px 0 10px 0;
+      position: relative;
+    }
+    .meter-fill {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #0284c7, #38bdf8);
+      box-shadow: 0 0 8px #38bdf8;
+      transition: width 0.15s ease-out;
+    }
+
+    /* Substation Actions */
+    .dash-btn {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid #38bdf8;
+      color: #f8fafc;
+      padding: 7px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: inherit;
+      letter-spacing: 1px;
+      border-radius: 4px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.15s ease;
+      width: 100%;
+      margin-top: 6px;
+    }
+    .dash-btn:hover:not(:disabled) {
+      background: rgba(56, 189, 248, 0.2);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+    }
+    .dash-btn:disabled { opacity: 0.3; cursor: not-allowed; border-color: #475569; }
+
+    #alert-banner {
+      align-self: center;
+      opacity: 0;
+      font-size: 17px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      color: #facc15;
+      text-shadow: 0 0 18px rgba(250, 204, 21, 0.8);
+      text-transform: uppercase;
+      margin-top: 10px;
+    }
+
+    /* Bottom Status Ribbon & Sector Radar */
+    .bottom-console {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      width: 100%;
+    }
+    .radar-frame {
+      width: 110px;
+      height: 110px;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      background: rgba(3, 7, 18, 0.8);
+      border-radius: 50%;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.15);
+      pointer-events: auto;
+    }
+    .radar-sweep {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, rgba(56, 189, 248, 0.35) 0deg, transparent 65deg);
+      animation: sweep 3.5s linear infinite;
+    }
+    .radar-crosshair {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 1px dashed rgba(56, 189, 248, 0.25);
+    }
+    @keyframes sweep { 100% { transform: rotate(360deg); } }
+
+    #game-over-modal {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      background: rgba(2, 3, 10, 0.92);
+      backdrop-filter: blur(10px);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+      color: #f8fafc;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+</head>
+<body>
+  <div id="bg-layer">
+    <div class="nebula-cloud" style="width: 600px; height: 600px; background: #1e1b4b; top: 10%; left: 15%;"></div>
+    <div class="nebula-cloud" style="width: 650px; height: 650px; background: #083344; bottom: 10%; right: 15%;"></div>
+  </div>
+
+  <div id="canvas-container">
+    <canvas id="stage"></canvas>
+  </div>
+
+  <div id="dashboard-layer">
+    <div class="top-console">
+      <!-- Left Dashboard Module: Engineering & Procurement -->
+      <div class="console-card">
+        <div class="dash-label"><span>Substation Logistics</span><span>SECTOR 04</span></div>
+        <div class="dash-label" style="margin-top: 6px;">Available Reserves</div>
+        <div id="credits-readout" class="telemetry-val emerald-text">300 CR</div>
+        
+        <div class="dash-label" style="margin-top: 8px;">Capacitor Reserve Bay</div>
+        <div id="spares-readout" style="font-weight: 700; color: #cbd5e1; font-family: monospace;">1 SPARE READY</div>
+        
+        <button id="buy-cap-btn" class="dash-btn" onclick="FacilityApp.buyCapacitor()">Purchase Surge Unit (150 CR)</button>
+        <button id="recharge-btn" class="dash-btn" onclick="FacilityApp.buyPowerCell()">Emergency Fuel Cell (100 CR)</button>
+      </div>
+
+      <!-- Center Dynamic Telemetry Alerts -->
+      <div id="alert-banner">GRID STABILIZED</div>
+
+      <!-- Right Dashboard Module: Core Buffer & Surge Diagnostics -->
+      <div class="console-card" style="text-align: right;">
+        <div class="dash-label"><span>Core Power Matrix</span><span id="drain-status">DRAIN: 0.0 kW/s</span></div>
+        <div id="grid-power-num" class="telemetry-val cyan-text">100.0%</div>
+        <div class="meter-bar">
+          <div id="grid-power-fill" class="meter-fill"></div>
+        </div>
+
+        <div class="dash-label"><span>Surge Array Buffer</span><span id="cap-load-num">0%</span></div>
+        <div class="meter-bar">
+          <div id="cap-load-fill" class="meter-fill" style="background: linear-gradient(90deg, #facc15, #f43f5e); width: 0%;"></div>
+        </div>
+        <button id="refit-cap-btn" class="dash-btn" style="display: none; border-color: #f43f5e; color: #f43f5e;" onclick="FacilityApp.refitCapacitor()">Install Spare Capacitor [R]</button>
+      </div>
+    </div>
+
+    <div class="bottom-console">
+      <!-- Sector Scanning Radar -->
+      <div class="radar-frame">
+        <div class="radar-sweep"></div>
+        <div class="radar-crosshair"></div>
+        <div style="position: absolute; top: 48%; left: 48%; width: 4px; height: 4px; border-radius: 50%; background: #38bdf8;"></div>
+      </div>
+
+      <!-- Telemetry Status Line -->
+      <div class="console-card" style="min-width: 440px; padding: 10px 16px;">
+        <div class="dash-label">
+          <span>Operational Protocol: Select Pillars to Toggle Load</span>
+          <span id="uptime-clock" class="cyan-text">RUNTIME: 00:00</span>
+        </div>
+        <div style="font-size: 11px; color: #64748b; margin-top: 4px;">
+          Active lighting yields continuous utility credits. Excess continuous load causes explosive capacitor rupture.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="game-over-modal">
+    <h1 style="color: #f43f5e; font-size: 36px; margin-bottom: 6px; letter-spacing: 2px;">CRITICAL SYSTEM COLLAPSE</h1>
+    <p id="game-over-stats" style="color: #94a3b8; margin-bottom: 20px; font-family: monospace;"></p>
+    <button class="dash-btn" style="width: auto; padding: 10px 28px;" onclick="FacilityApp.restart()">Re-energize Substation Grid</button>
+  </div>
+
+  <script>
+    // Original Vector Assets preserved with full SVG node definitions
+    const FACILITY_SVGS = {
+      generator: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 140">
+        <rect x="10" y="10" width="120" height="120" rx="10" fill="#0f172a" stroke="#38bdf8" stroke-width="3"/>
+        <circle cx="70" cy="70" r="44" fill="#0284c7" opacity="0.3"/>
+        <circle cx="70" cy="70" r="30" fill="#0369a1" stroke="#7dd3fc" stroke-width="2"/>
+        <line x1="70" y1="26" x2="70" y2="114" stroke="#e0f2fe" stroke-width="2"/>
+        <line x1="26" y1="70" x2="114" y2="70" stroke="#e0f2fe" stroke-width="2"/>
+      </svg>`,
+      pillar: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60">
+        <circle cx="30" cy="30" r="24" fill="#090d16" stroke="#475569" stroke-width="2"/>
+        <circle cx="30" cy="30" r="14" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/>
+        <circle cx="30" cy="30" r="5" fill="#e0f2fe"/>
+      </svg>`,
+      capacitor: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80">
+        <rect x="15" y="10" width="50" height="60" rx="6" fill="#050811" stroke="#facc15" stroke-width="2.5"/>
+        <line x1="30" y1="24" x2="50" y2="24" stroke="#fde047" stroke-width="3"/>
+        <line x1="24" y1="36" x2="56" y2="36" stroke="#fde047" stroke-width="3"/>
+        <line x1="30" y1="48" x2="50" y2="48" stroke="#fde047" stroke-width="3"/>
+      </svg>`
+    };
+
+    class AssetLoader {
+      static parseSvg(rawStr) {
+        try {
+          const blob = new Blob([rawStr], { type: 'image/svg+xml;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const img = new Image();
+          img.src = url;
+          return img;
+        } catch (e) {
+          console.error("[AssetLoader] Parse error:", e);
+          return null;
+        }
+      }
+
+      static load() {
+        return {
+          generator: this.parseSvg(FACILITY_SVGS.generator),
+          pillar: this.parseSvg(FACILITY_SVGS.pillar),
+          capacitor: this.parseSvg(FACILITY_SVGS.capacitor)
+        };
+      }
+    }
+
+    class Particle {
+      constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.radius = Math.random() * 2.5 + 1;
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 4 + 1.2;
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed;
+        this.alpha = 1;
+        this.decay = Math.random() * 0.03 + 0.02;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.alpha -= this.decay;
+      }
+      draw(ctx) {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, this.alpha);
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    class FacilitySubstationApp {
+      constructor() {
+        this.canvas = document.getElementById('stage');
+        this.ctx = this.canvas.getContext('2d');
+        this.assets = AssetLoader.load();
+
+        this.particles = [];
+        this.credits = 300;
+        this.spares = 1;
+        this.elapsedSeconds = 0;
+        this.clockTimer = 0;
+
+        this.grid = {
+          power: 100.0,
+          baseDrainRate: 0.009,
+          generator: { x: 0, y: 0, radius: 45, rotation: 0 },
+          capacitor: {
+            x: 0, y: 0, radius: 24,
+            load: 0, maxLoad: 100,
+            isBurst: false
+          },
+          pillars: []
+        };
+
+        this.isRunning = false;
+        this.initCanvasSize();
+        this.initLayout();
+        this.initEvents();
+        this.initBackgroundTweens();
+      }
+
+      initBackgroundTweens() {
+        try {
+          gsap.to('.nebula-cloud', {
+            x: 'random(-80, 80)',
+            y: 'random(-60, 60)',
+            scale: 'random(0.9, 1.2)',
+            duration: 11,
+            repeat: -1,
+            yoyo: true,
+            ease: 'sine.inOut',
+            stagger: 2
+          });
+        } catch (e) {
+          console.error("[FacilityApp] GSAP error:", e);
+        }
+      }
+
+      initCanvasSize() {
+        this.width = window.innerWidth;
+        this.height = window.innerHeight;
+        this.canvas.width = this.width;
+        this.canvas.height = this.height;
+      }
+
+      initLayout() {
+        this.grid.generator.x = this.width / 2;
+        this.grid.generator.y = this.height / 2;
+
+        this.grid.capacitor.x = this.grid.generator.x;
+        this.grid.capacitor.y = this.grid.generator.y + 85;
+
+        this.grid.pillars = [
+          { id: 1, x: this.width * 0.28, y: this.height * 0.28, active: true, radius: 24 },
+          { id: 2, x: this.width * 0.72, y: this.height * 0.28, active: true, radius: 24 },
+          { id: 3, x: this.width * 0.28, y: this.height * 0.72, active: true, radius: 24 },
+          { id: 4, x: this.width * 0.72, y: this.height * 0.72, active: true, radius: 24 }
+        ];
+      }
+
+      initEvents() {
+        window.addEventListener('resize', () => {
+          this.initCanvasSize();
+          this.initLayout();
+        });
+
+        window.addEventListener('keydown', (e) => {
+          if (e.code === 'KeyR') this.refitCapacitor();
+        });
+
+        this.canvas.addEventListener('click', (e) => {
+          const rect = this.canvas.getBoundingClientRect();
+          const mx = e.clientX - rect.left;
+          const my = e.clientY - rect.top;
+
+          // Toggle light pillar state
+          for (const pil of this.grid.pillars) {
+            if (Math.hypot(mx - pil.x, my - pil.y) <= pil.radius + 18) {
+              pil.active = !pil.active;
+              this.triggerBanner(`PILLAR 0${pil.id} ${pil.active ? 'CONNECTED' : 'DISENGAGED'}`);
+              return;
+            }
+          }
+
+          // Capacitor interaction
+          if (Math.hypot(mx - this.grid.capacitor.x, my - this.grid.capacitor.y) <= this.grid.capacitor.radius + 12) {
+            if (this.grid.capacitor.isBurst) this.refitCapacitor();
+          }
+        });
+      }
+
+      start() {
+        this.isRunning = true;
+        document.getElementById('game-over-modal').style.display = 'none';
+        this.loop();
+      }
+
+      restart() {
+        this.credits = 300;
+        this.spares = 1;
+        this.elapsedSeconds = 0;
+        this.clockTimer = 0;
+        this.grid.power = 100.0;
+        this.grid.capacitor.load = 0;
+        this.grid.capacitor.isBurst = false;
+        this.particles = [];
+        for (const p of this.grid.pillars) p.active = true;
+        this.updateHUD();
+        this.start();
+      }
+
+      triggerBanner(txt) {
+        const b = document.getElementById('alert-banner');
+        b.innerText = txt;
+        gsap.killTweensOf(b);
+        gsap.fromTo(b, { opacity: 0, y: -8 }, { opacity: 1, y: 0, duration: 0.25, yoyo: true, repeat: 1 });
+      }
+
+      buyCapacitor() {
+        if (this.credits >= 150) {
+          this.credits -= 150;
+          this.spares++;
+          this.triggerBanner("SURGE CAPACITOR PROCURED");
+          this.updateHUD();
+        }
+      }
+
+      buyPowerCell() {
+        if (this.credits >= 100 && this.grid.power < 100) {
+          this.credits -= 100;
+          this.grid.power = Math.min(100, this.grid.power + 25.0);
+          this.triggerBanner("FUEL CELLS DISPATCHED (+25%)");
+          this.updateHUD();
+        }
+      }
+
+      refitCapacitor() {
+        if (!this.grid.capacitor.isBurst) return;
+        if (this.spares > 0) {
+          this.spares--;
+          this.grid.capacitor.isBurst = false;
+          this.grid.capacitor.load = 0;
+          this.triggerBanner("SURGE ARRAY RESTORED");
+          this.updateHUD();
+        } else {
+          this.triggerBanner("DEPOT EMPTY: ACQUIRE SPARE");
+        }
+      }
+
+      triggerCapacitorBurst() {
+        this.grid.capacitor.isBurst = true;
+        this.grid.capacitor.load = 100;
+        this.triggerBanner("SURGE THRESHOLD EXCEEDED: BURST!");
+
+        for (let i = 0; i < 45; i++) {
+          this.particles.push(new Particle(this.grid.capacitor.x, this.grid.capacitor.y, '#facc15'));
+          this.particles.push(new Particle(this.grid.capacitor.x, this.grid.capacitor.y, '#f43f5e'));
+        }
+      }
+
+      gameOver() {
+        this.isRunning = false;
+        document.getElementById('game-over-stats').innerText = 
+          `FACILITY POWER EXHAUSTED | TOTAL SURVIVAL RUNTIME: ${this.formatTime(this.elapsedSeconds)}`;
+        document.getElementById('game-over-modal').style.display = 'flex';
+      }
+
+      formatTime(secs) {
+        const m = Math.floor(secs / 60).toString().padStart(2, '0');
+        const s = (secs % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+      }
+
+      updateHUD() {
+        document.getElementById('credits-readout').innerText = `${Math.floor(this.credits)} CR`;
+        document.getElementById('spares-readout').innerText = `${this.spares} SPARE${this.spares !== 1 ? 'S' : ''} READY`;
+
+        document.getElementById('buy-cap-btn').disabled = this.credits < 150;
+        document.getElementById('recharge-btn').disabled = this.credits < 100 || this.grid.power >= 99.9;
+
+        const powerNumEl = document.getElementById('grid-power-num');
+        const powerFillEl = document.getElementById('grid-power-fill');
+        powerNumEl.innerText = `${Math.max(0, this.grid.power).toFixed(1)}%`;
+        powerFillEl.style.width = `${Math.max(0, this.grid.power)}%`;
+
+        if (this.grid.power < 25) {
+          powerNumEl.className = 'telemetry-val crimson-text';
+          powerFillEl.style.background = '#f43f5e';
+        } else if (this.grid.power < 50) {
+          powerNumEl.className = 'telemetry-val gold-text';
+          powerFillEl.style.background = '#facc15';
+        } else {
+          powerNumEl.className = 'telemetry-val cyan-text';
+          powerFillEl.style.background = 'linear-gradient(90deg, #0284c7, #38bdf8)';
+        }
+
+        const capNumEl = document.getElementById('cap-load-num');
+        const capFillEl = document.getElementById('cap-load-fill');
+        const refitBtn = document.getElementById('refit-cap-btn');
+
+        if (this.grid.capacitor.isBurst) {
+          capNumEl.innerText = 'BURST / OFFLINE';
+          capNumEl.className = 'crimson-text';
+          capFillEl.style.width = '100%';
+          refitBtn.style.display = 'block';
+        } else {
+          capNumEl.innerText = `${Math.floor(this.grid.capacitor.load)}%`;
+          capNumEl.className = '';
+          capFillEl.style.width = `${this.grid.capacitor.load}%`;
+          refitBtn.style.display = 'none';
+        }
+
+        const activeCount = this.grid.pillars.filter(p => p.active).length;
+        const leakFactor = this.grid.capacitor.isBurst ? 2.6 : 1.0;
+        const kwTotal = (activeCount * this.grid.baseDrainRate * 60 * leakFactor).toFixed(1);
+        document.getElementById('drain-status').innerText = `DRAIN: ${kwTotal} kW/s (${activeCount}/4 ON)`;
+        document.getElementById('uptime-clock').innerText = `RUNTIME: ${this.formatTime(this.elapsedSeconds)}`;
+      }
+
+      update() {
+        this.clockTimer++;
+        if (this.clockTimer >= 60) {
+          this.elapsedSeconds++;
+          this.clockTimer = 0;
+          const activeCount = this.grid.pillars.filter(p => p.active).length;
+          this.credits += activeCount * 4;
+        }
+
+        // Active consumption dynamic
+        const activeCount = this.grid.pillars.filter(p => p.active).length;
+        const leakMultiplier = this.grid.capacitor.isBurst ? 2.6 : 1.0;
+        this.grid.power -= (activeCount * this.grid.baseDrainRate) * leakMultiplier;
+
+        if (this.grid.power <= 0) {
+          this.grid.power = 0;
+          this.gameOver();
+          return;
+        }
+
+        // Rotate generator core
+        this.grid.generator.rotation += this.grid.capacitor.isBurst ? 0.005 : (0.012 + activeCount * 0.005);
+
+        // Capacitor surge logic
+        if (!this.grid.capacitor.isBurst) {
+          if (activeCount >= 3) {
+            this.grid.capacitor.load += (activeCount === 3 ? 0.06 : 0.14);
+          } else {
+            this.grid.capacitor.load = Math.max(0, this.grid.capacitor.load - 0.08);
+          }
+
+          if (this.grid.capacitor.load >= this.grid.capacitor.maxLoad) {
+            this.triggerCapacitorBurst();
+          }
+        }
+
+        // Update discharge particles
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+          const pt = this.particles[i];
+          pt.update();
+          if (pt.alpha <= 0) this.particles.splice(i, 1);
+        }
+
+        this.updateHUD();
+      }
+
+      draw() {
+        this.ctx.clearRect(0, 0, this.width, this.height);
+
+        // 1. Power Conduit lines
+        this.ctx.lineWidth = 2;
+        for (const pil of this.grid.pillars) {
+          this.ctx.beginPath();
+          this.ctx.moveTo(this.grid.generator.x, this.grid.generator.y);
+          this.ctx.lineTo(pil.x, pil.y);
+
+          if (pil.active) {
+            this.ctx.strokeStyle = this.grid.capacitor.isBurst ? 'rgba(244, 63, 94, 0.45)' : 'rgba(56, 189, 248, 0.5)';
+            this.ctx.setLineDash([8, 6]);
+          } else {
+            this.ctx.strokeStyle = 'rgba(71, 85, 105, 0.2)';
+            this.ctx.setLineDash([]);
+          }
+          this.ctx.stroke();
+        }
+        this.ctx.setLineDash([]);
+
+        // Conduit linking generator to capacitor
+        this.ctx.beginPath();
+        this.ctx.moveTo(this.grid.generator.x, this.grid.generator.y);
+        this.ctx.lineTo(this.grid.capacitor.x, this.grid.capacitor.y);
+        this.ctx.strokeStyle = this.grid.capacitor.isBurst ? '#f43f5e' : '#facc15';
+        this.ctx.stroke();
+
+        // 2. Light Pillars & Radial Volumetric Glow
+        for (const pil of this.grid.pillars) {
+          if (pil.active) {
+            const glowRadius = this.grid.capacitor.isBurst ? 140 : 200;
+            const grad = this.ctx.createRadialGradient(pil.x, pil.y, 8, pil.x, pil.y, glowRadius);
+            const color = this.grid.capacitor.isBurst ? '244, 63, 94' : '56, 189, 248';
+            grad.addColorStop(0, `rgba(${color}, 0.26)`);
+            grad.addColorStop(1, `rgba(${color}, 0)`);
+
+            this.ctx.fillStyle = grad;
+            this.ctx.beginPath();
+            this.ctx.arc(pil.x, pil.y, glowRadius, 0, Math.PI * 2);
+            this.ctx.fill();
+          }
+
+          const pImg = this.assets.pillar;
+          if (pImg && pImg.complete) {
+            this.ctx.drawImage(pImg, pil.x - 24, pil.y - 24, 48, 48);
+          }
+        }
+
+        // 3. Central Generator Core
+        this.ctx.save();
+        this.ctx.translate(this.grid.generator.x, this.grid.generator.y);
+        this.ctx.rotate(this.grid.generator.rotation);
+        const gImg = this.assets.generator;
+        if (gImg && gImg.complete) {
+          this.ctx.drawImage(gImg, -45, -45, 90, 90);
+        }
+        this.ctx.restore();
+
+        // 4. Capacitor Subsystem
+        this.ctx.save();
+        this.ctx.translate(this.grid.capacitor.x, this.grid.capacitor.y);
+        const capImg = this.assets.capacitor;
+        if (capImg && capImg.complete) {
+          if (this.grid.capacitor.isBurst) {
+            this.ctx.filter = 'grayscale(100%) contrast(150%)';
+          }
+          this.ctx.drawImage(capImg, -20, -20, 40, 40);
+        }
+        this.ctx.restore();
+
+        // 5. Electrical Burst Particles
+        for (const pt of this.particles) pt.draw(this.ctx);
+      }
+
+      loop() {
+        if (!this.isRunning) return;
+        try {
+          this.update();
+          this.draw();
+          requestAnimationFrame(() => this.loop());
+        } catch (err) {
+          console.error("[FacilityApp] Tick error:", err);
+          this.isRunning = false;
+        }
+      }
+    }
+
+    let FacilityApp;
+    window.addEventListener('DOMContentLoaded', () => {
+      FacilityApp = new FacilitySubstationApp();
+      FacilityApp.start();
+    });
+  </script>
+</body>
+</html>

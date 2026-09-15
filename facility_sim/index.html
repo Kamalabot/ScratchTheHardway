@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aegis Facility Substation - Autonomous Power Sim</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body, html { width: 100%; height: 100%; overflow: hidden; background: #020308; font-family: 'Consolas', 'Courier New', monospace; }
+
+    #canvas-container { position: absolute; inset: 0; z-index: 1; }
+    canvas { display: block; width: 100%; height: 100%; }
+
+    #bg-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background: radial-gradient(circle at 50% 50%, #060919 0%, #010206 100%);
+      overflow: hidden;
+    }
+    .nebula-cloud {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.18;
+    }
+
+    #ui-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 24px 30px;
+      color: #e2e8f0;
+    }
+    .hud-panel { display: flex; justify-content: space-between; align-items: flex-start; }
+
+    .card {
+      background: rgba(10, 15, 30, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(12px);
+      padding: 14px 18px;
+      border-radius: 6px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+      pointer-events: auto;
+      min-width: 260px;
+    }
+
+    .hud-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #64748b; margin-bottom: 4px; }
+    .hud-val { font-size: 20px; font-weight: 700; }
+    .hero-val { color: #38bdf8; }
+    .danger-val { color: #f43f5e; }
+    .warning-val { color: #facc15; }
+    .economy-val { color: #4ade80; }
+
+    .btn {
+      background: #1e293b;
+      border: 1px solid #475569;
+      color: #f8fafc;
+      padding: 7px 12px;
+      font-size: 11px;
+      font-family: inherit;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 6px;
+      display: inline-block;
+      text-align: center;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    .btn:hover:not(:disabled) { background: #334155; border-color: #94a3b8; }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    #alert-banner {
+      align-self: center;
+      margin-top: 10px;
+      opacity: 0;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: #facc15;
+      text-transform: uppercase;
+    }
+
+    #game-over-modal {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      background: rgba(2, 2, 8, 0.94);
+      backdrop-filter: blur(10px);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+      color: #f8fafc;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+</head>
+<body>
+  <div id="bg-layer">
+    <div class="nebula-cloud" style="width: 550px; height: 550px; background: #1e1b4b; top: 15%; left: 20%;"></div>
+    <div class="nebula-cloud" style="width: 600px; height: 600px; background: #0e7490; bottom: 10%; right: 15%;"></div>
+  </div>
+
+  <div id="canvas-container">
+    <canvas id="stage"></canvas>
+  </div>
+
+  <div id="ui-layer">
+    <div class="hud-panel">
+      <!-- Depot & Engineering Management -->
+      <div class="card">
+        <div class="hud-title">Procurement Depot</div>
+        <div>
+          <span class="hud-title">Treasury:</span>
+          <span id="player-credits" class="hud-val economy-val">250 CR</span>
+        </div>
+        <div style="margin-top: 6px;">
+          <span class="hud-title">Capacitor Inventory:</span>
+          <span id="player-spares" style="color: #cbd5e1; font-weight: bold;">1 SPARE</span>
+        </div>
+        <div style="margin-top: 8px; display: flex; flex-direction: column; gap: 4px;">
+          <button id="buy-cap-btn" class="btn" onclick="Sim.buyCapacitor()">Purchase Spare (150 CR)</button>
+          <button id="recharge-btn" class="btn" onclick="Sim.buyEnergyRecharge()">Inject Fuel Cell: +25% (100 CR)</button>
+        </div>
+      </div>
+
+      <div id="alert-banner">SUBSTATION ONLINE</div>
+
+      <!-- Facility Telemetry -->
+      <div class="card" style="text-align: right;">
+        <div class="hud-title">Generator Core Charge</div>
+        <div id="facility-power" class="hud-val warning-val">100.0%</div>
+        <div id="facility-timer" style="font-size: 11px; color: #94a3b8; margin-top: 3px;">Drain: 0.0 kW/s</div>
+        
+        <div style="margin-top: 10px;">
+          <div class="hud-title">Surge Capacitor Subsystem</div>
+          <div id="cap-status" class="hud-val" style="color: #38bdf8;">BUFFER: 0%</div>
+        </div>
+        <button id="refit-cap-btn" class="btn" style="display: none; width: 100%; border-color: #f43f5e;" onclick="Sim.refitCapacitor()">Refit Replacement [R]</button>
+      </div>
+    </div>
+
+    <div style="font-size: 11px; color: #64748b; letter-spacing: 1px; display: flex; justify-content: space-between;">
+      <span>[CLICK PILLAR] Toggle Light On/Off &nbsp;|&nbsp; [R] Field Refit Burst Capacitor &nbsp;|&nbsp; Power generation awards continuous tariff credits</span>
+      <span id="sim-clock">TIME RUNNING: 00:00</span>
+    </div>
+  </div>
+
+  <div id="game-over-modal">
+    <h1 style="color: #f43f5e; font-size: 34px; margin-bottom: 8px; letter-spacing: 2px;">TOTAL FACILITY BLACKOUT</h1>
+    <p id="game-over-stats" style="color: #94a3b8; margin-bottom: 20px; font-size: 14px;"></p>
+    <button class="btn" style="padding: 12px 28px; font-size: 13px;" onclick="Sim.restart()">Recommission Substation Core</button>
+  </div>
+
+  <script>
+    const CUSTOM_SVGS = {
+      facility: {
+        generator: ``,
+        pillar: ``,
+        capacitor: ``
+      }
+    };
+
+    const DEFAULT_SVGS = {
+      facility: {
+        generator: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160">
+          <rect x="15" y="15" width="130" height="130" rx="14" fill="#0b0f19" stroke="#38bdf8" stroke-width="3"/>
+          <circle cx="80" cy="80" r="50" fill="#0f172a" stroke="#0284c7" stroke-width="2"/>
+          <circle cx="80" cy="80" r="32" fill="#0369a1" stroke="#7dd3fc" stroke-width="2.5"/>
+          <circle cx="80" cy="80" r="14" fill="#e0f2fe"/>
+          <line x1="80" y1="28" x2="80" y2="132" stroke="#38bdf8" stroke-width="2" stroke-dasharray="4,4"/>
+          <line x1="28" y1="80" x2="132" y2="80" stroke="#38bdf8" stroke-width="2" stroke-dasharray="4,4"/>
+        </svg>`,
+        pillar: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80">
+          <circle cx="40" cy="40" r="32" fill="#090d16" stroke="#475569" stroke-width="2.5"/>
+          <circle cx="40" cy="40" r="20" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/>
+          <circle cx="40" cy="40" r="8" fill="#e0f2fe"/>
+        </svg>`,
+        capacitor: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80">
+          <rect x="15" y="10" width="50" height="60" rx="6" fill="#050811" stroke="#facc15" stroke-width="2.5"/>
+          <line x1="30" y1="24" x2="50" y2="24" stroke="#fde047" stroke-width="3"/>
+          <line x1="22" y1="36" x2="58" y2="36" stroke="#fde047" stroke-width="3"/>
+          <line x1="30" y1="48" x2="50" y2="48" stroke="#fde047" stroke-width="3"/>
+        </svg>`
+      }
+    };
+
+    class AssetLoader {
+      static parseSvg(rawStr) {
+        try {
+          if (!rawStr || !rawStr.trim()) throw new Error("Blank SVG payload.");
+          const blob = new Blob([rawStr], { type: 'image/svg+xml;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const img = new Image();
+          img.src = url;
+          return img;
+        } catch (e) {
+          console.error("[AssetLoader] Parse failed:", e);
+          return null;
+        }
+      }
+
+      static load() {
+        console.log("[AssetLoader] Loading clean SVG elements...");
+        const assets = {};
+        ['generator', 'pillar', 'capacitor'].forEach(k => {
+          assets[k] = this.parseSvg(CUSTOM_SVGS.facility[k] || DEFAULT_SVGS.facility[k]);
+        });
+        return assets;
+      }
+    }
+
+    class Particle {
+      constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.radius = Math.random() * 2.5 + 1;
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 3.5 + 1;
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed;
+        this.alpha = 1;
+        this.decay = Math.random() * 0.03 + 0.02;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.alpha -= this.decay;
+      }
+      draw(ctx) {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, this.alpha);
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    class FacilitySim {
+      constructor() {
+        console.log("[FacilitySim] Booting standalone facility controller...");
+        this.canvas = document.getElementById('stage');
+        this.ctx = this.canvas.getContext('2d');
+        this.assets = AssetLoader.load();
+
+        this.particles = [];
+        this.credits = 250;
+        this.spares = 1;
+        this.elapsedSeconds = 0;
+        this.clockTimer = 0;
+
+        this.facility = {
+          power: 100.0,
+          baseDrainPerPillar: 0.008,
+          generator: { x: 0, y: 0, radius: 55, rotation: 0 },
+          capacitor: {
+            x: 0, y: 0, radius: 26,
+            load: 0, maxLoad: 100,
+            isBurst: false
+          },
+          pillars: []
+        };
+
+        this.isRunning = false;
+        this.initCanvasSize();
+        this.initFacilityLayout();
+        this.initEvents();
+        this.initGSAPBackground();
+      }
+
+      initGSAPBackground() {
+        try {
+          gsap.to('.nebula-cloud', {
+            x: 'random(-70, 70)',
+            y: 'random(-70, 70)',
+            scale: 'random(0.9, 1.2)',
+            duration: 10,
+            repeat: -1,
+            yoyo: true,
+            ease: 'sine.inOut',
+            stagger: 2
+          });
+        } catch (e) {
+          console.error("[FacilitySim] GSAP error:", e);
+        }
+      }
+
+      initCanvasSize() {
+        this.width = window.innerWidth;
+        this.height = window.innerHeight;
+        this.canvas.width = this.width;
+        this.canvas.height = this.height;
+      }
+
+      initFacilityLayout() {
+        this.facility.generator.x = this.width / 2;
+        this.facility.generator.y = this.height / 2;
+
+        this.facility.capacitor.x = this.facility.generator.x;
+        this.facility.capacitor.y = this.facility.generator.y + 110;
+
+        // 4 Quad-sector power pillars
+        this.facility.pillars = [
+          { id: 1, x: this.width * 0.28, y: this.height * 0.28, active: true, radius: 30 },
+          { id: 2, x: this.width * 0.72, y: this.height * 0.28, active: true, radius: 30 },
+          { id: 3, x: this.width * 0.28, y: this.height * 0.72, active: true, radius: 30 },
+          { id: 4, x: this.width * 0.72, y: this.height * 0.72, active: true, radius: 30 }
+        ];
+      }
+
+      initEvents() {
+        window.addEventListener('resize', () => {
+          this.initCanvasSize();
+          this.initFacilityLayout();
+        });
+
+        window.addEventListener('keydown', (e) => {
+          if (e.code === 'KeyR') this.refitCapacitor();
+        });
+
+        this.canvas.addEventListener('click', (e) => {
+          const rect = this.canvas.getBoundingClientRect();
+          const mx = e.clientX - rect.left;
+          const my = e.clientY - rect.top;
+
+          // Toggle pillars on click
+          for (const pil of this.facility.pillars) {
+            const dist = Math.hypot(mx - pil.x, my - pil.y);
+            if (dist <= pil.radius + 15) {
+              pil.active = !pil.active;
+              console.log(`[FacilitySim] Pillar ${pil.id} switched to ${pil.active ? 'ONLINE' : 'OFFLINE'}`);
+              this.triggerBanner(`Pillar ${pil.id} ${pil.active ? 'Engaged' : 'Severed'}`);
+              return;
+            }
+          }
+
+          // Click capacitor to refit if burst
+          const capDist = Math.hypot(mx - this.facility.capacitor.x, my - this.facility.capacitor.y);
+          if (capDist <= this.facility.capacitor.radius + 10 && this.facility.capacitor.isBurst) {
+            this.refitCapacitor();
+          }
+        });
+      }
+
+      start() {
+        console.log("[FacilitySim] Main generator online.");
+        this.isRunning = true;
+        document.getElementById('game-over-modal').style.display = 'none';
+        this.loop();
+      }
+
+      restart() {
+        console.log("[FacilitySim] Full core reset sequence...");
+        this.credits = 250;
+        this.spares = 1;
+        this.elapsedSeconds = 0;
+        this.clockTimer = 0;
+        this.facility.power = 100.0;
+        this.facility.capacitor.load = 0;
+        this.facility.capacitor.isBurst = false;
+        this.particles = [];
+        for (const p of this.facility.pillars) p.active = true;
+        this.updateHUD();
+        this.start();
+      }
+
+      triggerBanner(txt) {
+        const b = document.getElementById('alert-banner');
+        b.innerText = txt;
+        gsap.killTweensOf(b);
+        gsap.fromTo(b, { opacity: 0, y: -6 }, { opacity: 1, y: 0, duration: 0.25, yoyo: true, repeat: 1 });
+      }
+
+      buyCapacitor() {
+        if (this.credits >= 150) {
+          this.credits -= 150;
+          this.spares++;
+          console.log(`[Store] Procured spare capacitor. In stock: ${this.spares}`);
+          this.triggerBanner("Capacitor Purchased");
+          this.updateHUD();
+        }
+      }
+
+      buyEnergyRecharge() {
+        if (this.credits >= 100 && this.facility.power < 100) {
+          this.credits -= 100;
+          this.facility.power = Math.min(100, this.facility.power + 25.0);
+          console.log("[FacilitySim] Auxiliary fuel cells injected.");
+          this.triggerBanner("Injected Core Fuel (+25%)");
+          this.updateHUD();
+        }
+      }
+
+      refitCapacitor() {
+        if (!this.facility.capacitor.isBurst) return;
+        if (this.spares > 0) {
+          this.spares--;
+          this.facility.capacitor.isBurst = false;
+          this.facility.capacitor.load = 0;
+          console.log("[FacilitySim] Spare capacitor fitted successfully into surge array.");
+          this.triggerBanner("Capacitor Array Online");
+          this.updateHUD();
+        } else {
+          this.triggerBanner("No Spares Available!");
+        }
+      }
+
+      triggerCapacitorBurst() {
+        this.facility.capacitor.isBurst = true;
+        this.facility.capacitor.load = 100;
+        console.warn("[FacilitySim] Load capacity breached: Capacitor rupture!");
+        this.triggerBanner("CRITICAL: CAPACITOR RUPTURE!");
+
+        for (let i = 0; i < 40; i++) {
+          this.particles.push(new Particle(this.facility.capacitor.x, this.facility.capacitor.y, '#facc15'));
+          this.particles.push(new Particle(this.facility.capacitor.x, this.facility.capacitor.y, '#f43f5e'));
+        }
+      }
+
+      gameOver() {
+        console.warn("[FacilitySim] Zero generator potential detected.");
+        this.isRunning = false;
+        document.getElementById('game-over-stats').innerText = 
+          `Core collapsed after ${this.formatTime(this.elapsedSeconds)} of continuous runtime.`;
+        document.getElementById('game-over-modal').style.display = 'flex';
+      }
+
+      formatTime(totalSecs) {
+        const m = Math.floor(totalSecs / 60).toString().padStart(2, '0');
+        const s = (totalSecs % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+      }
+
+      updateHUD() {
+        document.getElementById('player-credits').innerText = `${Math.floor(this.credits)} CR`;
+        document.getElementById('player-spares').innerText = `${this.spares} SPARE`;
+
+        document.getElementById('buy-cap-btn').disabled = this.credits < 150;
+        document.getElementById('recharge-btn').disabled = this.credits < 100 || this.facility.power >= 99.9;
+
+        const pEl = document.getElementById('facility-power');
+        pEl.innerText = `${Math.max(0, this.facility.power).toFixed(1)}%`;
+        pEl.className = `hud-val ${this.facility.power < 20 ? 'danger-val' : (this.facility.power < 50 ? 'warning-val' : 'hero-val')}`;
+
+        const capStatusEl = document.getElementById('cap-status');
+        const refitBtn = document.getElementById('refit-cap-btn');
+        if (this.facility.capacitor.isBurst) {
+          capStatusEl.innerText = 'BURST / LEAKING';
+          capStatusEl.className = 'hud-val danger-val';
+          refitBtn.style.display = 'block';
+        } else {
+          capStatusEl.innerText = `BUFFER: ${Math.floor(this.facility.capacitor.load)}%`;
+          capStatusEl.className = 'hud-val hero-val';
+          refitBtn.style.display = 'none';
+        }
+
+        const activePillars = this.facility.pillars.filter(p => p.active).length;
+        const leakFactor = this.facility.capacitor.isBurst ? 2.5 : 1.0;
+        const kwTotal = (activePillars * this.facility.baseDrainPerPillar * 60 * leakFactor).toFixed(1);
+        document.getElementById('facility-timer').innerText = `Drain: ${kwTotal} kW/s (${activePillars}/4 Pillars On)`;
+        document.getElementById('sim-clock').innerText = `TIME RUNNING: ${this.formatTime(this.elapsedSeconds)}`;
+      }
+
+      update() {
+        // Clock tick & tariff rewards
+        this.clockTimer++;
+        if (this.clockTimer >= 60) {
+          this.elapsedSeconds++;
+          this.clockTimer = 0;
+          // Yields tariff revenue for keeping pillars online
+          const activeCount = this.facility.pillars.filter(p => p.active).length;
+          this.credits += activeCount * 4;
+        }
+
+        // Active pillar drain calculations
+        const activeCount = this.facility.pillars.filter(p => p.active).length;
+        let drainMultiplier = this.facility.capacitor.isBurst ? 2.8 : 1.0;
+        const frameDrain = (activeCount * this.facility.baseDrainPerPillar) * drainMultiplier;
+        
+        this.facility.power -= frameDrain;
+        if (this.facility.power <= 0) {
+          this.facility.power = 0;
+          this.gameOver();
+          return;
+        }
+
+        // Generator rotation speed linked to active state
+        this.facility.generator.rotation += this.facility.capacitor.isBurst ? 0.005 : (0.01 + activeCount * 0.005);
+
+        // Capacitor charge/surge dynamics
+        if (!this.facility.capacitor.isBurst) {
+          // Surge accumulates if more than 2 pillars are drawing continuously
+          if (activeCount >= 3) {
+            this.facility.capacitor.load += (activeCount === 3 ? 0.05 : 0.12);
+          } else {
+            // Buffer dissipates when grid is relaxed
+            this.facility.capacitor.load = Math.max(0, this.facility.capacitor.load - 0.08);
+          }
+
+          if (this.facility.capacitor.load >= this.facility.capacitor.maxLoad) {
+            this.triggerCapacitorBurst();
+          }
+        }
+
+        // Update rupture particles
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+          const pt = this.particles[i];
+          pt.update();
+          if (pt.alpha <= 0) this.particles.splice(i, 1);
+        }
+
+        this.updateHUD();
+      }
+
+      draw() {
+        this.ctx.clearRect(0, 0, this.width, this.height);
+
+        // 1. Render Power Conduits
+        this.ctx.lineWidth = 2;
+        for (const pil of this.facility.pillars) {
+          this.ctx.beginPath();
+          this.ctx.moveTo(this.facility.generator.x, this.facility.generator.y);
+          this.ctx.lineTo(pil.x, pil.y);
+
+          if (pil.active) {
+            this.ctx.strokeStyle = this.facility.capacitor.isBurst ? 'rgba(244, 63, 94, 0.4)' : 'rgba(56, 189, 248, 0.45)';
+            this.ctx.setLineDash([8, 6]);
+          } else {
+            this.ctx.strokeStyle = 'rgba(71, 85, 105, 0.2)';
+            this.ctx.setLineDash([]);
+          }
+          this.ctx.stroke();
+        }
+        this.ctx.setLineDash([]);
+
+        // Conduit from Generator to Capacitor
+        this.ctx.beginPath();
+        this.ctx.moveTo(this.facility.generator.x, this.facility.generator.y);
+        this.ctx.lineTo(this.facility.capacitor.x, this.facility.capacitor.y);
+        this.ctx.strokeStyle = this.facility.capacitor.isBurst ? '#f43f5e' : '#facc15';
+        this.ctx.stroke();
+
+        // 2. Render Pillars & Light Fields
+        for (const pil of this.facility.pillars) {
+          if (pil.active) {
+            const glowRadius = this.facility.capacitor.isBurst ? 140 : 220;
+            const grad = this.ctx.createRadialGradient(pil.x, pil.y, 10, pil.x, pil.y, glowRadius);
+            const color = this.facility.capacitor.isBurst ? '244, 63, 94' : '56, 189, 248';
+            grad.addColorStop(0, `rgba(${color}, 0.28)`);
+            grad.addColorStop(1, `rgba(${color}, 0)`);
+
+            this.ctx.fillStyle = grad;
+            this.ctx.beginPath();
+            this.ctx.arc(pil.x, pil.y, glowRadius, 0, Math.PI * 2);
+            this.ctx.fill();
+          }
+
+          // Pillar SVG
+          const pImg = this.assets.pillar;
+          if (pImg && pImg.complete) {
+            this.ctx.drawImage(pImg, pil.x - 30, pil.y - 30, 60, 60);
+          }
+        }
+
+        // 3. Render Generator Core
+        this.ctx.save();
+        this.ctx.translate(this.facility.generator.x, this.facility.generator.y);
+        this.ctx.rotate(this.facility.generator.rotation);
+        const gImg = this.assets.generator;
+        if (gImg && gImg.complete) {
+          this.ctx.drawImage(gImg, -55, -55, 110, 110);
+        }
+        this.ctx.restore();
+
+        // 4. Render Capacitor
+        this.ctx.save();
+        this.ctx.translate(this.facility.capacitor.x, this.facility.capacitor.y);
+        const capImg = this.assets.capacitor;
+        if (capImg && capImg.complete) {
+          if (this.facility.capacitor.isBurst) {
+            this.ctx.filter = 'grayscale(100%) contrast(160%)';
+          }
+          this.ctx.drawImage(capImg, -26, -26, 52, 52);
+        }
+        this.ctx.restore();
+
+        // 5. Render Burst Particles
+        for (const pt of this.particles) pt.draw(this.ctx);
+      }
+
+      loop() {
+        if (!this.isRunning) return;
+        try {
+          this.update();
+          this.draw();
+          requestAnimationFrame(() => this.loop());
+        } catch (err) {
+          console.error("[FacilitySim] Critical frame drop:", err);
+          this.isRunning = false;
+        }
+      }
+    }
+
+    let Sim;
+    window.addEventListener('DOMContentLoaded', () => {
+      Sim = new FacilitySim();
+      Sim.start();
+    });
+  </script>
+</body>
+</html>

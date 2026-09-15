@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Facility Infrastructure Subsystem - Power & Environmental Sim</title>
+<style>
+  :root {
+    --bg-base: #0a0d13;
+    --panel-bg: #10151f;
+    --border-color: #1e293b;
+    --text-primary: #94a3b8;
+    --text-accent: #38bdf8;
+    --text-warn: #f59e0b;
+    --text-danger: #ef4444;
+    --active-cyan: #00f0ff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font-family: 'Consolas', 'Courier New', monospace;
+    display: grid;
+    grid-template-columns: 340px 1fr 340px;
+    height: 100vh;
+    overflow: hidden;
+  }
+  .panel {
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    padding: 14px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  h2, h3 { color: var(--text-accent); font-size: 0.85rem; letter-spacing: 1px; border-bottom: 1px solid var(--border-color); padding-bottom: 4px; text-transform: uppercase; }
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: #0d1117;
+    border: 1px solid #161b22;
+    padding: 8px;
+    border-radius: 4px;
+  }
+  label { font-size: 0.75rem; display: flex; justify-content: space-between; }
+  input[type="range"] {
+    accent-color: var(--active-cyan);
+    width: 100%;
+    cursor: pointer;
+  }
+  .btn-row { display: flex; gap: 8px; }
+  button {
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #e2e8f0;
+    padding: 6px 10px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    font-family: inherit;
+    border-radius: 2px;
+  }
+  button:hover { background: #334155; border-color: var(--text-accent); }
+  button:active { background: #0f172a; }
+  .telemetry { font-size: 0.75rem; line-height: 1.4; }
+  .telemetry span { color: #f8fafc; font-weight: bold; }
+  #schematic-container {
+    width: 100%;
+    height: 180px;
+    background: #07090e;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+  }
+  #viewport-panel {
+    position: relative;
+    background: #030712;
+    display: flex;
+    flex-direction: column;
+  }
+  #sim-canvas { width: 100%; height: 100%; display: block; }
+  .terminal-log {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 120px;
+    background: rgba(3, 7, 18, 0.85);
+    border-top: 1px solid var(--border-color);
+    padding: 8px 12px;
+    overflow-y: auto;
+    font-size: 0.72rem;
+    color: #64748b;
+  }
+  .terminal-log div.err { color: var(--text-danger); }
+  .terminal-log div.sys { color: var(--text-accent); }
+</style>
+</head>
+<body>
+
+<!-- Left Control & Grid Configuration Panel -->
+<div class="panel">
+  <h2>Primary Grid Control</h2>
+  <div class="control-group">
+    <label>Generator Core Throttle: <span id="val-gen-thr">100%</span></label>
+    <input id="gen-throttle" type="range" min="0" max="100" value="100" />
+    <label>Output Max: <span>120 kW</span></label>
+  </div>
+
+  <div class="control-group">
+    <label>Capacitor Bank Link</label>
+    <div class="btn-row">
+      <button id="btn-toggle-cap">ONLINE</button>
+      <button id="btn-discharge-cap">DUMP CHARGE</button>
+    </div>
+  </div>
+
+  <div class="control-group">
+    <label>Distributor Substation Bus</label>
+    <div class="btn-row">
+      <button id="btn-toggle-dist">BREAKER CLOSED</button>
+    </div>
+  </div>
+
+  <h3>Topology Dispatch</h3>
+  <div class="control-group">
+    <label>Pillars (3-Tier Cluster): <span id="count-pillars">0</span></label>
+    <div class="btn-row">
+      <button id="btn-add-pillar">+ Add Pillar</button>
+      <button id="btn-rem-pillar">- Remove</button>
+    </div>
+  </div>
+
+  <div class="control-group">
+    <label>Cooling Turbines: <span id="count-fans">0</span></label>
+    <div class="btn-row">
+      <button id="btn-add-fan">+ Add Turbine</button>
+      <button id="btn-rem-fan">- Remove</button>
+    </div>
+  </div>
+
+  <h3>Load Modulation</h3>
+  <div class="control-group">
+    <label>Pillar Base Load Draw: <span id="val-pillar-load">12 kW</span></label>
+    <input id="pillar-load-slider" type="range" min="2" max="30" value="12" />
+  </div>
+</div>
+
+<!-- Center Viewport (Facility Canvas & Execution Log) -->
+<div id="viewport-panel">
+  <canvas id="sim-canvas"></canvas>
+  <div class="terminal-log" id="term-log"></div>
+</div>
+
+<!-- Right Diagnostics & Schematic Panel -->
+<div class="panel">
+  <h2>Real-Time Topology Vector</h2>
+  <svg id="schematic-container" viewBox="0 0 320 180">
+    <defs>
+      <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="3" result="glow" />
+        <feComposite in="SourceGraphic" in2="glow" operator="over" />
+      </filter>
+    </defs>
+    <!-- Traces -->
+    <path id="wire-gen-cap" d="M 60 90 L 120 90" stroke="#334155" stroke-width="2" />
+    <path id="wire-cap-dist" d="M 160 90 L 220 90" stroke="#334155" stroke-width="2" />
+    <path id="wire-dist-loads" d="M 260 90 L 300 90" stroke="#334155" stroke-width="2" />
+
+    <!-- Generator Block -->
+    <rect x="20" y="70" width="40" height="40" rx="3" fill="#0f172a" stroke="#0284c7" stroke-width="1.5" />
+    <text x="40" y="94" font-size="9" fill="#00f0ff" text-anchor="middle">GEN</text>
+
+    <!-- Capacitor Block -->
+    <rect id="svg-cap" x="120" y="70" width="40" height="40" rx="3" fill="#0f172a" stroke="#334155" stroke-width="1.5" />
+    <text x="140" y="94" font-size="9" fill="#94a3b8" text-anchor="middle">CAP</text>
+    <rect id="svg-cap-fill" x="122" y="108" width="36" height="0" fill="#00f0ff" opacity="0.4" />
+
+    <!-- Distributor Block -->
+    <rect id="svg-dist" x="220" y="70" width="40" height="40" rx="3" fill="#0f172a" stroke="#334155" stroke-width="1.5" />
+    <text x="240" y="94" font-size="9" fill="#94a3b8" text-anchor="middle">DST</text>
+  </svg>
+
+  <h3>Telemetry Status</h3>
+  <div class="telemetry">
+    Gen Generation: <span id="diag-gen">0.00 kW</span><br>
+    Facility Draw: <span id="diag-load">0.00 kW</span><br>
+    Grid Balance: <span id="diag-balance">0.00 kW</span><br>
+    Buffer Storage: <span id="diag-cap">0.00 / 200 kWh</span><br>
+    Bus Saturation: <span id="diag-ratio">0.0%</span>
+  </div>
+
+  <h3>Component Health Matrix</h3>
+  <div class="telemetry">
+    Capacitor State: <span id="diag-cap-state">DISCONNECTED</span><br>
+    Distributor Breaker: <span id="diag-dist-state">CLOSED</span><br>
+    Grid Phase: <span id="diag-grid-status">STABLE</span>
+  </div>
+</div>
+
+<script>
+/**
+ * SCI-FI FACILITY POWER SIMULATION CORE
+ */
+
+class FacilitySim {
+  constructor() {
+    this.generator = {
+      throttle: 1.0,
+      maxOutputKW: 120.0,
+      active: true,
+      currentOutputKW: 0.0
+    };
+
+    this.capacitor = {
+      connected: true,
+      maxCapacityKWh: 200.0,
+      currentChargeKWh: 80.0,
+      maxDischargeRateKW: 80.0,
+      maxChargeRateKW: 50.0
+    };
+
+    this.distributor = {
+      breakerClosed: true,
+      efficiency: 0.98
+    };
+
+    this.pillars = [];
+    this.fans = [];
+    this.pillarBaseDemand = 12.0; // kW per pillar
+
+    this.metrics = {
+      totalDemandKW: 0.0,
+      suppliedPowerKW: 0.0,
+      saturationRatio: 1.0
+    };
+  }
+
+  addPillar() {
+    this.pillars.push({
+      id: `LP-${Math.floor(100 + Math.random() * 900)}`,
+      lightLevels: [0, 0, 0],
+      currentDrawKW: 0,
+      position: { x: 0, y: 0 }
+    });
+    this.repositionEntities();
+  }
+
+  removePillar() {
+    if (this.pillars.length > 0) {
+      this.pillars.pop();
+      this.repositionEntities();
+    }
+  }
+
+  addFan() {
+    this.fans.push({
+      id: `FN-${Math.floor(100 + Math.random() * 900)}`,
+      rpm: 0,
+      angle: Math.random() * Math.PI * 2,
+      nominalDrawKW: 4.5,
+      actualDrawKW: 0,
+      position: { x: 0, y: 0 }
+    });
+    this.repositionEntities();
+  }
+
+  removeFan() {
+    if (this.fans.length > 0) {
+      this.fans.pop();
+      this.repositionEntities();
+    }
+  }
+
+  repositionEntities() {
+    const width = canvas.width || 800;
+    const height = canvas.height || 600;
+
+    // Distribute pillars across the mid sector
+    const pillarCount = this.pillars.length;
+    for (let i = 0; i < pillarCount; i++) {
+      this.pillars[i].position = {
+        x: (width / (pillarCount + 1)) * (i + 1),
+        y: height * 0.45
+      };
+    }
+
+    // Distribute fans across the top bulkhead
+    const fanCount = this.fans.length;
+    for (let i = 0; i < fanCount; i++) {
+      this.fans[i].position = {
+        x: (width / (fanCount + 1)) * (i + 1),
+        y: height * 0.15
+      };
+    }
+  }
+
+  step(dtSeconds) {
+    // 1. Generation Step
+    this.generator.currentOutputKW = this.generator.active 
+      ? this.generator.maxOutputKW * this.generator.throttle 
+      : 0.0;
+
+    // 2. Load Calculation Step
+    let demandedKW = 0.0;
+    if (this.distributor.breakerClosed) {
+      demandedKW += this.pillars.length * this.pillarBaseDemand;
+      demandedKW += this.fans.length * 4.5;
+    }
+    this.metrics.totalDemandKW = demandedKW;
+
+    // 3. Grid Balance Calculation
+    let availableSourceKW = this.generator.currentOutputKW;
+
+    // Buffer interaction (Capacitor)
+    let netDifferenceKW = availableSourceKW - demandedKW;
+
+    if (this.capacitor.connected) {
+      if (netDifferenceKW > 0) {
+        // Charging
+        const chargePower = Math.min(netDifferenceKW, this.capacitor.maxChargeRateKW);
+        const energyToStore = (chargePower * (dtSeconds / 3600));
+        const spaceLeft = this.capacitor.maxCapacityKWh - this.capacitor.currentChargeKWh;
+        const stored = Math.min(spaceLeft, energyToStore);
+        this.capacitor.currentChargeKWh += stored;
+        availableSourceKW -= (stored / (dtSeconds / 3600));
+      } else if (netDifferenceKW < 0) {
+        // Discharging
+        const neededKW = Math.abs(netDifferenceKW);
+        const dischargeLimit = Math.min(neededKW, this.capacitor.maxDischargeRateKW);
+        const availableFromStorage = this.capacitor.currentChargeKWh / (dtSeconds / 3600);
+        const effectiveDischarge = Math.min(dischargeLimit, availableFromStorage);
+        this.capacitor.currentChargeKWh -= effectiveDischarge * (dtSeconds / 3600);
+        availableSourceKW += effectiveDischarge;
+      }
+    }
+
+    // Power Delivery & Saturation Ratio Calculation
+    if (demandedKW > 0) {
+      this.metrics.saturationRatio = Math.min(1.0, availableSourceKW / demandedKW);
+      this.metrics.suppliedPowerKW = demandedKW * this.metrics.saturationRatio;
+    } else {
+      this.metrics.saturationRatio = 1.0;
+      this.metrics.suppliedPowerKW = 0.0;
+    }
+
+    // 4. Update Consumers dynamically proportional to power delivered
+    const ratio = this.metrics.saturationRatio;
+
+    for (let pillar of this.pillars) {
+      pillar.currentDrawKW = this.distributor.breakerClosed ? this.pillarBaseDemand * ratio : 0;
+      const baseIntensity = this.distributor.breakerClosed ? ratio : 0.0;
+      
+      // Proportional tier illumination: 
+      // Tier 1 fires first, Tier 2 follows past 0.33, Tier 3 past 0.66
+      pillar.lightLevels[0] = Math.min(1.0, baseIntensity / 0.33);
+      pillar.lightLevels[1] = Math.max(0.0, Math.min(1.0, (baseIntensity - 0.33) / 0.33));
+      pillar.lightLevels[2] = Math.max(0.0, Math.min(1.0, (baseIntensity - 0.66) / 0.34));
+    }
+
+    for (let fan of this.fans) {
+      fan.actualDrawKW = this.distributor.breakerClosed ? fan.nominalDrawKW * ratio : 0;
+      fan.rpm = this.distributor.breakerClosed ? ratio * 900 : 0;
+      fan.angle += (fan.rpm / 60) * Math.PI * 2 * dtSeconds;
+    }
+  }
+}
+
+// -------------------------------------------------------------
+// UI & Canvas Rendering Subsystem
+// -------------------------------------------------------------
+const canvas = document.getElementById('sim-canvas');
+const ctx = canvas.getContext('2d');
+const sim = new FacilitySim();
+
+function resizeCanvas() {
+  canvas.width = canvas.parentElement.clientWidth;
+  canvas.height = canvas.parentElement.clientHeight - 120;
+  sim.repositionEntities();
+}
+window.addEventListener('resize', resizeCanvas);
+
+// Controls wiring
+document.getElementById('gen-throttle').addEventListener('input', (e) => {
+  const val = e.target.value;
+  sim.generator.throttle = val / 100;
+  document.getElementById('val-gen-thr').innerText = `${val}%`;
+});
+
+const btnCap = document.getElementById('btn-toggle-cap');
+btnCap.addEventListener('click', () => {
+  sim.capacitor.connected = !sim.capacitor.connected;
+  btnCap.innerText = sim.capacitor.connected ? "ONLINE" : "OFFLINE";
+  btnCap.style.color = sim.capacitor.connected ? "#00f0ff" : "#ef4444";
+  logTerm(`Capacitor bank toggled: ${sim.capacitor.connected ? 'ONLINE' : 'ISOLATED'}`);
+});
+
+document.getElementById('btn-discharge-cap').addEventListener('click', () => {
+  sim.capacitor.currentChargeKWh = 0;
+  logTerm("Emergency Ground Dump completed: Capacitor drained.", "err");
+});
+
+const btnDist = document.getElementById('btn-toggle-dist');
+btnDist.addEventListener('click', () => {
+  sim.distributor.breakerClosed = !sim.distributor.breakerClosed;
+  btnDist.innerText = sim.distributor.breakerClosed ? "BREAKER CLOSED" : "BREAKER OPEN";
+  btnDist.style.color = sim.distributor.breakerClosed ? "#00f0ff" : "#ef4444";
+  logTerm(`Main Bus Interrupter: ${sim.distributor.breakerClosed ? 'CLOSED' : 'OPEN'}`);
+});
+
+document.getElementById('btn-add-pillar').addEventListener('click', () => {
+  sim.addPillar();
+  document.getElementById('count-pillars').innerText = sim.pillars.length;
+  logTerm(`Constructed Light Pillar Unit: ${sim.pillars[sim.pillars.length - 1].id}`);
+});
+
+document.getElementById('btn-rem-pillar').addEventListener('click', () => {
+  if (sim.pillars.length > 0) {
+    const p = sim.pillars.pop();
+    document.getElementById('count-pillars').innerText = sim.pillars.length;
+    logTerm(`Decommissioned Pillar Unit: ${p.id}`);
+  }
+});
+
+document.getElementById('btn-add-fan').addEventListener('click', () => {
+  sim.addFan();
+  document.getElementById('count-fans').innerText = sim.fans.length;
+  logTerm(`Turbine Life-support connected: ${sim.fans[sim.fans.length - 1].id}`);
+});
+
+document.getElementById('btn-rem-fan').addEventListener('click', () => {
+  if (sim.fans.length > 0) {
+    const f = sim.fans.pop();
+    document.getElementById('count-fans').innerText = sim.fans.length;
+    logTerm(`Removed Cooling Turbine: ${f.id}`);
+  }
+});
+
+document.getElementById('pillar-load-slider').addEventListener('input', (e) => {
+  const val = parseFloat(e.target.value);
+  sim.pillarBaseDemand = val;
+  document.getElementById('val-pillar-load').innerText = `${val.toFixed(1)} kW`;
+});
+
+function logTerm(msg, type = "sys") {
+  const c = document.getElementById('term-log');
+  const d = document.createElement('div');
+  d.className = type;
+  d.innerText = `[${new Date().toISOString().substring(11, 19)}] ${msg}`;
+  c.appendChild(d);
+  c.scrollTop = c.scrollHeight;
+}
+
+// -------------------------------------------------------------
+// Renderers (Canvas Sci-Fi Scene & SVG Schematic Synchronizer)
+// -------------------------------------------------------------
+
+function renderCanvas() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Background Grid Blueprint Lines
+  ctx.strokeStyle = '#0b1329';
+  ctx.lineWidth = 1;
+  const gridStep = 40;
+  for (let x = 0; x < canvas.width; x += gridStep) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, canvas.height);
+    ctx.stroke();
+  }
+  for (let y = 0; y < canvas.height; y += gridStep) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(canvas.width, y);
+    ctx.stroke();
+  }
+
+  // Draw Structural Conduit Lines to consumers
+  if (sim.distributor.breakerClosed) {
+    ctx.strokeStyle = `rgba(0, 240, 255, ${0.1 + sim.metrics.saturationRatio * 0.3})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    [...sim.pillars, ...sim.fans].forEach((entity) => {
+      ctx.moveTo(canvas.width * 0.5, canvas.height * 0.95);
+      ctx.lineTo(entity.position.x, entity.position.y + 60);
+    });
+    ctx.stroke();
+  }
+
+  // Draw Fans (Cooling Turbines)
+  sim.fans.forEach((fan) => {
+    ctx.save();
+    ctx.translate(fan.position.x, fan.position.y);
+
+    // Frame
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(-28, -28, 56, 56);
+
+    ctx.beginPath();
+    ctx.arc(0, 0, 24, 0, Math.PI * 2);
+    ctx.strokeStyle = '#475569';
+    ctx.stroke();
+
+    // Blades
+    ctx.rotate(fan.angle);
+    for (let b = 0; b < 4; b++) {
+      ctx.rotate(Math.PI / 2);
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(16, 6);
+      ctx.lineTo(20, 0);
+      ctx.lineTo(16, -6);
+      ctx.fillStyle = sim.metrics.saturationRatio > 0.05 ? '#38bdf8' : '#334155';
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // Fan Tag
+    ctx.fillStyle = '#64748b';
+    ctx.font = '9px monospace';
+    ctx.fillText(`${fan.id} [${Math.round(fan.rpm)} RPM]`, fan.position.x - 36, fan.position.y + 40);
+  });
+
+  // Draw Light Pillars (Each containing 3 light elements)
+  sim.pillars.forEach((pillar) => {
+    const px = pillar.position.x;
+    const py = pillar.position.y;
+
+    // Pillar Chasis
+    ctx.fillStyle = '#0f172a';
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 2;
+    ctx.fillRect(px - 18, py - 60, 36, 120);
+    ctx.strokeRect(px - 18, py - 60, 36, 120);
+
+    // 3 Segmented Light Banks
+    const slotHeights = [-40, -5, 30];
+    for (let l = 0; l < 3; l++) {
+      const ly = py + slotHeights[l];
+      const intensity = pillar.lightLevels[l];
+
+      // Physical emitter block
+      ctx.fillStyle = '#050b14';
+      ctx.fillRect(px - 12, ly - 10, 24, 20);
+
+      // Core illumination
+      ctx.fillStyle = `rgba(0, 240, 255, ${0.1 + intensity * 0.9})`;
+      ctx.fillRect(px - 10, ly - 8, 20, 16);
+
+      // Light Volumetric Glow Aura
+      if (intensity > 0.05) {
+        ctx.save();
+        ctx.shadowColor = '#00f0ff';
+        ctx.shadowBlur = 24 * intensity;
+        ctx.fillStyle = `rgba(186, 247, 255, ${intensity * 0.7})`;
+        ctx.fillRect(px - 8, ly - 6, 16, 12);
+        ctx.restore();
+      }
+    }
+
+    // Telemetry text below pillar
+    ctx.fillStyle = '#64748b';
+    ctx.font = '9px monospace';
+    ctx.fillText(pillar.id, px - 16, py + 75);
+    ctx.fillText(`${pillar.currentDrawKW.toFixed(1)} kW`, px - 18, py + 86);
+  });
+}
+
+function updateSchematicVector() {
+  const capSvg = document.getElementById('svg-cap');
+  const capFill = document.getElementById('svg-cap-fill');
+  const distSvg = document.getElementById('svg-dist');
+  const wireGenCap = document.getElementById('wire-gen-cap');
+  const wireCapDist = document.getElementById('wire-cap-dist');
+  const wireDistLoads = document.getElementById('wire-dist-loads');
+
+  // Generator Link
+  wireGenCap.setAttribute('stroke', sim.generator.active && sim.generator.throttle > 0 ? '#00f0ff' : '#334155');
+
+  // Capacitor Update
+  if (sim.capacitor.connected) {
+    capSvg.setAttribute('stroke', '#00f0ff');
+    const fillPercent = sim.capacitor.currentChargeKWh / sim.capacitor.maxCapacityKWh;
+    capFill.setAttribute('y', 110 - (fillPercent * 38));
+    capFill.setAttribute('height', fillPercent * 38);
+    wireCapDist.setAttribute('stroke', '#00f0ff');
+  } else {
+    capSvg.setAttribute('stroke', '#ef4444');
+    capFill.setAttribute('height', 0);
+    wireCapDist.setAttribute('stroke', '#334155');
+  }
+
+  // Distributor Update
+  if (sim.distributor.breakerClosed) {
+    distSvg.setAttribute('stroke', '#00f0ff');
+    wireDistLoads.setAttribute('stroke', sim.metrics.saturationRatio > 0 ? '#00f0ff' : '#334155');
+  } else {
+    distSvg.setAttribute('stroke', '#ef4444');
+    wireDistLoads.setAttribute('stroke', '#334155');
+  }
+
+  // Right-Panel Diagnostics
+  document.getElementById('diag-gen').innerText = `${sim.generator.currentOutputKW.toFixed(2)} kW`;
+  document.getElementById('diag-load').innerText = `${sim.metrics.totalDemandKW.toFixed(2)} kW`;
+  const balance = sim.generator.currentOutputKW - sim.metrics.totalDemandKW;
+  document.getElementById('diag-balance').innerText = `${balance >= 0 ? '+' : ''}${balance.toFixed(2)} kW`;
+  document.getElementById('diag-cap').innerText = `${sim.capacitor.currentChargeKWh.toFixed(1)} / ${sim.capacitor.maxCapacityKWh} kWh`;
+  document.getElementById('diag-ratio').innerText = `${(sim.metrics.saturationRatio * 100).toFixed(1)}%`;
+  document.getElementById('diag-cap-state').innerText = sim.capacitor.connected ? "ONLINE" : "ISOLATED";
+  document.getElementById('diag-dist-state').innerText = sim.distributor.breakerClosed ? "CLOSED" : "INTERRUPTED";
+
+  const statusLbl = document.getElementById('diag-grid-status');
+  if (sim.metrics.saturationRatio < 0.95 && sim.metrics.totalDemandKW > 0) {
+    statusLbl.innerText = "BROWNOUT / DEFICIT";
+    statusLbl.style.color = "#ef4444";
+  } else {
+    statusLbl.innerText = "NOMINAL";
+    statusLbl.style.color = "#00f0ff";
+  }
+}
+
+// -------------------------------------------------------------
+// Deterministic Tick Loop
+// -------------------------------------------------------------
+let lastTimestamp = performance.now();
+
+function mainLoop(currentTimestamp) {
+  const dt = (currentTimestamp - lastTimestamp) / 1000.0;
+  lastTimestamp = currentTimestamp;
+
+  // Step simulation state
+  sim.step(Math.min(dt, 0.1));
+
+  // Render representations
+  renderCanvas();
+  updateSchematicVector();
+
+  requestAnimationFrame(mainLoop);
+}
+
+// Seed baseline facility loadout
+resizeCanvas();
+sim.addPillar();
+sim.addPillar();
+sim.addFan();
+sim.addFan();
+document.getElementById('count-pillars').innerText = sim.pillars.length;
+document.getElementById('count-fans').innerText = sim.fans.length;
+logTerm("System initialization complete. Facility Substation online.");
+
+requestAnimationFrame(mainLoop);
+</script>
+</body>
+</html>

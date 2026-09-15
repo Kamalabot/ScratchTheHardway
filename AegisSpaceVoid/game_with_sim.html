@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aegis Void - Substation Defense & Capacitor Grid</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body, html { width: 100%; height: 100%; overflow: hidden; background: #020208; font-family: monospace; }
+    
+    #canvas-container { position: absolute; inset: 0; z-index: 1; }
+    canvas { display: block; width: 100%; height: 100%; }
+
+    #bg-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background: radial-gradient(circle at 50% 50%, #070a1e 0%, #010206 100%);
+      overflow: hidden;
+    }
+    .nebula-cloud {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.18;
+    }
+
+    #ui-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 20px 24px;
+      color: #e2e8f0;
+    }
+    .hud-panel { display: flex; justify-content: space-between; align-items: flex-start; }
+    
+    .card {
+      background: rgba(10, 15, 30, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(12px);
+      padding: 12px 16px;
+      border-radius: 6px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+      pointer-events: auto;
+    }
+
+    .hud-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: #64748b; margin-bottom: 4px; }
+    .hud-val { font-size: 18px; font-weight: 700; }
+    .hero-val { color: #38bdf8; }
+    .danger-val { color: #f43f5e; }
+    .warning-val { color: #facc15; }
+    .economy-val { color: #4ade80; }
+
+    /* Store & Facility Control */
+    .btn {
+      background: #1e293b;
+      border: 1px solid #475569;
+      color: #f8fafc;
+      padding: 6px 12px;
+      font-size: 11px;
+      font-family: inherit;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+    .btn:hover:not(:disabled) { background: #334155; border-color: #94a3b8; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    #alert-banner {
+      align-self: center;
+      margin-top: 10px;
+      opacity: 0;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: #facc15;
+      text-transform: uppercase;
+    }
+
+    #game-over-modal {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      background: rgba(2, 2, 8, 0.9);
+      backdrop-filter: blur(10px);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+      color: #f8fafc;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+</head>
+<body>
+  <div id="bg-layer">
+    <div class="nebula-cloud" style="width: 500px; height: 500px; background: #312e81; top: 15%; left: 20%;"></div>
+    <div class="nebula-cloud" style="width: 600px; height: 600px; background: #0e7490; bottom: 10%; right: 15%;"></div>
+  </div>
+
+  <div id="canvas-container">
+    <canvas id="stage"></canvas>
+  </div>
+
+  <div id="ui-layer">
+    <div class="hud-panel">
+      <!-- Player & Depot Status -->
+      <div class="card">
+        <div class="hud-title">Recon Chassis</div>
+        <div id="player-lvl" class="hud-val hero-val">MK I INTERCEPTOR</div>
+        <div style="margin-top: 6px;">
+          <span class="hud-title">Credits:</span>
+          <span id="player-credits" class="hud-val economy-val">0 CR</span>
+        </div>
+        <div style="margin-top: 6px;">
+          <span class="hud-title">Spares:</span>
+          <span id="player-spares" style="color: #cbd5e1; font-weight: bold;">1 CAP</span>
+        </div>
+        <button id="buy-cap-btn" class="btn" onclick="Game.buyCapacitor()">Buy Capacitor (150 CR)</button>
+      </div>
+
+      <div id="alert-banner">SYSTEM ONLINE</div>
+
+      <!-- Substation Energy Status -->
+      <div class="card" style="text-align: right;">
+        <div class="hud-title">Facility Grid Buffer</div>
+        <div id="facility-power" class="hud-val warning-val">100.0%</div>
+        <div id="facility-timer" style="font-size: 11px; color: #94a3b8; margin-top: 2px;">Drain: 0.8 kW/s</div>
+        
+        <div style="margin-top: 8px;">
+          <div class="hud-title">Capacitor State</div>
+          <div id="cap-status" class="hud-val" style="color: #38bdf8;">NOMINAL (0%)</div>
+        </div>
+        <button id="refit-cap-btn" class="btn" style="display: none;" onclick="Game.refitCapacitor()">Refit Spare Bay</button>
+      </div>
+    </div>
+
+    <!-- Instructions Bar -->
+    <div style="font-size: 11px; color: #64748b; letter-spacing: 1px;">
+      [WASD] Pilot &nbsp;|&nbsp; [SPACE/CLICK] Batteries &nbsp;|&nbsp; [R] Refit Burst Capacitor &nbsp;|&nbsp; Lights drain power exponentially
+    </div>
+  </div>
+
+  <div id="game-over-modal">
+    <h1 style="color: #f43f5e; font-size: 38px; margin-bottom: 8px;">FACILITY SYSTEM COLLAPSE</h1>
+    <p id="game-over-stats" style="color: #94a3b8; margin-bottom: 16px;"></p>
+    <button class="btn" style="padding: 10px 24px; font-size: 14px;" onclick="Game.restart()">Reboot Generator Core</button>
+  </div>
+
+  <script>
+    const CUSTOM_SVGS = {
+      hero: { mk1: ``, mk2: ``, mk3: `` },
+      enemy: { tier1: ``, tier2: ``, tier3: `` },
+      facility: { generator: ``, pillar: ``, capacitor: `` }
+    };
+
+    const DEFAULT_SVGS = {
+      hero: {
+        mk1: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+          <path d="M50 6 L66 45 L78 68 L50 60 L22 68 L34 45 Z" fill="#0f172a" stroke="#38bdf8" stroke-width="2.5"/>
+          <ellipse cx="50" cy="34" rx="4" ry="10" fill="#38bdf8"/>
+        </svg>`,
+        mk2: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+          <path d="M50 2 L62 26 L88 64 L72 74 L50 64 L28 74 L12 64 L38 26 Z" fill="#0f172a" stroke="#38bdf8" stroke-width="2.5"/>
+          <rect x="18" y="44" width="4" height="24" fill="#0284c7"/>
+          <rect x="78" y="44" width="4" height="24" fill="#0284c7"/>
+          <ellipse cx="50" cy="30" rx="5" ry="12" fill="#7dd3fc"/>
+        </svg>`,
+        mk3: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+          <polygon points="50,0 66,22 96,46 84,82 50,68 16,82 4,46 34,22" fill="#0b0f19" stroke="#0ea5e9" stroke-width="3"/>
+          <rect x="6" y="32" width="6" height="34" fill="#0284c7" stroke="#38bdf8" stroke-width="1.5"/>
+          <rect x="88" y="32" width="6" height="34" fill="#0284c7" stroke="#38bdf8" stroke-width="1.5"/>
+          <circle cx="50" cy="54" r="6" fill="#f43f5e"/>
+        </svg>`
+      },
+      enemy: {
+        tier1: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+          <polygon points="50,94 18,24 50,44 82,24" fill="#4c0519" stroke="#f43f5e" stroke-width="2.5"/>
+          <circle cx="50" cy="46" r="4" fill="#ffe4e6"/>
+        </svg>`,
+        tier2: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+          <path d="M50 96 L20 48 L6 20 L32 30 L50 14 L68 30 L94 20 L80 48 Z" fill="#2d0612" stroke="#e11d48" stroke-width="3"/>
+          <circle cx="50" cy="46" r="6" fill="#fb7185"/>
+        </svg>`,
+        tier3: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+          <polygon points="50,98 12,68 2,18 24 34 50 8 76 34 98 18 88 68" fill="#1f030a" stroke="#be123c" stroke-width="3.5"/>
+          <circle cx="50" cy="54" r="8" fill="#e11d48"/>
+        </svg>`
+      },
+      facility: {
+        generator: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 140">
+          <rect x="10" y="10" width="120" height="120" rx="10" fill="#0f172a" stroke="#38bdf8" stroke-width="3"/>
+          <circle cx="70" cy="70" r="44" fill="#0284c7" opacity="0.3"/>
+          <circle cx="70" cy="70" r="30" fill="#0369a1" stroke="#7dd3fc" stroke-width="2"/>
+          <line x1="70" y1="26" x2="70" y2="114" stroke="#e0f2fe" stroke-width="2"/>
+          <line x1="26" y1="70" x2="114" y2="70" stroke="#e0f2fe" stroke-width="2"/>
+        </svg>`,
+        pillar: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60">
+          <circle cx="30" cy="30" r="24" fill="#090d16" stroke="#475569" stroke-width="2"/>
+          <circle cx="30" cy="30" r="14" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/>
+          <circle cx="30" cy="30" r="5" fill="#e0f2fe"/>
+        </svg>`,
+        capacitor: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80">
+          <rect x="15" y="10" width="50" height="60" rx="6" fill="#050811" stroke="#facc15" stroke-width="2.5"/>
+          <line x1="30" y1="24" x2="50" y2="24" stroke="#fde047" stroke-width="3"/>
+          <line x1="24" y1="36" x2="56" y2="36" stroke="#fde047" stroke-width="3"/>
+          <line x1="30" y1="48" x2="50" y2="48" stroke="#fde047" stroke-width="3"/>
+        </svg>`
+      }
+    };
+
+    class AssetLoader {
+      static parseSvg(rawStr) {
+        try {
+          if (!rawStr || !rawStr.trim()) throw new Error("Blank SVG payload.");
+          const blob = new Blob([rawStr], { type: 'image/svg+xml;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const img = new Image();
+          img.src = url;
+          return img;
+        } catch (e) {
+          console.error("[AssetLoader] Parse failed:", e);
+          return null;
+        }
+      }
+
+      static load() {
+        console.log("[AssetLoader] Generating SVG cache...");
+        const assets = { hero: {}, enemy: {}, facility: {} };
+        ['mk1', 'mk2', 'mk3'].forEach(k => assets.hero[k] = this.parseSvg(CUSTOM_SVGS.hero[k] || DEFAULT_SVGS.hero[k]));
+        ['tier1', 'tier2', 'tier3'].forEach(k => assets.enemy[k] = this.parseSvg(CUSTOM_SVGS.enemy[k] || DEFAULT_SVGS.enemy[k]));
+        ['generator', 'pillar', 'capacitor'].forEach(k => assets.facility[k] = this.parseSvg(CUSTOM_SVGS.facility[k] || DEFAULT_SVGS.facility[k]));
+        return assets;
+      }
+    }
+
+    class Projectile {
+      constructor(x, y, angle, speed = 15) {
+        this.x = x;
+        this.y = y;
+        this.vx = Math.cos(angle - Math.PI / 2) * speed;
+        this.vy = Math.sin(angle - Math.PI / 2) * speed;
+        this.angle = angle;
+        this.radius = 3;
+        this.lifetime = 80;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.lifetime--;
+      }
+      draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle);
+        ctx.fillStyle = '#38bdf8';
+        ctx.shadowColor = '#0ea5e9';
+        ctx.shadowBlur = 6;
+        ctx.fillRect(-2, -6, 4, 12);
+        ctx.restore();
+      }
+    }
+
+    class Particle {
+      constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.radius = Math.random() * 2 + 1;
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 3 + 1;
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed;
+        this.alpha = 1;
+        this.decay = Math.random() * 0.03 + 0.02;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.alpha -= this.decay;
+      }
+      draw(ctx) {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, this.alpha);
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    class GameEngine {
+      constructor() {
+        console.log("[GameEngine] Initializing Aegis Grid Simulation...");
+        this.canvas = document.getElementById('stage');
+        this.ctx = this.canvas.getContext('2d');
+        this.assets = AssetLoader.load();
+
+        this.input = { up: false, down: false, left: false, right: false, mouseX: 0, mouseY: 0, fire: false };
+        this.projectiles = [];
+        this.enemies = [];
+        this.particles = [];
+
+        this.player = {
+          x: 0, y: 0, vx: 0, vy: 0,
+          speed: 0.65, friction: 0.91,
+          radius: 22, angle: 0, xp: 0,
+          level: 1, fireCooldown: 0, credits: 0, spares: 1
+        };
+
+        // Facility Infrastructure Models
+        this.facility = {
+          power: 100.0,
+          maxPower: 100.0,
+          baseDrainRate: 0.015, // Real-time drain per frame
+          pillars: [],
+          generator: { x: 0, y: 0, radius: 45, rotation: 0 },
+          capacitor: {
+            x: 0, y: 0, radius: 24,
+            load: 0, maxLoad: 100,
+            isBurst: false
+          }
+        };
+
+        this.wave = 1;
+        this.spawnTimer = 0;
+        this.isRunning = false;
+
+        this.initCanvasSize();
+        this.initGridPositions();
+        this.initEvents();
+        this.initBackgroundTween();
+      }
+
+      initBackgroundTween() {
+        try {
+          gsap.to('.nebula-cloud', {
+            x: 'random(-60, 60)',
+            y: 'random(-60, 60)',
+            scale: 'random(0.85, 1.15)',
+            duration: 9,
+            repeat: -1,
+            yoyo: true,
+            ease: 'sine.inOut'
+          });
+        } catch (e) {
+          console.error("[GameEngine] GSAP failed:", e);
+        }
+      }
+
+      initCanvasSize() {
+        this.width = window.innerWidth;
+        this.height = window.innerHeight;
+        this.canvas.width = this.width;
+        this.canvas.height = this.height;
+      }
+
+      initGridPositions() {
+        // Center Generator Room
+        this.facility.generator.x = this.width / 2;
+        this.facility.generator.y = this.height / 2;
+
+        // Capacitor bay offset to the generator core
+        this.facility.capacitor.x = this.facility.generator.x;
+        this.facility.capacitor.y = this.facility.generator.y + 70;
+
+        // Defensive Pillars & Perimeter Lamps
+        this.facility.pillars = [
+          { x: this.width * 0.25, y: this.height * 0.25, intensity: 1.0 },
+          { x: this.width * 0.75, y: this.height * 0.25, intensity: 1.0 },
+          { x: this.width * 0.25, y: this.height * 0.75, intensity: 1.0 },
+          { x: this.width * 0.75, y: this.height * 0.75, intensity: 1.0 }
+        ];
+
+        if (this.player.x === 0 && this.player.y === 0) {
+          this.player.x = this.width / 2;
+          this.player.y = this.height * 0.82;
+        }
+      }
+
+      initEvents() {
+        window.addEventListener('resize', () => {
+          this.initCanvasSize();
+          this.initGridPositions();
+        });
+
+        window.addEventListener('keydown', (e) => {
+          if (e.code === 'KeyW' || e.code === 'ArrowUp') this.input.up = true;
+          if (e.code === 'KeyS' || e.code === 'ArrowDown') this.input.down = true;
+          if (e.code === 'KeyA' || e.code === 'ArrowLeft') this.input.left = true;
+          if (e.code === 'KeyD' || e.code === 'ArrowRight') this.input.right = true;
+          if (e.code === 'Space') { this.input.fire = true; e.preventDefault(); }
+          if (e.code === 'KeyR') this.refitCapacitor();
+        });
+
+        window.addEventListener('keyup', (e) => {
+          if (e.code === 'KeyW' || e.code === 'ArrowUp') this.input.up = false;
+          if (e.code === 'KeyS' || e.code === 'ArrowDown') this.input.down = false;
+          if (e.code === 'KeyA' || e.code === 'ArrowLeft') this.input.left = false;
+          if (e.code === 'KeyD' || e.code === 'ArrowRight') this.input.right = false;
+          if (e.code === 'Space') this.input.fire = false;
+        });
+
+        window.addEventListener('mousemove', (e) => {
+          this.input.mouseX = e.clientX;
+          this.input.mouseY = e.clientY;
+        });
+        window.addEventListener('mousedown', (e) => { if (e.button === 0) this.input.fire = true; });
+        window.addEventListener('mouseup', (e) => { if (e.button === 0) this.input.fire = false; });
+      }
+
+      start() {
+        console.log("[GameEngine] Facility Generator online.");
+        this.isRunning = true;
+        document.getElementById('game-over-modal').style.display = 'none';
+        this.loop();
+      }
+
+      restart() {
+        console.log("[GameEngine] Total reboot executed.");
+        this.player.x = this.width / 2;
+        this.player.y = this.height * 0.82;
+        this.player.vx = 0;
+        this.player.vy = 0;
+        this.player.xp = 0;
+        this.player.level = 1;
+        this.player.credits = 0;
+        this.player.spares = 1;
+        this.facility.power = 100.0;
+        this.facility.capacitor.load = 0;
+        this.facility.capacitor.isBurst = false;
+        this.wave = 1;
+        this.enemies = [];
+        this.projectiles = [];
+        this.particles = [];
+        this.updateHUD();
+        this.start();
+      }
+
+      triggerBanner(txt) {
+        const b = document.getElementById('alert-banner');
+        b.innerText = txt;
+        gsap.killTweensOf(b);
+        gsap.fromTo(b, { opacity: 0, y: -6 }, { opacity: 1, y: 0, duration: 0.25, yoyo: true, repeat: 1 });
+      }
+
+      buyCapacitor() {
+        if (this.player.credits >= 150) {
+          this.player.credits -= 150;
+          this.player.spares++;
+          console.log(`[Store] Purchased replacement capacitor. Current inventory: ${this.player.spares}`);
+          this.triggerBanner("Capacitor Purchased");
+          this.updateHUD();
+        }
+      }
+
+      refitCapacitor() {
+        if (!this.facility.capacitor.isBurst) return;
+        if (this.player.spares > 0) {
+          this.player.spares--;
+          this.facility.capacitor.isBurst = false;
+          this.facility.capacitor.load = 0;
+          console.log("[Facility] Replacement capacitor fitted into array bay.");
+          this.triggerBanner("Capacitor Refitted");
+          this.updateHUD();
+        } else {
+          this.triggerBanner("No Spares in Depot!");
+        }
+      }
+
+      triggerCapacitorBurst() {
+        this.facility.capacitor.isBurst = true;
+        this.facility.capacitor.load = 100;
+        console.warn("[Facility] Surge threshold surpassed! Capacitor ruptured.");
+        this.triggerBanner("WARNING: CAPACITOR BURST!");
+
+        // Discharge particles
+        for (let i = 0; i < 35; i++) {
+          this.particles.push(new Particle(this.facility.capacitor.x, this.facility.capacitor.y, '#facc15'));
+          this.particles.push(new Particle(this.facility.capacitor.x, this.facility.capacitor.y, '#f43f5e'));
+        }
+      }
+
+      updateHUD() {
+        const lvlMap = { 1: 'MK I RECON', 2: 'MK II GUNSHIP', 3: 'MK III BATTLECRUISER' };
+        document.getElementById('player-lvl').innerText = lvlMap[this.player.level];
+        document.getElementById('player-credits').innerText = `${this.player.credits} CR`;
+        document.getElementById('player-spares').innerText = `${this.player.spares} CAP`;
+        
+        const buyBtn = document.getElementById('buy-cap-btn');
+        buyBtn.disabled = this.player.credits < 150;
+
+        const pEl = document.getElementById('facility-power');
+        pEl.innerText = `${Math.max(0, this.facility.power).toFixed(1)}%`;
+        pEl.className = `hud-val ${this.facility.power < 25 ? 'danger-val' : (this.facility.power < 50 ? 'warning-val' : 'hero-val')}`;
+
+        const capStatusEl = document.getElementById('cap-status');
+        const refitBtn = document.getElementById('refit-cap-btn');
+        if (this.facility.capacitor.isBurst) {
+          capStatusEl.innerText = 'BURST / OFFLINE';
+          capStatusEl.className = 'hud-val danger-val';
+          refitBtn.style.display = 'inline-block';
+        } else {
+          capStatusEl.innerText = `BUFFER: ${Math.floor(this.facility.capacitor.load)}%`;
+          capStatusEl.className = 'hud-val hero-val';
+          refitBtn.style.display = 'none';
+        }
+
+        // Active Drain Calculation Display
+        const activeLights = this.facility.pillars.length;
+        const currentDrainKw = (this.facility.baseDrainRate * 60 * (1 + (this.facility.capacitor.isBurst ? 1.5 : 0))).toFixed(1);
+        document.getElementById('facility-timer').innerText = `Drain: ${currentDrainKw} kW/s (${activeLights} Pillars Active)`;
+      }
+
+      spawnEnemy() {
+        const x = Math.random() * (this.width - 80) + 40;
+        let tier = 1;
+        if (this.wave >= 2 && Math.random() > 0.5) tier = 2;
+        if (this.wave >= 3 && Math.random() > 0.65) tier = 3;
+
+        this.enemies.push({
+          x, y: -40, tier,
+          hp: tier === 1 ? 2 : (tier === 2 ? 6 : 12),
+          maxHp: tier === 1 ? 2 : (tier === 2 ? 6 : 12),
+          speed: (tier === 1 ? 2.2 : (tier === 2 ? 1.6 : 1.1)),
+          radius: tier === 1 ? 18 : (tier === 2 ? 26 : 34),
+          angle: 0
+        });
+      }
+
+      gameOver(reason = "FACILITY SHUTDOWN") {
+        console.warn(`[GameEngine] Terminal state reached: ${reason}`);
+        this.isRunning = false;
+        document.getElementById('game-over-stats').innerText = `${reason} | Hull Frame: MK ${this.player.level}`;
+        document.getElementById('game-over-modal').style.display = 'flex';
+      }
+
+      update() {
+        // Facility Power Drain Over Time
+        let drainMultiplier = 1.0;
+        if (this.facility.capacitor.isBurst) {
+          drainMultiplier = 2.5; // Grid leaks power rapidly without buffer capacitor
+        }
+        this.facility.power -= this.facility.baseDrainRate * drainMultiplier;
+        if (this.facility.power <= 0) {
+          this.facility.power = 0;
+          this.gameOver("MAIN GENERATOR GRID DRAINED");
+          return;
+        }
+
+        // Generator rotation
+        this.facility.generator.rotation += this.facility.capacitor.isBurst ? 0.005 : 0.02;
+
+        // Capacitor Load Dynamics (High grid stress increases load)
+        if (!this.facility.capacitor.isBurst) {
+          if (this.enemies.length > 2) {
+            this.facility.capacitor.load += 0.06 * this.enemies.length;
+          } else {
+            this.facility.capacitor.load = Math.max(0, this.facility.capacitor.load - 0.04);
+          }
+
+          if (this.facility.capacitor.load >= this.facility.capacitor.maxLoad) {
+            this.triggerCapacitorBurst();
+          }
+        }
+
+        // Player Dynamics
+        if (this.input.up) this.player.vy -= this.player.speed;
+        if (this.input.down) this.player.vy += this.player.speed;
+        if (this.input.left) this.player.vx -= this.player.speed;
+        if (this.input.right) this.player.vx += this.player.speed;
+
+        this.player.vx *= this.player.friction;
+        this.player.vy *= this.player.friction;
+        this.player.x += this.player.vx;
+        this.player.y += this.player.vy;
+
+        // Boundaries
+        this.player.x = Math.max(this.player.radius, Math.min(this.width - this.player.radius, this.player.x));
+        this.player.y = Math.max(this.player.radius, Math.min(this.height - this.player.radius, this.player.y));
+
+        // Heading angle
+        const targetAngle = Math.atan2(this.input.mouseY - this.player.y, this.input.mouseX - this.player.x) + Math.PI / 2;
+        let diff = targetAngle - this.player.angle;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        this.player.angle += diff * 0.16;
+
+        // Weapons Discharge
+        if (this.player.fireCooldown > 0) this.player.fireCooldown--;
+        if (this.input.fire && this.player.fireCooldown <= 0) {
+          const forward = this.player.angle;
+          if (this.player.level === 1) {
+            this.projectiles.push(new Projectile(this.player.x, this.player.y, forward));
+            this.player.fireCooldown = 12;
+          } else if (this.player.level === 2) {
+            const offX = Math.cos(forward) * 12;
+            const offY = Math.sin(forward) * 12;
+            this.projectiles.push(new Projectile(this.player.x + offX, this.player.y + offY, forward));
+            this.projectiles.push(new Projectile(this.player.x - offX, this.player.y - offY, forward));
+            this.player.fireCooldown = 10;
+          } else {
+            this.projectiles.push(new Projectile(this.player.x, this.player.y, forward));
+            this.projectiles.push(new Projectile(this.player.x, this.player.y, forward - 0.15));
+            this.projectiles.push(new Projectile(this.player.x, this.player.y, forward + 0.15));
+            this.player.fireCooldown = 8;
+          }
+        }
+
+        // Projectiles update
+        for (let pi = this.projectiles.length - 1; pi >= 0; pi--) {
+          const p = this.projectiles[pi];
+          p.update();
+          if (p.lifetime <= 0 || p.x < 0 || p.x > this.width || p.y < 0 || p.y > this.height) {
+            this.projectiles.splice(pi, 1);
+            continue;
+          }
+
+          // Enemy Impact
+          for (let ei = this.enemies.length - 1; ei >= 0; ei--) {
+            const e = this.enemies[ei];
+            const dist = Math.hypot(p.x - e.x, p.y - e.y);
+            if (dist < e.radius + p.radius) {
+              e.hp--;
+              this.projectiles.splice(pi, 1);
+              for (let k = 0; k < 3; k++) this.particles.push(new Particle(p.x, p.y, '#38bdf8'));
+
+              if (e.hp <= 0) {
+                for (let k = 0; k < 14; k++) this.particles.push(new Particle(e.x, e.y, '#f43f5e'));
+                const bounty = e.tier * 35;
+                this.player.credits += bounty;
+                this.player.xp += e.tier * 25;
+                this.enemies.splice(ei, 1);
+
+                // Check Vessel Evolution
+                if (this.player.level === 1 && this.player.xp >= 100) {
+                  this.player.level = 2;
+                  this.triggerBanner("VESSEL UPGRADED: MK II GUNSHIP");
+                } else if (this.player.level === 2 && this.player.xp >= 260) {
+                  this.player.level = 3;
+                  this.triggerBanner("VESSEL UPGRADED: MK III BATTLECRUISER");
+                }
+              }
+              break;
+            }
+          }
+        }
+
+        // Hostile Incursions
+        this.spawnTimer++;
+        if (this.spawnTimer >= 90) {
+          this.spawnEnemy();
+          this.spawnTimer = 0;
+        }
+
+        for (let ei = this.enemies.length - 1; ei >= 0; ei--) {
+          const e = this.enemies[ei];
+          
+          // Target priority: Closest entity between Generator core and player
+          const target = (Math.hypot(this.player.x - e.x, this.player.y - e.y) < 220) 
+            ? this.player 
+            : this.facility.generator;
+
+          const dx = target.x - e.x;
+          const dy = target.y - e.y;
+          const dist = Math.hypot(dx, dy);
+
+          e.x += (dx / dist) * e.speed;
+          e.y += (dy / dist) * e.speed;
+          e.angle = Math.atan2(dy, dx) - Math.PI / 2;
+
+          // Crash into player
+          if (Math.hypot(this.player.x - e.x, this.player.y - e.y) < this.player.radius + e.radius) {
+            this.gameOver("VESSEL COMPROMISED BY HOSTILE RAM");
+            return;
+          }
+
+          // Incursion on Central Generator
+          if (Math.hypot(this.facility.generator.x - e.x, this.facility.generator.y - e.y) < this.facility.generator.radius + e.radius) {
+            this.facility.power -= 8.0;
+            for (let k = 0; k < 12; k++) this.particles.push(new Particle(e.x, e.y, '#f43f5e'));
+            this.enemies.splice(ei, 1);
+          }
+        }
+
+        // Update Particle Array
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+          const pt = this.particles[i];
+          pt.update();
+          if (pt.alpha <= 0) this.particles.splice(i, 1);
+        }
+
+        this.updateHUD();
+      }
+
+      draw() {
+        this.ctx.clearRect(0, 0, this.width, this.height);
+
+        // 1. Draw Pillar Lights and Illuminance Fields
+        for (const pil of this.facility.pillars) {
+          const alpha = this.facility.capacitor.isBurst ? 0.08 : 0.22;
+          const grad = this.ctx.createRadialGradient(pil.x, pil.y, 10, pil.x, pil.y, 180);
+          grad.addColorStop(0, `rgba(56, 189, 248, ${alpha})`);
+          grad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+          
+          this.ctx.fillStyle = grad;
+          this.ctx.beginPath();
+          this.ctx.arc(pil.x, pil.y, 180, 0, Math.PI * 2);
+          this.ctx.fill();
+
+          // Render Pillar SVG
+          const pImg = this.assets.facility.pillar;
+          if (pImg && pImg.complete) {
+            this.ctx.drawImage(pImg, pil.x - 24, pil.y - 24, 48, 48);
+          }
+        }
+
+        // 2. Draw Central Facility Generator
+        this.ctx.save();
+        this.ctx.translate(this.facility.generator.x, this.facility.generator.y);
+        this.ctx.rotate(this.facility.generator.rotation);
+        const gImg = this.assets.facility.generator;
+        if (gImg && gImg.complete) {
+          this.ctx.drawImage(gImg, -45, -45, 90, 90);
+        }
+        this.ctx.restore();
+
+        // 3. Draw Buffer Capacitor Subsystem
+        this.ctx.save();
+        this.ctx.translate(this.facility.capacitor.x, this.facility.capacitor.y);
+        const capImg = this.assets.facility.capacitor;
+        if (capImg && capImg.complete) {
+          if (this.facility.capacitor.isBurst) {
+            // Visual distortion during rupture
+            this.ctx.filter = 'grayscale(100%) contrast(150%)';
+          }
+          this.ctx.drawImage(capImg, -20, -20, 40, 40);
+        }
+        this.ctx.restore();
+
+        // 4. Draw Projectiles
+        for (const p of this.projectiles) p.draw(this.ctx);
+
+        // 5. Draw Hostile Ships
+        for (const e of this.enemies) {
+          this.ctx.save();
+          this.ctx.translate(e.x, e.y);
+          this.ctx.rotate(e.angle);
+          const eImg = this.assets.enemy[`tier${e.tier}`];
+          const sz = e.radius * 2.2;
+          if (eImg && eImg.complete) {
+            this.ctx.drawImage(eImg, -sz / 2, -sz / 2, sz, sz);
+          }
+          this.ctx.restore();
+        }
+
+        // 6. Draw Player Rocket
+        this.ctx.save();
+        this.ctx.translate(this.player.x, this.player.y);
+        this.ctx.rotate(this.player.angle);
+        const hImg = this.assets.hero[`mk${this.player.level}`];
+        const hsz = 48 + this.player.level * 6;
+        if (hImg && hImg.complete) {
+          this.ctx.drawImage(hImg, -hsz / 2, -hsz / 2, hsz, hsz);
+        }
+        this.ctx.restore();
+
+        // 7. Draw Field Particles
+        for (const pt of this.particles) pt.draw(this.ctx);
+      }
+
+      loop() {
+        if (!this.isRunning) return;
+        try {
+          this.update();
+          this.draw();
+          requestAnimationFrame(() => this.loop());
+        } catch (err) {
+          console.error("[GameEngine] Critical loop drop:", err);
+          this.isRunning = false;
+        }
+      }
+    }
+
+    let Game;
+    window.addEventListener('DOMContentLoaded', () => {
+      Game = new GameEngine();
+      Game.start();
+    });
+  </script>
+</body>
+</html>

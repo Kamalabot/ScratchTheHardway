@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aegis Void - Vector Recon & Destruction</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body, html { width: 100%; height: 100%; overflow: hidden; background: #03030c; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; }
+    #canvas-container { position: absolute; inset: 0; z-index: 1; }
+    canvas { display: block; width: 100%; height: 100%; }
+    #bg-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background: radial-gradient(circle at 50% 50%, #0c1228 0%, #03030d 100%);
+      overflow: hidden;
+    }
+    .nebula-cloud {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(90px);
+      opacity: 0.22;
+    }
+    #ui-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 24px 32px;
+      color: #e2e8f0;
+    }
+    .hud-panel { display: flex; justify-content: space-between; align-items: flex-start; }
+    .card {
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(12px);
+      padding: 12px 18px;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+    .hud-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: #94a3b8; margin-bottom: 2px; }
+    .hud-val { font-size: 22px; font-weight: 700; font-family: monospace; }
+    .hero-val { color: #38bdf8; text-shadow: 0 0 10px rgba(56, 189, 248, 0.5); }
+    .danger-val { color: #f43f5e; text-shadow: 0 0 10px rgba(244, 63, 94, 0.5); }
+    #alert-banner {
+      align-self: center;
+      margin-top: 10px;
+      opacity: 0;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: #facc15;
+      text-shadow: 0 0 16px rgba(250, 204, 21, 0.7);
+      text-transform: uppercase;
+    }
+    #game-over-modal {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      background: rgba(3, 3, 12, 0.88);
+      backdrop-filter: blur(8px);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+    }
+    #game-over-modal h1 { font-size: 42px; color: #f43f5e; margin-bottom: 8px; font-weight: 800; }
+    #restart-btn {
+      margin-top: 16px;
+      padding: 12px 28px;
+      font-size: 15px;
+      font-weight: 700;
+      border: none;
+      border-radius: 6px;
+      background: #38bdf8;
+      color: #03030c;
+      cursor: pointer;
+    }
+    #restart-btn:hover { background: #7dd3fc; }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+</head>
+<body>
+  <div id="bg-layer">
+    <div class="nebula-cloud" style="width: 500px; height: 500px; background: #4f46e5; top: 10%; left: 15%;"></div>
+    <div class="nebula-cloud" style="width: 600px; height: 600px; background: #06b6d4; bottom: 5%; right: 10%;"></div>
+  </div>
+
+  <div id="canvas-container">
+    <canvas id="stage"></canvas>
+  </div>
+
+  <div id="ui-layer">
+    <div class="hud-panel">
+      <div class="card">
+        <div class="hud-title">Vessel Frame</div>
+        <div id="player-lvl" class="hud-val hero-val">MK I RECON</div>
+        <div id="player-score" style="font-size: 12px; color: #94a3b8; margin-top: 4px;">XP: 0 / 120</div>
+      </div>
+      <div id="alert-banner">Hull Upgraded</div>
+      <div class="card" style="text-align: right;">
+        <div class="hud-title">Hostile Incursion</div>
+        <div id="wave-lvl" class="hud-val danger-val">TIER 1</div>
+        <div id="kills-counter" style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Kills: 0</div>
+      </div>
+    </div>
+    <div style="font-size: 12px; color: #64748b;">
+      [WASD] Thrusters &nbsp;|&nbsp; [SPACE / LEFT CLICK] Battery Fire &nbsp;|&nbsp; [MOUSE] Orientation
+    </div>
+  </div>
+
+  <div id="game-over-modal">
+    <h1>VESSEL COMPROMISED</h1>
+    <p id="game-over-stats" style="color: #94a3b8; font-size: 16px; margin-bottom: 8px;"></p>
+    <button id="restart-btn" onclick="Game.restart()">Re-initialize Frame</button>
+  </div>
+
+  <script>
+    const CUSTOM_SVGS = {
+      hero: { mk1: ``, mk2: ``, mk3: `` },
+      enemy: { tier1: ``, tier2: ``, tier3: `` }
+    };
+
+    const DEFAULT_SVGS = {
+      hero: {
+        // MK I: Light Interceptor with twin atmospheric wings and primary plasma spire
+        mk1: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+          <defs>
+            <linearGradient id="h1_hull" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#1e293b"/><stop offset="50%" stop-color="#0f172a"/><stop offset="100%" stop-color="#0284c7"/>
+            </linearGradient>
+            <linearGradient id="h1_glow" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#0284c7"/>
+            </linearGradient>
+          </defs>
+          <path d="M50 4 L64 42 L78 68 L50 60 L22 68 L36 42 Z" fill="url(#h1_hull)" stroke="#38bdf8" stroke-width="2"/>
+          <polygon points="50,14 42,48 50,44 58,48" fill="#0369a1" stroke="#7dd3fc" stroke-width="1"/>
+          <ellipse cx="50" cy="34" rx="4" ry="10" fill="#e0f2fe" opacity="0.9"/>
+          <rect x="30" y="66" width="6" height="8" rx="2" fill="#0284c7" stroke="#38bdf8" stroke-width="1"/>
+          <rect x="64" y="66" width="6" height="8" rx="2" fill="#0284c7" stroke="#38bdf8" stroke-width="1"/>
+          <path d="M48 64 L52 64 L50 78 Z" fill="#38bdf8" opacity="0.8"/>
+        </svg>`,
+
+        // MK II: Reinforced Gunship with forward canards and wing-mounted autocannons
+        mk2: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+          <defs>
+            <linearGradient id="h2_hull" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#334155"/><stop offset="50%" stop-color="#0f172a"/><stop offset="100%" stop-color="#0284c7"/>
+            </linearGradient>
+          </defs>
+          <path d="M50 2 L62 26 L88 64 L72 74 L50 64 L28 74 L12 64 L38 26 Z" fill="url(#h2_hull)" stroke="#38bdf8" stroke-width="2"/>
+          <polygon points="50,22 36,46 50,42 64,46" fill="#0284c7" stroke="#bae6fd" stroke-width="1"/>
+          <rect x="18" y="44" width="4" height="26" rx="1" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>
+          <rect x="78" y="44" width="4" height="26" rx="1" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>
+          <ellipse cx="50" cy="30" rx="5" ry="12" fill="#bae6fd"/>
+          <path d="M42 66 L46 78 L38 78 Z" fill="#0ea5e9"/>
+          <path d="M58 66 L62 78 L54 78 Z" fill="#0ea5e9"/>
+        </svg>`,
+
+        // MK III: Dreadnought Rebuild with outrigger warp pods and broadside railgun spires
+        mk3: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+          <defs>
+            <linearGradient id="h3_hull" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#475569"/><stop offset="40%" stop-color="#1e1b4b"/><stop offset="100%" stop-color="#0369a1"/>
+            </linearGradient>
+          </defs>
+          <polygon points="50,0 66,22 96 46 84 82 50 68 16 82 4 46 34 22" fill="url(#h3_hull)" stroke="#0ea5e9" stroke-width="2.5"/>
+          <polygon points="50,14 32,54 50,48 68,54" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>
+          <rect x="6" y="32" width="6" height="34" rx="2" fill="#0284c7" stroke="#7dd3fc" stroke-width="1.5"/>
+          <rect x="88" y="32" width="6" height="34" rx="2" fill="#0284c7" stroke="#7dd3fc" stroke-width="1.5"/>
+          <ellipse cx="50" cy="28" rx="6" ry="14" fill="#e0f2fe"/>
+          <circle cx="50" cy="54" r="6" fill="#f43f5e" stroke="#fda4af" stroke-width="1.5"/>
+          <rect x="36" y="70" width="8" height="12" rx="1" fill="#0284c7"/>
+          <rect x="56" y="70" width="8" height="12" rx="1" fill="#0284c7"/>
+        </svg>`
+      },
+      enemy: {
+        // Tier 1: Razor Drone
+        tier1: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+          <polygon points="50,96 14,24 50,44 86,24" fill="#4c0519" stroke="#f43f5e" stroke-width="3"/>
+          <polygon points="50,68 34,36 50,48 66,36" fill="#881337" stroke="#fb7185" stroke-width="1.5"/>
+          <circle cx="50" cy="50" r="5" fill="#ffe4e6"/>
+          <line x1="28" y1="26" x2="20" y2="8" stroke="#f43f5e" stroke-width="2" stroke-linecap="round"/>
+          <line x1="72" y1="26" x2="80" y2="8" stroke="#f43f5e" stroke-width="2" stroke-linecap="round"/>
+        </svg>`,
+
+        // Tier 2: Heavy Crimson Corvette
+        tier2: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+          <path d="M50 96 L20 48 L6 20 L32 30 L50 14 L68 30 L94 20 L80 48 Z" fill="#3f0713" stroke="#e11d48" stroke-width="2.5"/>
+          <polygon points="50,78 30,42 50,54 70,42" fill="#881337" stroke="#fda4af" stroke-width="1.5"/>
+          <rect x="18" y="24" width="4" height="22" rx="1" fill="#9f1239" stroke="#f43f5e" stroke-width="1.5"/>
+          <rect x="78" y="24" width="4" height="22" rx="1" fill="#9f1239" stroke="#f43f5e" stroke-width="1.5"/>
+          <circle cx="50" cy="46" r="6" fill="#fb7185"/>
+        </svg>`,
+
+        // Tier 3: Rebuilt Siege Dreadnought with armored mandates
+        tier3: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+          <polygon points="50,98 12,68 2,18 24 34 50 8 76 34 98 18 88 68" fill="#26040d" stroke="#be123c" stroke-width="3"/>
+          <polygon points="50,80 24,52 38 40 50,46 62 40 76 52" fill="#4c0519" stroke="#f43f5e" stroke-width="2"/>
+          <rect x="18" y="16" width="6" height="34" rx="2" fill="#881337" stroke="#fb7185" stroke-width="1.5"/>
+          <rect x="76" y="16" width="6" height="34" rx="2" fill="#881337" stroke="#fb7185" stroke-width="1.5"/>
+          <circle cx="50" cy="56" r="8" fill="#e11d48" stroke="#ffe4e6" stroke-width="2"/>
+          <line x1="36" y1="72" x2="16" y2="88" stroke="#f43f5e" stroke-width="2.5"/>
+          <line x1="64" y1="72" x2="84" y2="88" stroke="#f43f5e" stroke-width="2.5"/>
+        </svg>`
+      }
+    };
+
+    class AssetLoader {
+      static parseSvg(rawStr) {
+        try {
+          if (!rawStr || !rawStr.trim()) throw new Error("Empty SVG string");
+          const blob = new Blob([rawStr], { type: 'image/svg+xml;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const img = new Image();
+          img.src = url;
+          return img;
+        } catch (err) {
+          console.error("[AssetLoader] Error parsing SVG:", err);
+          return null;
+        }
+      }
+
+      static getAssets() {
+        console.log("[AssetLoader] Compiling procedural SVG hulls...");
+        const assets = { hero: {}, enemy: {} };
+        ['mk1', 'mk2', 'mk3'].forEach(k => {
+          assets.hero[k] = this.parseSvg(CUSTOM_SVGS.hero[k] || DEFAULT_SVGS.hero[k]);
+        });
+        ['tier1', 'tier2', 'tier3'].forEach(k => {
+          assets.enemy[k] = this.parseSvg(CUSTOM_SVGS.enemy[k] || DEFAULT_SVGS.enemy[k]);
+        });
+        return assets;
+      }
+    }
+
+    class Projectile {
+      constructor(x, y, angle, speed = 14, color = '#38bdf8') {
+        this.x = x;
+        this.y = y;
+        this.angle = angle;
+        this.vx = Math.cos(angle - Math.PI / 2) * speed;
+        this.vy = Math.sin(angle - Math.PI / 2) * speed;
+        this.color = color;
+        this.radius = 3;
+        this.lifetime = 90;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.lifetime--;
+      }
+      draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle);
+        ctx.fillStyle = this.color;
+        ctx.shadowColor = this.color;
+        ctx.shadowBlur = 8;
+        ctx.fillRect(-2, -8, 4, 16);
+        ctx.restore();
+      }
+    }
+
+    class Particle {
+      constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.radius = Math.random() * 2.5 + 1;
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 4 + 1;
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed;
+        this.alpha = 1;
+        this.decay = Math.random() * 0.04 + 0.02;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.alpha -= this.decay;
+      }
+      draw(ctx) {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, this.alpha);
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    class GameEngine {
+      constructor() {
+        console.log("[GameEngine] Starting engine subroutines...");
+        this.canvas = document.getElementById('stage');
+        this.ctx = this.canvas.getContext('2d');
+        this.assets = AssetLoader.getAssets();
+
+        this.input = { up: false, down: false, left: false, right: false, mouseX: 0, mouseY: 0, fire: false };
+        this.projectiles = [];
+        this.enemies = [];
+        this.particles = [];
+
+        this.player = {
+          x: 0, y: 0, vx: 0, vy: 0,
+          speed: 0.65, friction: 0.91,
+          radius: 24, angle: 0, xp: 0,
+          level: 1, fireCooldown: 0, kills: 0
+        };
+
+        this.wave = 1;
+        this.spawnTimer = 0;
+        this.isRunning = false;
+
+        this.initCanvasSize();
+        this.initEvents();
+        this.initGSAPBackground();
+      }
+
+      initGSAPBackground() {
+        try {
+          gsap.to('.nebula-cloud', {
+            x: 'random(-100, 100)',
+            y: 'random(-80, 80)',
+            scale: 'random(0.8, 1.25)',
+            duration: 10,
+            repeat: -1,
+            yoyo: true,
+            ease: 'sine.inOut',
+            stagger: 2
+          });
+        } catch (e) {
+          console.error("[GameEngine] GSAP error:", e);
+        }
+      }
+
+      initCanvasSize() {
+        this.width = window.innerWidth;
+        this.height = window.innerHeight;
+        this.canvas.width = this.width;
+        this.canvas.height = this.height;
+        if (this.player.x === 0 && this.player.y === 0) {
+          this.player.x = this.width / 2;
+          this.player.y = this.height * 0.75;
+          this.input.mouseX = this.player.x;
+          this.input.mouseY = this.player.y - 100;
+        }
+      }
+
+      initEvents() {
+        window.addEventListener('resize', () => this.initCanvasSize());
+        window.addEventListener('keydown', (e) => {
+          if (e.code === 'KeyW' || e.code === 'ArrowUp') this.input.up = true;
+          if (e.code === 'KeyS' || e.code === 'ArrowDown') this.input.down = true;
+          if (e.code === 'KeyA' || e.code === 'ArrowLeft') this.input.left = true;
+          if (e.code === 'KeyD' || e.code === 'ArrowRight') this.input.right = true;
+          if (e.code === 'Space') { this.input.fire = true; e.preventDefault(); }
+        });
+        window.addEventListener('keyup', (e) => {
+          if (e.code === 'KeyW' || e.code === 'ArrowUp') this.input.up = false;
+          if (e.code === 'KeyS' || e.code === 'ArrowDown') this.input.down = false;
+          if (e.code === 'KeyA' || e.code === 'ArrowLeft') this.input.left = false;
+          if (e.code === 'KeyD' || e.code === 'ArrowRight') this.input.right = false;
+          if (e.code === 'Space') this.input.fire = false;
+        });
+        window.addEventListener('mousemove', (e) => {
+          this.input.mouseX = e.clientX;
+          this.input.mouseY = e.clientY;
+        });
+        window.addEventListener('mousedown', (e) => { if (e.button === 0) this.input.fire = true; });
+        window.addEventListener('mouseup', (e) => { if (e.button === 0) this.input.fire = false; });
+      }
+
+      start() {
+        console.log("[GameEngine] Simulation running.");
+        this.isRunning = true;
+        document.getElementById('game-over-modal').style.display = 'none';
+        this.loop();
+      }
+
+      restart() {
+        console.log("[GameEngine] Resetting tactical state...");
+        this.player.x = this.width / 2;
+        this.player.y = this.height * 0.75;
+        this.player.vx = 0;
+        this.player.vy = 0;
+        this.player.xp = 0;
+        this.player.level = 1;
+        this.player.kills = 0;
+        this.wave = 1;
+        this.enemies = [];
+        this.projectiles = [];
+        this.particles = [];
+        this.updateHUD();
+        this.start();
+      }
+
+      triggerAlert(text) {
+        const banner = document.getElementById('alert-banner');
+        banner.innerText = text;
+        gsap.killTweensOf(banner);
+        gsap.fromTo(banner, 
+          { opacity: 0, y: -8, scale: 0.85 }, 
+          { opacity: 1, y: 0, scale: 1.1, duration: 0.3, yoyo: true, repeat: 1, ease: "power2.out" }
+        );
+      }
+
+      updateHUD() {
+        const lvlMap = { 1: 'MK I INTERCEPTOR', 2: 'MK II HEAVY GUNSHIP', 3: 'MK III BATTLECRUISER' };
+        document.getElementById('player-lvl').innerText = lvlMap[this.player.level];
+        const nextXp = this.player.level === 1 ? 120 : (this.player.level === 2 ? 300 : 'MAX');
+        document.getElementById('player-score').innerText = `XP: ${Math.floor(this.player.xp)} / ${nextXp}`;
+        document.getElementById('wave-lvl').innerText = `TIER ${this.wave}`;
+        document.getElementById('kills-counter').innerText = `Eliminations: ${this.player.kills}`;
+      }
+
+      spawnEnemy() {
+        const margin = 50;
+        const x = Math.random() * (this.width - margin * 2) + margin;
+        const y = -60;
+        
+        let tier = 1;
+        if (this.wave >= 2 && Math.random() > 0.45) tier = 2;
+        if (this.wave >= 3 && Math.random() > 0.6) tier = 3;
+
+        const hp = tier === 1 ? 2 : (tier === 2 ? 5 : 10);
+        const radius = tier === 1 ? 18 : (tier === 2 ? 26 : 36);
+        const speed = (tier === 1 ? 2.4 : (tier === 2 ? 1.7 : 1.1)) + Math.random() * 0.4;
+
+        this.enemies.push({
+          x, y, tier, hp, maxHp: hp, speed, radius, angle: 0
+        });
+      }
+
+      shootWeapons() {
+        if (this.player.fireCooldown > 0) return;
+        const forwardAngle = this.player.angle;
+
+        if (this.player.level === 1) {
+          // Center bolt
+          this.projectiles.push(new Projectile(this.player.x, this.player.y, forwardAngle, 15, '#38bdf8'));
+          this.player.fireCooldown = 12;
+        } else if (this.player.level === 2) {
+          // Dual wing cannons
+          const offX = Math.cos(forwardAngle) * 14;
+          const offY = Math.sin(forwardAngle) * 14;
+          this.projectiles.push(new Projectile(this.player.x + offX, this.player.y + offY, forwardAngle, 16, '#38bdf8'));
+          this.projectiles.push(new Projectile(this.player.x - offX, this.player.y - offY, forwardAngle, 16, '#38bdf8'));
+          this.player.fireCooldown = 10;
+        } else {
+          // MK III Tri-array spread cannon
+          this.projectiles.push(new Projectile(this.player.x, this.player.y, forwardAngle, 17, '#7dd3fc'));
+          this.projectiles.push(new Projectile(this.player.x, this.player.y, forwardAngle - 0.16, 17, '#38bdf8'));
+          this.projectiles.push(new Projectile(this.player.x, this.player.y, forwardAngle + 0.16, 17, '#38bdf8'));
+          this.player.fireCooldown = 8;
+        }
+      }
+
+      gameOver() {
+        console.warn("[GameEngine] Structural failure. Game Over.");
+        this.isRunning = false;
+        for (let i = 0; i < 50; i++) {
+          this.particles.push(new Particle(this.player.x, this.player.y, '#38bdf8'));
+          this.particles.push(new Particle(this.player.x, this.player.y, '#f43f5e'));
+        }
+        document.getElementById('game-over-stats').innerText = 
+          `Final Status: MK ${this.player.level} | Foes Annihilated: ${this.player.kills}`;
+        document.getElementById('game-over-modal').style.display = 'flex';
+      }
+
+      update() {
+        // Player Movement
+        if (this.input.up) this.player.vy -= this.player.speed;
+        if (this.input.down) this.player.vy += this.player.speed;
+        if (this.input.left) this.player.vx -= this.player.speed;
+        if (this.input.right) this.player.vx += this.player.speed;
+
+        this.player.vx *= this.player.friction;
+        this.player.vy *= this.player.friction;
+        this.player.x += this.player.vx;
+        this.player.y += this.player.vy;
+
+        this.player.x = Math.max(this.player.radius, Math.min(this.width - this.player.radius, this.player.x));
+        this.player.y = Math.max(this.player.radius, Math.min(this.height - this.player.radius, this.player.y));
+
+        // Smooth rotation to reticle
+        const targetAngle = Math.atan2(this.input.mouseY - this.player.y, this.input.mouseX - this.player.x) + Math.PI / 2;
+        let diff = targetAngle - this.player.angle;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        this.player.angle += diff * 0.16;
+
+        // Weapon firing
+        if (this.player.fireCooldown > 0) this.player.fireCooldown--;
+        if (this.input.fire) this.shootWeapons();
+
+        // Level Up Thresholds
+        if (this.player.level === 1 && this.player.xp >= 120) {
+          this.player.level = 2;
+          this.triggerAlert("HULL EVOLVED: MK II GUNSHIP");
+          console.log("[GameEngine] Frame reconstructed to MK II.");
+        } else if (this.player.level === 2 && this.player.xp >= 300) {
+          this.player.level = 3;
+          this.triggerAlert("HULL EVOLVED: MK III BATTLECRUISER");
+          console.log("[GameEngine] Frame reconstructed to MK III.");
+        }
+
+        // Escalation Phases
+        if (this.player.kills >= 8 && this.wave === 1) {
+          this.wave = 2;
+          this.triggerAlert("ESCALATION DETECTED: TIER 2 ASSAULT");
+        } else if (this.player.kills >= 22 && this.wave === 2) {
+          this.wave = 3;
+          this.triggerAlert("CRITICAL: TIER 3 DREADNOUGHT INCURSION");
+        }
+
+        // Spawn cadence
+        this.spawnTimer++;
+        const spawnCadence = Math.max(25, 75 - (this.wave * 14));
+        if (this.spawnTimer >= spawnCadence) {
+          this.spawnEnemy();
+          this.spawnTimer = 0;
+        }
+
+        // Projectiles Update & Collision
+        for (let pi = this.projectiles.length - 1; pi >= 0; pi--) {
+          const p = this.projectiles[pi];
+          p.update();
+
+          // Out of screen bounds
+          if (p.lifetime <= 0 || p.x < 0 || p.x > this.width || p.y < 0 || p.y > this.height) {
+            this.projectiles.splice(pi, 1);
+            continue;
+          }
+
+          // Hit detection against enemies
+          for (let ei = this.enemies.length - 1; ei >= 0; ei--) {
+            const e = this.enemies[ei];
+            const dist = Math.hypot(p.x - e.x, p.y - e.y);
+            if (dist < e.radius + p.radius) {
+              e.hp--;
+              for (let k = 0; k < 4; k++) {
+                this.particles.push(new Particle(p.x, p.y, '#fda4af'));
+              }
+              this.projectiles.splice(pi, 1);
+
+              // Enemy destroyed
+              if (e.hp <= 0) {
+                console.log(`[GameEngine] Hostile Tier ${e.tier} neutralized.`);
+                for (let k = 0; k < 18; k++) {
+                  this.particles.push(new Particle(e.x, e.y, e.tier === 3 ? '#a855f7' : '#f43f5e'));
+                }
+                this.player.kills++;
+                this.player.xp += e.tier * 22;
+                this.enemies.splice(ei, 1);
+              }
+              break;
+            }
+          }
+        }
+
+        // Update Hostiles
+        for (let i = this.enemies.length - 1; i >= 0; i--) {
+          const e = this.enemies[i];
+          const dx = this.player.x - e.x;
+          const dy = this.player.y - e.y;
+          const dist = Math.hypot(dx, dy);
+
+          const trackingSpeed = e.tier === 3 ? 0.025 : (e.tier === 2 ? 0.015 : 0.006);
+          e.x += (dx / dist) * (e.speed * trackingSpeed * 100);
+          e.y += e.speed;
+          e.angle = Math.atan2(dy, dx) - Math.PI / 2;
+
+          // Ship-on-ship crash
+          if (dist < (this.player.radius + e.radius) * 0.75) {
+            this.gameOver();
+            return;
+          }
+
+          if (e.y > this.height + 80) {
+            this.enemies.splice(i, 1);
+          }
+        }
+
+        // Update Particles
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+          const p = this.particles[i];
+          p.update();
+          if (p.alpha <= 0) this.particles.splice(i, 1);
+        }
+
+        this.updateHUD();
+      }
+
+      draw() {
+        this.ctx.clearRect(0, 0, this.width, this.height);
+
+        // Render Player
+        this.ctx.save();
+        this.ctx.translate(this.player.x, this.player.y);
+        this.ctx.rotate(this.player.angle);
+
+        const heroTierKey = this.player.level === 1 ? 'mk1' : (this.player.level === 2 ? 'mk2' : 'mk3');
+        const heroImg = this.assets.hero[heroTierKey];
+        const hSize = 56 + this.player.level * 8;
+
+        if (heroImg && heroImg.complete && heroImg.naturalWidth !== 0) {
+          this.ctx.drawImage(heroImg, -hSize / 2, -hSize / 2, hSize, hSize);
+        }
+        this.ctx.restore();
+
+        // Render Enemies
+        for (const e of this.enemies) {
+          this.ctx.save();
+          this.ctx.translate(e.x, e.y);
+          this.ctx.rotate(e.angle);
+
+          const enemyTierKey = e.tier === 1 ? 'tier1' : (e.tier === 2 ? 'tier2' : 'tier3');
+          const enemyImg = this.assets.enemy[enemyTierKey];
+          const eSize = e.radius * 2.4;
+
+          if (enemyImg && enemyImg.complete && enemyImg.naturalWidth !== 0) {
+            this.ctx.drawImage(enemyImg, -eSize / 2, -eSize / 2, eSize, eSize);
+          }
+
+          // Damage Indicator / Health Bar
+          if (e.hp < e.maxHp) {
+            const barW = e.radius * 1.5;
+            this.ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            this.ctx.fillRect(-barW / 2, -e.radius - 8, barW, 4);
+            this.ctx.fillStyle = '#f43f5e';
+            this.ctx.fillRect(-barW / 2, -e.radius - 8, barW * (e.hp / e.maxHp), 4);
+          }
+          this.ctx.restore();
+        }
+
+        // Render Projectiles
+        for (const p of this.projectiles) p.draw(this.ctx);
+
+        // Render Particles
+        for (const pt of this.particles) pt.draw(this.ctx);
+      }
+
+      loop() {
+        if (!this.isRunning) return;
+        try {
+          this.update();
+          this.draw();
+          requestAnimationFrame(() => this.loop());
+        } catch (err) {
+          console.error("[GameEngine] Critical tick error:", err);
+          this.isRunning = false;
+        }
+      }
+    }
+
+    let Game;
+    window.addEventListener('DOMContentLoaded', () => {
+      Game = new GameEngine();
+      Game.start();
+    });
+  </script>
+</body>
+</html>

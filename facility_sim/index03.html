@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Facility Industrial Mimic Subsystem</title>
+<style>
+  :root {
+    --hull: #080c14;
+    --chassis: #0f1726;
+    --border: #1e293b;
+    --cyan: #00f0ff;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --green: #10b981;
+    --wire-off: #1e293b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  body {
+    background: var(--hull);
+    color: #94a3b8;
+    font-family: 'Consolas', 'Courier New', monospace;
+    height: 100vh;
+    display: grid;
+    grid-template-rows: 48px 1fr 180px;
+    overflow: hidden;
+  }
+  /* CRT Scanline Overlay */
+  body::after {
+    content: " ";
+    display: block;
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+    background-size: 100% 3px, 6px 100%;
+    pointer-events: none;
+    z-index: 99;
+  }
+
+  /* Header Bar */
+  header {
+    background: var(--chassis);
+    border-bottom: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    font-size: 0.85rem;
+    letter-spacing: 1.5px;
+    color: #cbd5e1;
+  }
+  header span.live {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 8px var(--cyan);
+    margin-right: 8px;
+  }
+
+  /* Main Canvas Viewport */
+  #viewport-wrap {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: crosshair;
+  }
+
+  /* Floating Context HUD */
+  #inspect-overlay {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(15, 23, 38, 0.92);
+    border: 1px solid var(--cyan);
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+    border-radius: 4px;
+    padding: 14px;
+    width: 260px;
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 0.75rem;
+    z-index: 10;
+  }
+  #inspect-overlay h4 {
+    color: var(--cyan);
+    border-bottom: 1px solid #334155;
+    padding-bottom: 4px;
+    font-size: 0.8rem;
+  }
+
+  /* Bottom Industrial Tactical Deck */
+  #tactical-deck {
+    background: var(--chassis);
+    border-top: 2px solid var(--border);
+    display: grid;
+    grid-template-columns: 280px 1fr 320px;
+    gap: 16px;
+    padding: 12px 20px;
+  }
+  .deck-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-left: 1px solid var(--border);
+    padding-left: 14px;
+  }
+  .deck-section:first-child { border-left: none; padding-left: 0; }
+  .deck-title {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: #64748b;
+    letter-spacing: 1px;
+  }
+
+  /* Tactical Controls */
+  .control-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.75rem;
+  }
+  input[type="range"] {
+    accent-color: var(--cyan);
+    flex-grow: 1;
+    cursor: pointer;
+  }
+  .btn-tac {
+    background: #1e293b;
+    border: 1px solid #475569;
+    color: #e2e8f0;
+    padding: 6px 12px;
+    font-size: 0.75rem;
+    font-family: inherit;
+    border-radius: 3px;
+    cursor: pointer;
+    text-transform: uppercase;
+  }
+  .btn-tac:hover { background: #334155; border-color: var(--cyan); }
+  .btn-tac.active {
+    background: rgba(0, 240, 255, 0.15);
+    border-color: var(--cyan);
+    color: var(--cyan);
+    box-shadow: inset 0 0 8px rgba(0, 240, 255, 0.3);
+  }
+  .btn-tac.warn {
+    border-color: var(--amber);
+    color: var(--amber);
+  }
+
+  /* Dial / Gauge */
+  .gauge-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .gauge-svg { width: 80px; height: 80px; }
+  .gauge-data {
+    font-size: 0.75rem;
+    line-height: 1.4;
+  }
+  .gauge-data span { color: #f8fafc; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<header>
+  <div><span class="live"></span>MAIN DISTRIBUTION FACILITY // SECTOR-07 GRID</div>
+  <div id="audio-indicator" style="font-size: 0.7rem; color: #64748b;">AUDIO SYNTH: CLICK ANYWHERE TO ENGAGE</div>
+</header>
+
+<div id="viewport-wrap">
+  <canvas id="stage"></canvas>
+  
+  <div id="inspect-overlay">
+    <h4 id="inspect-title">ELEMENT INSPECT</h4>
+    <div>Type: <span id="inspect-type" style="color:#f8fafc">--</span></div>
+    <div>Operating Draw: <span id="inspect-draw" style="color:#00f0ff">--</span></div>
+    <div>Status: <span id="inspect-status" style="color:#10b981">NOMINAL</span></div>
+    <button class="btn-tac warn" id="inspect-kill-btn" style="margin-top: 6px;">CYCLE DISCONNECT</button>
+  </div>
+</div>
+
+<div id="tactical-deck">
+  <!-- Section 1: Generation Controls -->
+  <div class="deck-section">
+    <div class="deck-title">Primary Generation Control</div>
+    <div class="control-row">
+      <span>Throttle:</span>
+      <input type="range" id="gen-slider" min="0" max="100" value="90">
+      <span id="gen-val" style="width: 40px; text-align: right; color: var(--cyan);">90%</span>
+    </div>
+    <div class="control-row" style="margin-top: 4px;">
+      <button class="btn-tac active" id="cap-breaker-btn">CAP BANK: ONLINE</button>
+      <button class="btn-tac" id="cap-dump-btn">DUMP</button>
+    </div>
+    <div class="control-row">
+      <button class="btn-tac active" id="main-breaker-btn" style="width: 100%;">DISTRIBUTOR BREAKER: CLOSED</button>
+    </div>
+  </div>
+
+  <!-- Section 2: Spatial Topology Mutators -->
+  <div class="deck-section">
+    <div class="deck-title">Facility Layout Configuration</div>
+    <div class="control-row" style="justify-content: flex-start; gap: 12px; margin-top: 4px;">
+      <button class="btn-tac" id="add-pillar-btn">+ LIGHT PILLAR</button>
+      <button class="btn-tac" id="rem-pillar-btn">- REMOVE PILLAR</button>
+      <span style="font-size: 0.7rem; color: #64748b;">(Click entity to inspect)</span>
+    </div>
+    <div class="control-row" style="justify-content: flex-start; gap: 12px; margin-top: 6px;">
+      <button class="btn-tac" id="add-fan-btn">+ COOLING TURBINE</button>
+      <button class="btn-tac" id="rem-fan-btn">- REMOVE TURBINE</button>
+    </div>
+  </div>
+
+  <!-- Section 3: Bus Voltage Analog Gauge & Diagnostics -->
+  <div class="deck-section">
+    <div class="deck-title">Bus Dynamic Voltage & Reserves</div>
+    <div class="gauge-box">
+      <svg class="gauge-svg" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="40" fill="none" stroke="#1e293b" stroke-width="8" />
+        <circle id="gauge-arc" cx="50" cy="50" r="40" fill="none" stroke="#00f0ff" stroke-width="8"
+                stroke-dasharray="251.2" stroke-dashoffset="0" stroke-linecap="round"
+                transform="rotate(-90 50 50)" />
+        <text id="gauge-txt" x="50" y="55" font-size="16" fill="#f8fafc" font-family="monospace" text-anchor="middle">100%</text>
+      </svg>
+      <div class="gauge-data">
+        Supply: <span id="tel-supply">0 kW</span><br>
+        Facility Load: <span id="tel-demand">0 kW</span><br>
+        Buffer Storage: <span id="tel-cap">0 kWh</span><br>
+        System State: <span id="tel-state" style="color:var(--green)">OPTIMAL</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/**
+ * INDUSTRIAL AUDIO ENGINE (Web Audio API Synthesizer)
+ */
+class SoundEngine {
+  constructor() {
+    this.ctx = null;
+    this.humNode = null;
+    this.humGain = null;
+    this.turbineNode = null;
+    this.turbineGain = null;
+    this.initialized = false;
+  }
+
+  init() {
+    if (this.initialized) return;
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    this.ctx = new AudioContext();
+
+    // 60Hz Electrical Transformer Hum
+    this.humNode = this.ctx.createOscillator();
+    this.humNode.type = 'sawtooth';
+    this.humNode.frequency.setValueAtTime(60, this.ctx.currentTime);
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(140, this.ctx.currentTime);
+
+    this.humGain = this.ctx.createGain();
+    this.humGain.gain.setValueAtTime(0.02, this.ctx.currentTime);
+
+    this.humNode.connect(filter);
+    filter.connect(this.humGain);
+    this.humGain.connect(this.ctx.destination);
+    this.humNode.start();
+
+    // High Turbine Resonance Filter
+    this.turbineNode = this.ctx.createOscillator();
+    this.turbineNode.type = 'triangle';
+    this.turbineNode.frequency.setValueAtTime(180, this.ctx.currentTime);
+    this.turbineGain = this.ctx.createGain();
+    this.turbineGain.gain.setValueAtTime(0.01, this.ctx.currentTime);
+
+    this.turbineNode.connect(this.turbineGain);
+    this.turbineGain.connect(this.ctx.destination);
+    this.turbineNode.start();
+
+    this.initialized = true;
+    document.getElementById('audio-indicator').innerText = "AUDIO SYNTH: ENGAGED";
+    document.getElementById('audio-indicator').style.color = "#00f0ff";
+  }
+
+  triggerRelayClick() {
+    if (!this.initialized) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(320, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.08);
+    gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.08);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.09);
+  }
+
+  updateModulation(saturation, generatorThrottle, fanCount) {
+    if (!this.initialized) return;
+    const now = this.ctx.currentTime;
+    // Hum strains and pitches lower on brownout
+    this.humNode.frequency.setTargetAtTime(50 + saturation * 15, now, 0.1);
+    this.humGain.gain.setTargetAtTime((0.01 + generatorThrottle * 0.03), now, 0.1);
+
+    // Turbine pitch follows saturation & number of fans
+    if (fanCount > 0) {
+      this.turbineNode.frequency.setTargetAtTime(120 + saturation * 240, now, 0.1);
+      this.turbineGain.gain.setTargetAtTime(saturation * 0.04, now, 0.1);
+    } else {
+      this.turbineGain.gain.setTargetAtTime(0, now, 0.1);
+    }
+  }
+}
+
+/**
+ * SIMULATION LOGIC CORE & TOPOLOGY
+ */
+class Simulation {
+  constructor() {
+    this.gen = { throttle: 0.9, maxKW: 140, outputKW: 0 };
+    this.cap = { online: true, capacityKWh: 200, storedKWh: 90, maxRateKW: 60 };
+    this.dist = { breaker: true };
+
+    this.pillars = [];
+    this.fans = [];
+
+    this.metrics = {
+      demandKW: 0,
+      suppliedKW: 0,
+      saturation: 1.0
+    };
+
+    // Flow particles
+    this.particles = [];
+    for (let i = 0; i < 60; i++) {
+      this.particles.push({ t: Math.random(), path: 'gen-dist' });
+    }
+  }
+
+  addPillar() {
+    this.pillars.push({
+      id: `P-${this.pillars.length + 1}`,
+      tierLevels: [0, 0, 0],
+      baseDrawKW: 14,
+      drawKW: 0,
+      isolated: false,
+      flickerOffset: Math.random() * 100,
+      x: 0, y: 0
+    });
+  }
+
+  removePillar() {
+    if (this.pillars.length > 0) this.pillars.pop();
+  }
+
+  addFan() {
+    this.fans.push({
+      id: `T-${this.fans.length + 1}`,
+      rpm: 0,
+      angle: Math.random() * Math.PI,
+      baseDrawKW: 6.0,
+      drawKW: 0,
+      isolated: false,
+      x: 0, y: 0
+    });
+  }
+
+  removeFan() {
+    if (this.fans.length > 0) this.fans.pop();
+  }
+
+  step(dt) {
+    // 1. Calculate raw available source
+    this.gen.outputKW = this.gen.throttle * this.gen.maxKW;
+
+    // 2. Sum demand
+    let totalDemand = 0;
+    if (this.dist.breaker) {
+      this.pillars.forEach(p => { if (!p.isolated) totalDemand += p.baseDrawKW; });
+      this.fans.forEach(f => { if (!f.isolated) totalDemand += f.baseDrawKW; });
+    }
+    this.metrics.demandKW = totalDemand;
+
+    // 3. Capacitor arbitration
+    let net = this.gen.outputKW - totalDemand;
+    let effectiveAvailable = this.gen.outputKW;
+
+    if (this.cap.online) {
+      if (net > 0) {
+        // Charging
+        const chargeAmount = Math.min(net, this.cap.maxRateKW);
+        const energy = chargeAmount * (dt / 3600);
+        const room = this.cap.capacityKWh - this.cap.storedKWh;
+        const actualStored = Math.min(room, energy);
+        this.cap.storedKWh += actualStored;
+        effectiveAvailable -= (actualStored / (dt / 3600));
+      } else if (net < 0) {
+        // Discharging
+        const deficit = Math.abs(net);
+        const dischargeLimit = Math.min(deficit, this.cap.maxRateKW);
+        const maxDischargeEnergy = this.cap.storedKWh / (dt / 3600);
+        const actualDrawn = Math.min(dischargeLimit, maxDischargeEnergy);
+        this.cap.storedKWh -= actualDrawn * (dt / 3600);
+        effectiveAvailable += actualDrawn;
+      }
+    }
+
+    // 4. Compute Voltage / Saturation Ratio
+    if (totalDemand > 0) {
+      this.metrics.saturation = Math.min(1.0, effectiveAvailable / totalDemand);
+      this.metrics.suppliedKW = totalDemand * this.metrics.saturation;
+    } else {
+      this.metrics.saturation = 1.0;
+      this.metrics.suppliedKW = 0;
+    }
+
+    const sat = this.metrics.saturation;
+
+    // 5. Update Light Pillars (proportional tier step-down + brownout flicker)
+    const timeNow = performance.now() * 0.005;
+    this.pillars.forEach(p => {
+      if (!this.dist.breaker || p.isolated) {
+        p.tierLevels = [0, 0, 0];
+        p.drawKW = 0;
+        return;
+      }
+      p.drawKW = p.baseDrawKW * sat;
+
+      // Analog flicker noise under voltage deficit
+      let noise = 1.0;
+      if (sat < 0.9) {
+        noise = 0.5 + 0.5 * Math.sin(timeNow * 8 + p.flickerOffset);
+      }
+
+      const eff = sat * noise;
+      p.tierLevels[0] = Math.min(1.0, eff / 0.33);
+      p.tierLevels[1] = Math.max(0.0, Math.min(1.0, (eff - 0.33) / 0.33));
+      p.tierLevels[2] = Math.max(0.0, Math.min(1.0, (eff - 0.66) / 0.34));
+    });
+
+    // 6. Update Fans
+    this.fans.forEach(f => {
+      if (!this.dist.breaker || f.isolated) {
+        f.rpm = 0;
+        f.drawKW = 0;
+        return;
+      }
+      f.drawKW = f.baseDrawKW * sat;
+      f.rpm = sat * 1200;
+      f.angle += (f.rpm / 60) * Math.PI * 2 * dt;
+    });
+
+    // 7. Update Flow Particles
+    const speed = this.dist.breaker ? 0.2 + sat * 0.8 : 0.05;
+    this.particles.forEach(pt => {
+      pt.t += dt * speed;
+      if (pt.t > 1) pt.t = 0;
+    });
+  }
+}
+
+// -------------------------------------------------------------
+// SETUP & INTERACTION
+// -------------------------------------------------------------
+const canvas = document.getElementById('stage');
+const ctx = canvas.getContext('2d');
+const sound = new SoundEngine();
+const sim = new Simulation();
+
+let selectedEntity = null;
+
+function resize() {
+  canvas.width = canvas.parentElement.clientWidth;
+  canvas.height = canvas.parentElement.clientHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+// Initial Population
+for (let i = 0; i < 3; i++) sim.addPillar();
+for (let i = 0; i < 2; i++) sim.addFan();
+
+// User Input Hooks
+window.addEventListener('click', () => sound.init(), { once: true });
+
+document.getElementById('gen-slider').addEventListener('input', (e) => {
+  const val = parseInt(e.target.value);
+  sim.gen.throttle = val / 100;
+  document.getElementById('gen-val').innerText = `${val}%`;
+});
+
+const capBtn = document.getElementById('cap-breaker-btn');
+capBtn.addEventListener('click', () => {
+  sound.triggerRelayClick();
+  sim.cap.online = !sim.cap.online;
+  capBtn.innerText = `CAP BANK: ${sim.cap.online ? 'ONLINE' : 'OFFLINE'}`;
+  capBtn.classList.toggle('active', sim.cap.online);
+});
+
+document.getElementById('cap-dump-btn').addEventListener('click', () => {
+  sound.triggerRelayClick();
+  sim.cap.storedKWh = 0;
+});
+
+const mainBreakerBtn = document.getElementById('main-breaker-btn');
+mainBreakerBtn.addEventListener('click', () => {
+  sound.triggerRelayClick();
+  sim.dist.breaker = !sim.dist.breaker;
+  mainBreakerBtn.innerText = `DISTRIBUTOR BREAKER: ${sim.dist.breaker ? 'CLOSED' : 'OPEN'}`;
+  mainBreakerBtn.classList.toggle('active', sim.dist.breaker);
+});
+
+document.getElementById('add-pillar-btn').addEventListener('click', () => sim.addPillar());
+document.getElementById('rem-pillar-btn').addEventListener('click', () => sim.removePillar());
+document.getElementById('add-fan-btn').addEventListener('click', () => sim.addFan());
+document.getElementById('rem-fan-btn').addEventListener('click', () => sim.removeFan());
+
+// Inspect Overlay & Direct Canvas Selection
+canvas.addEventListener('click', (e) => {
+  sound.init();
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+
+  let clicked = null;
+  // Check pillars
+  for (let p of sim.pillars) {
+    if (Math.abs(p.x - mx) < 30 && Math.abs(p.y - my) < 90) {
+      clicked = { entity: p, type: 'Light Pillar Cluster' };
+      break;
+    }
+  }
+  // Check fans
+  if (!clicked) {
+    for (let f of sim.fans) {
+      if (Math.abs(f.x - mx) < 35 && Math.abs(f.y - my) < 35) {
+        clicked = { entity: f, type: 'Cooling Turbine Module' };
+        break;
+      }
+    }
+  }
+
+  selectedEntity = clicked ? clicked.entity : null;
+  const overlay = document.getElementById('inspect-overlay');
+  if (clicked) {
+    overlay.style.display = 'flex';
+    document.getElementById('inspect-title').innerText = `${clicked.entity.id} DIAGNOSTIC`;
+    document.getElementById('inspect-type').innerText = clicked.type;
+    document.getElementById('inspect-kill-btn').onclick = () => {
+      sound.triggerRelayClick();
+      clicked.entity.isolated = !clicked.entity.isolated;
+    };
+  } else {
+    overlay.style.display = 'none';
+  }
+});
+
+// -------------------------------------------------------------
+// RENDER CYCLE
+// -------------------------------------------------------------
+function render() {
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // Clear & Sci-Fi Graticule Floor
+  ctx.fillStyle = '#080c14';
+  ctx.fillRect(0, 0, W, H);
+
+  // Structural Bays / Floor Plates
+  ctx.strokeStyle = '#121c2e';
+  ctx.lineWidth = 1.5;
+  const step = 45;
+  for (let x = 0; x < W; x += step) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+  for (let y = 0; y < H; y += step) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+
+  // Industrial Nodes Positions
+  const genNode = { x: W * 0.12, y: H * 0.5 };
+  const capNode = { x: W * 0.28, y: H * 0.5 };
+  const distNode = { x: W * 0.44, y: H * 0.5 };
+
+  // Update layout anchors for Consumers
+  const pCount = sim.pillars.length;
+  sim.pillars.forEach((p, i) => {
+    p.x = W * 0.62 + (i * ((W * 0.35) / Math.max(1, pCount)));
+    p.y = H * 0.62;
+  });
+
+  const fCount = sim.fans.length;
+  sim.fans.forEach((f, i) => {
+    f.x = W * 0.62 + (i * ((W * 0.35) / Math.max(1, fCount)));
+    f.y = H * 0.24;
+  });
+
+  // DRAW HEAVY POWER CONDUIT BUSES
+  function drawConduit(x1, y1, x2, y2, powered) {
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 8;
+    ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+
+    if (powered) {
+      ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    }
+  }
+
+  // Draw Primary Mainlines
+  drawConduit(genNode.x, genNode.y, capNode.x, capNode.y, sim.gen.outputKW > 0);
+  drawConduit(capNode.x, capNode.y, distNode.x, distNode.y, sim.cap.online);
+
+  // Consumer branches
+  sim.pillars.forEach(p => {
+    drawConduit(distNode.x, distNode.y, p.x, p.y + 40, sim.dist.breaker && !p.isolated);
+  });
+  sim.fans.forEach(f => {
+    drawConduit(distNode.x, distNode.y, f.x, f.y, sim.dist.breaker && !f.isolated);
+  });
+
+  // DRAW ENERGY PARTICLES
+  const sat = sim.metrics.saturation;
+  if (sim.dist.breaker && sim.metrics.suppliedKW > 0) {
+    ctx.fillStyle = sat > 0.6 ? '#00f0ff' : '#f59e0b';
+    sim.particles.forEach(pt => {
+      // Primary trunk
+      const tx = genNode.x + (distNode.x - genNode.x) * pt.t;
+      const ty = genNode.y;
+      ctx.beginPath();
+      ctx.arc(tx, ty, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Branches
+      sim.pillars.forEach(p => {
+        if (p.isolated) return;
+        const bx = distNode.x + (p.x - distNode.x) * pt.t;
+        const by = distNode.y + ((p.y + 40) - distNode.y) * pt.t;
+        ctx.beginPath(); ctx.arc(bx, by, 2, 0, Math.PI * 2); ctx.fill();
+      });
+    });
+  }
+
+  // DRAW PRIMARY NODES (Chassis)
+  function drawChassis(pos, label, subtext, color) {
+    ctx.fillStyle = '#0f172a';
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.fillRect(pos.x - 40, pos.y - 40, 80, 80);
+    ctx.strokeRect(pos.x - 40, pos.y - 40, 80, 80);
+
+    ctx.fillStyle = color;
+    ctx.font = 'bold 11px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, pos.x, pos.y - 10);
+    ctx.fillStyle = '#64748b';
+    ctx.font = '9px monospace';
+    ctx.fillText(subtext, pos.x, pos.y + 16);
+  }
+
+  drawChassis(genNode, "GENERATOR", `${sim.gen.outputKW.toFixed(0)} kW`, '#38bdf8');
+
+  // Capacitor Bank Node (with real-time fill level)
+  drawChassis(capNode, "CAPACITOR", `${sim.cap.storedKWh.toFixed(0)} kWh`, sim.cap.online ? '#00f0ff' : '#ef4444');
+  const capPct = sim.cap.storedKWh / sim.cap.capacityKWh;
+  ctx.fillStyle = 'rgba(0, 240, 255, 0.25)';
+  ctx.fillRect(capNode.x - 36, capNode.y + 36 - (72 * capPct), 72, 72 * capPct);
+
+  drawChassis(distNode, "DISTRIBUTOR", sim.dist.breaker ? 'CLOSED' : 'OPEN', sim.dist.breaker ? '#00f0ff' : '#ef4444');
+
+  // DRAW CONSUMERS: COOLING TURBINES
+  sim.fans.forEach(fan => {
+    ctx.save();
+    ctx.translate(fan.x, fan.y);
+
+    // Chassis Box
+    ctx.fillStyle = fan === selectedEntity ? '#1e293b' : '#0f172a';
+    ctx.strokeStyle = fan.isolated ? '#ef4444' : '#334155';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(-32, -32, 64, 64);
+    ctx.fillRect(-32, -32, 64, 64);
+
+    // Blades
+    ctx.rotate(fan.angle);
+    for (let i = 0; i < 4; i++) {
+      ctx.rotate(Math.PI / 2);
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(18, 6);
+      ctx.lineTo(24, 0);
+      ctx.lineTo(18, -6);
+      ctx.fillStyle = fan.rpm > 10 ? '#38bdf8' : '#334155';
+      ctx.fill();
+    }
+    ctx.restore();
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '9px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${fan.id} [${Math.round(fan.rpm)} RPM]`, fan.x, fan.y + 46);
+  });
+
+  // DRAW CONSUMERS: LIGHT PILLARS WITH VOLUMETRIC FLOOR PROJECTIONS
+  sim.pillars.forEach(pillar => {
+    const px = pillar.x;
+    const py = pillar.y;
+
+    // Volumetric Deck Glow (Radial illumination on facility floor)
+    const combinedGlow = (pillar.tierLevels[0] + pillar.tierLevels[1] + pillar.tierLevels[2]) / 3;
+    if (combinedGlow > 0.05) {
+      const grad = ctx.createRadialGradient(px, py + 10, 10, px, py + 10, 140 * combinedGlow);
+      grad.addColorStop(0, `rgba(0, 240, 255, ${0.45 * combinedGlow})`);
+      grad.addColorStop(0.6, `rgba(0, 240, 255, ${0.1 * combinedGlow})`);
+      grad.addColorStop(1, 'rgba(0, 240, 255, 0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(px, py + 10, 140 * combinedGlow, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Structural Tower Core
+    ctx.fillStyle = pillar === selectedEntity ? '#1e293b' : '#0b111c';
+    ctx.strokeStyle = pillar.isolated ? '#ef4444' : '#1e293b';
+    ctx.lineWidth = 2;
+    ctx.fillRect(px - 16, py - 70, 32, 140);
+    ctx.strokeRect(px - 16, py - 70, 32, 140);
+
+    // 3 Light Segments
+    const offsets = [-44, -6, 32];
+    for (let t = 0; t < 3; t++) {
+      const ty = py + offsets[t];
+      const intensity = pillar.tierLevels[t];
+
+      // Physical housing
+      ctx.fillStyle = '#05070d';
+      ctx.fillRect(px - 11, ty - 12, 22, 24);
+
+      // Light emitter core
+      ctx.fillStyle = `rgba(0, 240, 255, ${0.1 + intensity * 0.9})`;
+      ctx.fillRect(px - 9, ty - 10, 18, 20);
+
+      // Lens Bloom
+      if (intensity > 0.1) {
+        ctx.save();
+        ctx.shadowColor = '#00f0ff';
+        ctx.shadowBlur = 18 * intensity;
+        ctx.fillStyle = `rgba(224, 250, 255, ${intensity})`;
+        ctx.fillRect(px - 6, ty - 7, 12, 14);
+        ctx.restore();
+      }
+    }
+
+    // Footing Identification
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '9px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(pillar.id, px, py + 86);
+    ctx.fillText(`${pillar.drawKW.toFixed(1)} kW`, px, py + 97);
+  });
+
+  // UPDATE TACTICAL HUD DIALS & READOUTS
+  const arc = document.getElementById('gauge-arc');
+  const dashoffset = 251.2 * (1 - sat);
+  arc.style.strokeDashoffset = dashoffset;
+  arc.setAttribute('stroke', sat > 0.9 ? '#10b981' : (sat > 0.4 ? '#f59e0b' : '#ef4444'));
+  document.getElementById('gauge-txt').innerText = `${Math.round(sat * 100)}%`;
+
+  document.getElementById('tel-supply').innerText = `${sim.gen.outputKW.toFixed(1)} kW`;
+  document.getElementById('tel-demand').innerText = `${sim.metrics.demandKW.toFixed(1)} kW`;
+  document.getElementById('tel-cap').innerText = `${sim.cap.storedKWh.toFixed(1)} kWh`;
+
+  const stateLbl = document.getElementById('tel-state');
+  if (sat < 0.95 && sim.metrics.demandKW > 0) {
+    stateLbl.innerText = "GRID UNDERVOLTAGE";
+    stateLbl.style.color = "var(--amber)";
+  } else {
+    stateLbl.innerText = "BUS NOMINAL";
+    stateLbl.style.color = "var(--green)";
+  }
+
+  // Dynamic Selected Entity Inspector Update
+  if (selectedEntity) {
+    document.getElementById('inspect-draw').innerText = `${selectedEntity.drawKW.toFixed(1)} kW`;
+    document.getElementById('inspect-status').innerText = selectedEntity.isolated ? "MANUAL ISOLATION" : "ONLINE / SYNC";
+    document.getElementById('inspect-status').style.color = selectedEntity.isolated ? "var(--red)" : "var(--green)";
+    document.getElementById('inspect-kill-btn').innerText = selectedEntity.isolated ? "RESTORE FEED" : "ISOLATE FEED";
+  }
+
+  // Audio update
+  sound.updateModulation(sat, sim.gen.throttle, sim.fans.length);
+}
+
+// -------------------------------------------------------------
+// MAIN TICK LOOP
+// -------------------------------------------------------------
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min((now - last) / 1000, 0.1);
+  last = now;
+
+  sim.step(dt);
+  render();
+
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
