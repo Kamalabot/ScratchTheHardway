@@ -157,6 +157,8 @@ function create() {
 ```
 ScratchTheHardway/OfficeWorker/
 ├── README.md                          <-- Complete documentation & architectural guide
+├── modular_character_parts_guide.md   <-- Modular face parts, outfits, and avatar asset repositories
+├── oss_character_generators.md        <-- Open-source character generator tools & Phaser LPC loading code
 ├── asset_ideation_and_engine_comparison.md <-- Asset spec pipeline & Phaser vs PixiJS/Three.js/Godot comparison
 ├── programming_narrative_guide.md     <-- Cohesive story & technical narrative (Primitives -> OOP -> Swarms)
 ├── scratch_to_phaser_guide.md         <-- Scratch to Phaser JS block-by-block conversion guide
