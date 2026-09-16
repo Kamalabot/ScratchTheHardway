@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Warehouse Logistics Digital Twin - Phaser 3</title>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.0/dist/phaser.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: #060911;
+      color: #f1f5f9;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 16px;
+      overflow-x: hidden;
+    }
+
+    header {
+      width: 100%;
+      max-width: 1200px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .title-group h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .title-group p {
+      color: #94a3b8;
+      font-size: 0.88rem;
+      margin-top: 2px;
+    }
+
+    .badge {
+      background: rgba(6, 182, 212, 0.15);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      color: #06b6d4;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .app-layout {
+      width: 100%;
+      max-width: 1200px;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 16px;
+    }
+
+    @media (max-width: 1024px) {
+      .app-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Simulation Viewport */
+    .viewport-box {
+      background: #090e1a;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      position: relative;
+      min-height: 560px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .canvas-bar {
+      background: rgba(15, 23, 42, 0.8);
+      padding: 10px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.82rem;
+      color: #94a3b8;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot-live {
+      width: 8px;
+      height: 8px;
+      background: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #10b981;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    #phaser-canvas {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Telemetry Dashboard Sidebar */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .panel {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    }
+
+    .panel-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #06b6d4;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .kpi-box {
+      background: #090e1a;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+
+    .kpi-label {
+      font-size: 0.72rem;
+      color: #64748b;
+      text-transform: uppercase;
+    }
+
+    .kpi-val {
+      font-family: 'Fira Code', monospace;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #f8fafc;
+      margin-top: 2px;
+    }
+
+    /* AGV Fleet Table */
+    .agv-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 190px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .agv-row {
+      background: #090e1a;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 8px;
+      padding: 8px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+    }
+
+    .agv-id {
+      font-family: 'Fira Code', monospace;
+      font-weight: 600;
+      color: #38bdf8;
+    }
+
+    .agv-state {
+      font-size: 0.72rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .state-moving { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+    .state-loading { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+    .state-charging { background: rgba(168, 85, 247, 0.15); color: #c084fc; }
+
+    /* Controls */
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .btn {
+      background: #1e293b;
+      color: #f8fafc;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: #334155;
+      border-color: #06b6d4;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%);
+      border: none;
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(6, 182, 212, 0.3);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #0369a1 0%, #0891b2 100%);
+    }
+
+    .btn-warning {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      color: #fbbf24;
+    }
+
+    .btn-warning:hover {
+      background: rgba(245, 158, 11, 0.25);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="title-group">
+      <h1>🏭 Warehouse Logistics Digital Twin <span class="badge">Phaser WebGL & Containers</span></h1>
+      <p>Real-time visualization of Automated Guided Vehicles (AGVs) navigating a fulfillment center layout.</p>
+    </div>
+  </header>
+
+  <div class="app-layout">
+    <!-- Phaser Main Canvas -->
+    <div class="viewport-box">
+      <div class="canvas-bar">
+        <div class="status-indicator">
+          <div class="dot-live"></div>
+          <span>MQTT/WebSocket Telemetry Stream: <strong>CONNECTED</strong></span>
+        </div>
+        <div>Fulfillment Center Alpha-1 (Grid 800x500)</div>
+      </div>
+      <div id="phaser-canvas"></div>
+    </div>
+
+    <!-- Sidebar Dashboard -->
+    <div class="sidebar">
+      <!-- Live KPI Metrics -->
+      <div class="panel">
+        <div class="panel-title">System Metrics <span>⚡ Live</span></div>
+        <div class="kpi-grid">
+          <div class="kpi-box">
+            <div class="kpi-label">Active AGVs</div>
+            <div class="kpi-val" id="kpi-agv-count">5</div>
+          </div>
+          <div class="kpi-box">
+            <div class="kpi-label">Parcels Moved</div>
+            <div class="kpi-val" id="kpi-parcels" style="color: #10b981;">0</div>
+          </div>
+          <div class="kpi-box">
+            <div class="kpi-label">Throughput / min</div>
+            <div class="kpi-val" id="kpi-throughput" style="color: #38bdf8;">24</div>
+          </div>
+          <div class="kpi-box">
+            <div class="kpi-label">Congestion Risk</div>
+            <div class="kpi-val" id="kpi-risk" style="color: #fbbf24;">LOW</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AGV Fleet Monitoring -->
+      <div class="panel">
+        <div class="panel-title">Fleet Telemetry</div>
+        <div class="agv-list" id="agv-telemetry-list">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Interactive Dispatch Controls -->
+      <div class="panel">
+        <div class="panel-title">Dispatch Control Center</div>
+        <div class="btn-group">
+          <button id="btn-dispatch" class="btn btn-primary">📦 Dispatch New Order Batch</button>
+          <button id="btn-traffic" class="btn btn-warning">⚠️ Simulate Intersection Bottleneck</button>
+          <button id="btn-add-agv" class="btn">🤖 Deploy Additional AGV</button>
+          <button id="btn-pause" class="btn">⏸️ Pause / Resume Sim</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Warehouse Layout Coordinates & Waypoints
+    const WAYPOINTS = {
+      RECEIVING_A: { x: 80, y: 100, name: 'Dock A' },
+      RECEIVING_B: { x: 80, y: 220, name: 'Dock B' },
+      STORAGE_1:   { x: 300, y: 100, name: 'Aisle 1' },
+      STORAGE_2:   { x: 300, y: 260, name: 'Aisle 2' },
+      STORAGE_3:   { x: 300, y: 420, name: 'Aisle 3' },
+      SORTING_HUB: { x: 520, y: 260, name: 'Hub' },
+      SHIPPING_A:  { x: 720, y: 140, name: 'Ship A' },
+      SHIPPING_B:  { x: 720, y: 380, name: 'Ship B' },
+      CHARGING:    { x: 520, y: 440, name: 'Charger' }
+    };
+
+    // Predefined AGV Delivery Routes
+    const ROUTES = [
+      [WAYPOINTS.RECEIVING_A, WAYPOINTS.STORAGE_1, WAYPOINTS.SORTING_HUB, WAYPOINTS.SHIPPING_A],
+      [WAYPOINTS.RECEIVING_B, WAYPOINTS.STORAGE_2, WAYPOINTS.SORTING_HUB, WAYPOINTS.SHIPPING_B],
+      [WAYPOINTS.RECEIVING_A, WAYPOINTS.STORAGE_3, WAYPOINTS.SORTING_HUB, WAYPOINTS.SHIPPING_A],
+      [WAYPOINTS.RECEIVING_B, WAYPOINTS.STORAGE_1, WAYPOINTS.CHARGING, WAYPOINTS.RECEIVING_B]
+    ];
+
+    // Global Simulation Metrics
+    let activeAGVs = [];
+    let totalParcelsMoved = 0;
+    let isSimPaused = false;
+    let isBottleneckActive = false;
+    let bottleneckParticleEmitter = null;
+
+    // Main Phaser Game Scene
+    class WarehouseScene extends Phaser.Scene {
+      constructor() {
+        super({ key: 'WarehouseScene' });
+      }
+
+      preload() {
+        // Programmatically generate particle texture
+        const graphics = this.make.graphics({ x: 0, y: 0, add: false });
+        graphics.fillStyle(0xffffff, 1);
+        graphics.fillCircle(4, 4, 4);
+        graphics.generateTexture('particle_dot', 8, 8);
+
+        // Generate spark particle texture
+        const spark = this.make.graphics({ x: 0, y: 0, add: false });
+        spark.fillStyle(0xf59e0b, 1);
+        spark.fillRoundedRect(0, 0, 6, 6, 2);
+        spark.generateTexture('spark_dot', 6, 6);
+      }
+
+      create() {
+        this.cameras.main.setBackgroundColor('#090e1a');
+
+        // Render floor grid & warehouse structures
+        this.drawWarehouseFloor();
+
+        // Create Bottleneck Heatmap Particle Emitter at Central Hub
+        this.setupBottleneckEmitter();
+
+        // Spawn Initial Fleet of AGVs
+        for (let i = 0; i < 5; i++) {
+          this.spawnAGV(`AGV-0${i + 1}`, ROUTES[i % ROUTES.length]);
+        }
+
+        // Live KPI update loop
+        this.time.addEvent({
+          delay: 500,
+          callback: this.updateFleetTelemetryUI,
+          callbackScope: this,
+          loop: true
+        });
+      }
+
+      drawWarehouseFloor() {
+        const g = this.add.graphics();
+
+        // Grid Lines
+        g.lineStyle(1, 0x1e293b, 0.4);
+        for (let x = 0; x < 800; x += 40) g.lineBetween(x, 0, x, 500);
+        for (let y = 0; y < 500; y += 40) g.lineBetween(0, y, 800, y);
+
+        // Path Guidelines
+        g.lineStyle(3, 0x0284c7, 0.25);
+        // Main arterial transit lines
+        g.lineBetween(80, 100, 720, 100);
+        g.lineBetween(80, 260, 720, 260);
+        g.lineBetween(80, 420, 720, 420);
+        g.lineBetween(300, 100, 300, 420);
+        g.lineBetween(520, 100, 520, 440);
+
+        // Storage Racks (Aisle Blocks)
+        this.drawRackZone(g, 220, 60, 160, 50, 'STORAGE AISLE A');
+        this.drawRackZone(g, 220, 220, 160, 50, 'STORAGE AISLE B');
+        this.drawRackZone(g, 220, 380, 160, 50, 'STORAGE AISLE C');
+
+        // Receiving Docks
+        this.drawDockZone(g, 20, 70, 70, 60, 'INBOUND A', 0x10b981);
+        this.drawDockZone(g, 20, 190, 70, 60, 'INBOUND B', 0x10b981);
+
+        // Shipping Docks
+        this.drawDockZone(g, 710, 110, 70, 60, 'OUTBOUND A', 0x38bdf8);
+        this.drawDockZone(g, 710, 350, 70, 60, 'OUTBOUND B', 0x38bdf8);
+
+        // Central Sorting Hub
+        g.fillStyle(0x0f172a, 0.9);
+        g.lineStyle(2, 0x06b6d4, 0.8);
+        g.fillRoundedRect(470, 220, 100, 80, 8);
+        g.strokeRoundedRect(470, 220, 100, 80, 8);
+        this.add.text(520, 260, 'SORTING\nHUB', {
+          fontFamily: 'Inter', fontSize: '11px', fontWeight: 'bold', color: '#06b6d4', align: 'center'
+        }).setOrigin(0.5);
+
+        // Charging Station
+        g.fillStyle(0x1e1b4b, 0.9);
+        g.lineStyle(2, 0xc084fc, 0.8);
+        g.fillRoundedRect(470, 415, 100, 50, 6);
+        g.strokeRoundedRect(470, 415, 100, 50, 6);
+        this.add.text(520, 440, '⚡ CHARGE BAY', {
+          fontFamily: 'Inter', fontSize: '10px', fontWeight: 'bold', color: '#c084fc'
+        }).setOrigin(0.5);
+      }
+
+      drawRackZone(g, x, y, w, h, label) {
+        g.fillStyle(0x1e293b, 0.8);
+        g.lineStyle(1, 0x475569, 0.6);
+        g.fillRoundedRect(x, y, w, h, 6);
+        g.strokeRoundedRect(x, y, w, h, 6);
+
+        // Internal rack shelf slots visual detail
+        g.lineStyle(1, 0x334155, 0.5);
+        for (let ix = x + 20; ix < x + w; ix += 30) {
+          g.lineBetween(ix, y, ix, y + h);
+        }
+
+        this.add.text(x + w / 2, y + h / 2, label, {
+          fontFamily: 'Inter', fontSize: '10px', color: '#64748b', fontWeight: 'bold'
+        }).setOrigin(0.5);
+      }
+
+      drawDockZone(g, x, y, w, h, label, color) {
+        g.fillStyle(color, 0.1);
+        g.lineStyle(2, color, 0.7);
+        g.fillRoundedRect(x, y, w, h, 6);
+        g.strokeRoundedRect(x, y, w, h, 6);
+
+        this.add.text(x + w / 2, y + h / 2, label, {
+          fontFamily: 'Inter', fontSize: '10px', color: `#${color.toString(16)}`, fontWeight: 'bold', align: 'center'
+        }).setOrigin(0.5);
+      }
+
+      setupBottleneckEmitter() {
+        // Red glowing warning particles at Central Hub when bottleneck occurs
+        bottleneckParticleEmitter = this.add.particles(520, 260, 'spark_dot', {
+          speed: { min: 20, max: 80 },
+          scale: { start: 1.5, end: 0 },
+          alpha: { start: 0.9, end: 0 },
+          lifespan: 800,
+          blendMode: 'ADD',
+          frequency: -1 // Stopped initially
+        });
+      }
+
+      spawnAGV(id, route) {
+        const startPoint = route[0];
+
+        // Container holding robot graphics + payload box + labels
+        const agvContainer = this.add.container(startPoint.x, startPoint.y);
+
+        // AGV Chassis Graphic
+        const chassis = this.add.graphics();
+        this.drawAGVChassis(chassis, 0x06b6d4, false);
+        agvContainer.add(chassis);
+
+        // ID Label
+        const label = this.add.text(0, -22, id, {
+          fontFamily: 'Fira Code', fontSize: '10px', fontWeight: 'bold', color: '#38bdf8'
+        }).setOrigin(0.5);
+        agvContainer.add(label);
+
+        // Cargo Payload Graphic (Box)
+        const box = this.add.graphics();
+        box.fillStyle(0xf59e0b, 1);
+        box.fillRoundedRect(-8, -8, 16, 16, 3);
+        box.lineStyle(1, 0xffffff, 0.5);
+        box.strokeRoundedRect(-8, -8, 16, 16, 3);
+        box.setVisible(false); // Initially empty
+        agvContainer.add(box);
+
+        // Particle Exhaust Trail
+        const trail = this.add.particles(0, 0, 'particle_dot', {
+          speed: 10,
+          scale: { start: 0.8, end: 0 },
+          alpha: { start: 0.5, end: 0 },
+          lifespan: 400,
+          blendMode: 'ADD',
+          follow: agvContainer
+        });
+
+        const agvData = {
+          id: id,
+          container: agvContainer,
+          chassis: chassis,
+          box: box,
+          route: route,
+          currentWayIdx: 0,
+          hasPayload: false,
+          battery: Math.floor(Math.random() * 30) + 70,
+          status: 'MOVING',
+          tween: null
+        };
+
+        activeAGVs.push(agvData);
+        this.navigateAGVNextWaypoint(agvData);
+      }
+
+      drawAGVChassis(g, color, hasBox) {
+        g.clear();
+        // Body
+        g.fillStyle(0x0f172a, 1);
+        g.fillRoundedRect(-18, -14, 36, 28, 6);
+        g.lineStyle(2, color, 1);
+        g.strokeRoundedRect(-18, -14, 36, 28, 6);
+
+        // Front directional wedge
+        g.fillStyle(color, 1);
+        g.fillTriangle(10, -6, 16, 0, 10, 6);
+      }
+
+      navigateAGVNextWaypoint(agv) {
+        if (isSimPaused) {
+          this.time.delayedCall(500, () => this.navigateAGVNextWaypoint(agv));
+          return;
+        }
+
+        const nextIdx = (agv.currentWayIdx + 1) % agv.route.length;
+        const target = agv.route[nextIdx];
+        const current = agv.route[agv.currentWayIdx];
+
+        // Determine angle of rotation
+        const angle = Phaser.Math.Angle.Between(current.x, current.y, target.x, target.y);
+        agv.container.setRotation(angle);
+
+        // Base speed affected if bottleneck active near sorting hub
+        let speedDuration = 1800;
+        if (isBottleneckActive && target.name === 'Hub') {
+          speedDuration = 4500; // Traffic delay!
+        }
+
+        agv.status = 'MOVING';
+        agv.battery = Math.max(10, agv.battery - 1);
+
+        agv.tween = this.tweens.add({
+          targets: agv.container,
+          x: target.x,
+          y: target.y,
+          duration: speedDuration,
+          ease: 'Linear',
+          onComplete: () => {
+            agv.currentWayIdx = nextIdx;
+
+            // Handle location actions
+            if (target.name.includes('Dock')) {
+              // Load parcel
+              agv.status = 'LOADING';
+              agv.hasPayload = true;
+              agv.box.setVisible(true);
+              this.drawAGVChassis(agv.chassis, 0xf59e0b, true);
+              this.time.delayedCall(800, () => this.navigateAGVNextWaypoint(agv));
+
+            } else if (target.name.includes('Ship')) {
+              // Unload parcel
+              agv.status = 'UNLOADING';
+              if (agv.hasPayload) {
+                agv.hasPayload = false;
+                agv.box.setVisible(false);
+                totalParcelsMoved++;
+                document.getElementById('kpi-parcels').textContent = totalParcelsMoved;
+              }
+              this.drawAGVChassis(agv.chassis, 0x10b981, false);
+              this.time.delayedCall(800, () => this.navigateAGVNextWaypoint(agv));
+
+            } else if (target.name === 'Charger') {
+              agv.status = 'CHARGING';
+              agv.battery = 100;
+              this.drawAGVChassis(agv.chassis, 0xc084fc, false);
+              this.time.delayedCall(1500, () => this.navigateAGVNextWaypoint(agv));
+
+            } else {
+              this.navigateAGVNextWaypoint(agv);
+            }
+          }
+        });
+      }
+
+      updateFleetTelemetryUI() {
+        const listEl = document.getElementById('agv-telemetry-list');
+        listEl.innerHTML = '';
+
+        activeAGVs.forEach(agv => {
+          const row = document.createElement('div');
+          row.className = 'agv-row';
+          
+          let stateClass = 'state-moving';
+          if (agv.status.includes('LOAD')) stateClass = 'state-loading';
+          if (agv.status === 'CHARGING') stateClass = 'state-charging';
+
+          row.innerHTML = `
+            <div>
+              <span class="agv-id">${agv.id}</span>
+              <span style="color: #64748b; font-size: 0.7rem; margin-left: 6px;">🔋 ${agv.battery}%</span>
+            </div>
+            <span class="agv-state ${stateClass}">${agv.status}</span>
+          `;
+          listEl.appendChild(row);
+        });
+
+        document.getElementById('kpi-agv-count').textContent = activeAGVs.length;
+      }
+    }
+
+    // Phaser Configuration
+    const config = {
+      type: Phaser.AUTO,
+      parent: 'phaser-canvas',
+      width: 800,
+      height: 500,
+      scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH
+      },
+      scene: WarehouseScene
+    };
+
+    const game = new Phaser.Game(config);
+
+    // UI Interactive Controls
+    document.getElementById('btn-dispatch').addEventListener('click', () => {
+      totalParcelsMoved += 5;
+      document.getElementById('kpi-parcels').textContent = totalParcelsMoved;
+      // Pulse background notification
+      const scene = game.scene.keys['WarehouseScene'];
+      scene.cameras.main.flash(300, 6, 182, 212);
+    });
+
+    document.getElementById('btn-traffic').addEventListener('click', () => {
+      isBottleneckActive = !isBottleneckActive;
+      const riskEl = document.getElementById('kpi-risk');
+      const btn = document.getElementById('btn-traffic');
+
+      if (isBottleneckActive) {
+        riskEl.textContent = 'HIGH (HUB)';
+        riskEl.style.color = '#ef4444';
+        btn.textContent = '🟢 Clear Intersection Bottleneck';
+        bottleneckParticleEmitter.start();
+      } else {
+        riskEl.textContent = 'LOW';
+        riskEl.style.color = '#fbbf24';
+        btn.textContent = '⚠️ Simulate Intersection Bottleneck';
+        bottleneckParticleEmitter.stop();
+      }
+    });
+
+    document.getElementById('btn-add-agv').addEventListener('click', () => {
+      const scene = game.scene.keys['WarehouseScene'];
+      const newId = `AGV-0${activeAGVs.length + 1}`;
+      const route = ROUTES[activeAGVs.length % ROUTES.length];
+      scene.spawnAGV(newId, route);
+    });
+
+    document.getElementById('btn-pause').addEventListener('click', () => {
+      isSimPaused = !isSimPaused;
+      const btn = document.getElementById('btn-pause');
+      btn.textContent = isSimPaused ? '▶️ Resume Sim' : '⏸️ Pause Sim';
+
+      activeAGVs.forEach(agv => {
+        if (agv.tween) {
+          if (isSimPaused) agv.tween.pause();
+          else agv.tween.resume();
+        }
+      });
+    });
+  </script>
+</body>
+</html>

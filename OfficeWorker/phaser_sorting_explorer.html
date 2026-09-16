@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visual Sorting Algorithm Explorer - Phaser 3</title>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.0/dist/phaser.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: #090d16;
+      color: #f1f5f9;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+      overflow-x: hidden;
+    }
+
+    header {
+      width: 100%;
+      max-width: 1100px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .title-group h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .title-group p {
+      color: #94a3b8;
+      font-size: 0.9rem;
+      margin-top: 4px;
+    }
+
+    .badge {
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: #38bdf8;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    /* Main Container layout */
+    .app-container {
+      width: 100%;
+      max-width: 1100px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Controls Panel */
+    .controls-bar {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #cbd5e1;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    select, input[type="range"] {
+      background: #0f172a;
+      border: 1px solid #334155;
+      color: #f8fafc;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    select:focus, select:hover {
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+    }
+
+    .btn {
+      background: #334155;
+      color: #f8fafc;
+      border: none;
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.88rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .btn:hover {
+      background: #475569;
+      transform: translateY(-1px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #0369a1 0%, #1d4ed8 100%);
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+    }
+
+    .btn-accent {
+      background: linear-gradient(135deg, #0d9488 0%, #059669 100%);
+      color: #ffffff;
+    }
+
+    .btn-accent:hover {
+      background: linear-gradient(135deg, #0f766e 0%, #047857 100%);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171;
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.25);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    /* Phaser Viewport Box */
+    .viewport-wrapper {
+      position: relative;
+      background: #020617;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 480px;
+    }
+
+    #phaser-canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Stats & Code Panel */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .metric-card {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 14px 18px;
+    }
+
+    .metric-card .title {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .metric-card .value {
+      font-size: 1.4rem;
+      font-weight: 700;
+      font-family: 'Fira Code', monospace;
+      color: #38bdf8;
+      margin-top: 4px;
+    }
+
+    .legend {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      font-size: 0.82rem;
+      color: #94a3b8;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .color-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="title-group">
+      <h1>📊 Visual Sorting Explorer <span class="badge">Phaser Tweens & Graphics</span></h1>
+      <p>Interactive algorithm visualization powered by Phaser 3 tween interpolation and dynamic scene graphics.</p>
+    </div>
+  </header>
+
+  <div class="app-container">
+    <!-- Controls -->
+    <div class="controls-bar">
+      <div class="control-group">
+        <label for="algo-select">Algorithm</label>
+        <select id="algo-select">
+          <option value="bubble">Bubble Sort</option>
+          <option value="selection">Selection Sort</option>
+          <option value="insertion">Insertion Sort</option>
+          <option value="quick">Quick Sort (Lomuto)</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="size-range">Elements (<span id="size-val">16</span>)</label>
+        <input type="range" id="size-range" min="8" max="32" value="16" step="2">
+      </div>
+
+      <div class="control-group">
+        <label for="speed-range">Speed</label>
+        <input type="range" id="speed-range" min="50" max="600" value="300" step="50">
+      </div>
+
+      <div class="control-group">
+        <button id="btn-shuffle" class="btn">🔀 Shuffle</button>
+        <button id="btn-step" class="btn btn-accent">⏯️ Step</button>
+        <button id="btn-play" class="btn btn-primary">▶️ Play</button>
+        <button id="btn-reset" class="btn btn-danger">↺ Reset</button>
+      </div>
+    </div>
+
+    <!-- Phaser Canvas Container -->
+    <div class="viewport-wrapper">
+      <div id="phaser-canvas"></div>
+    </div>
+
+    <!-- Metric HUD -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="title">Current Status</div>
+        <div class="value" id="stat-status" style="color: #cbd5e1; font-size: 1.1rem;">Ready</div>
+      </div>
+      <div class="metric-card">
+        <div class="title">Comparisons</div>
+        <div class="value" id="stat-comparisons">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="title">Swaps / Writes</div>
+        <div class="value" id="stat-swaps">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="title">Active Operation</div>
+        <div class="value" id="stat-op" style="font-size: 0.95rem; color: #a7f3d0;">IDLE</div>
+      </div>
+    </div>
+
+    <!-- Color Legend -->
+    <div class="legend">
+      <div class="legend-item"><div class="color-dot" style="background: #38bdf8;"></div> Default Bar</div>
+      <div class="legend-item"><div class="color-dot" style="background: #f59e0b;"></div> Comparing</div>
+      <div class="legend-item"><div class="color-dot" style="background: #ec4899;"></div> Swapping / Pivot</div>
+      <div class="legend-item"><div class="color-dot" style="background: #10b981;"></div> Sorted</div>
+    </div>
+  </div>
+
+  <script>
+    // Audio synthesizer context for visual feedback
+    let audioCtx = null;
+    function playTone(freq, duration = 0.08) {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    // Color Palette Constants
+    const COLOR_DEFAULT = 0x38bdf8;  // Light Blue
+    const COLOR_COMPARE = 0xf59e0b;  // Amber Yellow
+    const COLOR_SWAP    = 0xec4899;  // Pink
+    const COLOR_PIVOT   = 0x8b5cf6;  // Purple
+    const COLOR_SORTED  = 0x10b981;  // Emerald Green
+
+    // App State Management
+    let arraySize = 16;
+    let arrayValues = [];
+    let barObjects = []; // Stores Phaser Container references
+    let stepGenerator = null;
+    let isPlaying = false;
+    let isAnimating = false;
+    let animSpeed = 300; // Tween duration ms
+
+    let comparisonsCount = 0;
+    let swapsCount = 0;
+
+    // Main Phaser Game Scene
+    class SortingScene extends Phaser.Scene {
+      constructor() {
+        super({ key: 'SortingScene' });
+      }
+
+      create() {
+        this.cameras.main.setBackgroundColor('#020617');
+        this.createGridBackground();
+        
+        // Initial array generation
+        generateArray();
+        this.renderArrayBars();
+
+        // Handle resize responsiveness
+        this.scale.on('resize', this.resize, this);
+      }
+
+      createGridBackground() {
+        const graphics = this.add.graphics();
+        graphics.lineStyle(1, 0x1e293b, 0.4);
+        for (let x = 0; x < 1000; x += 40) {
+          graphics.lineBetween(x, 0, x, 500);
+        }
+        for (let y = 0; y < 500; y += 40) {
+          graphics.lineBetween(0, y, 1000, y);
+        }
+      }
+
+      resize() {
+        if (barObjects.length > 0) {
+          this.repositionBars(false);
+        }
+      }
+
+      renderArrayBars() {
+        // Clear old bar containers
+        barObjects.forEach(b => b.destroy());
+        barObjects = [];
+
+        const width = this.cameras.main.width;
+        const height = this.cameras.main.height;
+        const maxVal = Math.max(...arrayValues);
+
+        const padding = 40;
+        const availableWidth = width - (padding * 2);
+        const barGap = Math.max(4, Math.floor(availableWidth / (arraySize * 5)));
+        const barWidth = Math.floor((availableWidth - (barGap * (arraySize - 1))) / arraySize);
+        const startX = (width - ((barWidth * arraySize) + (barGap * (arraySize - 1)))) / 2;
+
+        const maxBarHeight = height - 140;
+        const bottomY = height - 50;
+
+        for (let i = 0; i < arraySize; i++) {
+          const val = arrayValues[i];
+          const barHeight = Math.floor((val / maxVal) * maxBarHeight) + 20;
+          const x = startX + i * (barWidth + barGap) + barWidth / 2;
+          const y = bottomY - barHeight / 2;
+
+          // Create Container holding Rectangle + Value Label
+          const container = this.add.container(x, y);
+
+          // Bar graphics background
+          const barGraphic = this.add.graphics();
+          this.drawBarGraphic(barGraphic, barWidth, barHeight, COLOR_DEFAULT);
+          container.add(barGraphic);
+
+          // Value Text
+          const fontSize = Math.min(16, Math.max(10, barWidth - 4));
+          const text = this.add.text(0, barHeight / 2 + 12, val.toString(), {
+            fontFamily: 'Fira Code, monospace',
+            fontSize: `${fontSize}px`,
+            color: '#94a3b8'
+          }).setOrigin(0.5);
+          container.add(text);
+
+          // Store metadata on container
+          container.userData = {
+            index: i,
+            value: val,
+            barWidth: barWidth,
+            barHeight: barHeight,
+            graphic: barGraphic,
+            text: text,
+            currentColor: COLOR_DEFAULT
+          };
+
+          barObjects.push(container);
+        }
+      }
+
+      drawBarGraphic(graphics, width, height, color) {
+        graphics.clear();
+        
+        // Fill gradient style
+        graphics.fillStyle(color, 0.85);
+        graphics.fillRoundedRect(-width / 2, -height / 2, width, height, 6);
+
+        // Highlight border top
+        graphics.lineStyle(2, 0xffffff, 0.3);
+        graphics.strokeRoundedRect(-width / 2, -height / 2, width, height, 6);
+      }
+
+      setBarColor(container, color) {
+        if (!container || !container.userData) return;
+        container.userData.currentColor = color;
+        this.drawBarGraphic(container.userData.graphic, container.userData.barWidth, container.userData.barHeight, color);
+      }
+
+      repositionBars(animate = true) {
+        const width = this.cameras.main.width;
+        const padding = 40;
+        const availableWidth = width - (padding * 2);
+        const barGap = Math.max(4, Math.floor(availableWidth / (arraySize * 5)));
+        const barWidth = Math.floor((availableWidth - (barGap * (arraySize - 1))) / arraySize);
+        const startX = (width - ((barWidth * arraySize) + (barGap * (arraySize - 1)))) / 2;
+
+        barObjects.forEach((container, i) => {
+          const targetX = startX + i * (barWidth + barGap) + barWidth / 2;
+          if (animate) {
+            this.tweens.add({
+              targets: container,
+              x: targetX,
+              duration: animSpeed,
+              ease: 'Cubic.out'
+            });
+          } else {
+            container.x = targetX;
+          }
+        });
+      }
+
+      // Tween swap between two bar containers
+      swapBars(i, j, callback) {
+        const barA = barObjects[i];
+        const barB = barObjects[j];
+
+        if (!barA || !barB) {
+          if (callback) callback();
+          return;
+        }
+
+        const targetXA = barB.x;
+        const targetXB = barA.x;
+
+        // Audio frequency based on value
+        playTone(200 + barA.userData.value * 15, 0.1);
+        playTone(200 + barB.userData.value * 15, 0.1);
+
+        // Arching tween paths for clean visual swap
+        this.tweens.add({
+          targets: barA,
+          x: targetXA,
+          y: barA.y - 25, // lift up
+          duration: animSpeed * 0.5,
+          ease: 'Quad.out',
+          yoyo: true,
+          onComplete: () => {
+            barA.userData.index = j;
+          }
+        });
+
+        this.tweens.add({
+          targets: barB,
+          x: targetXB,
+          y: barB.y + 25, // dip down
+          duration: animSpeed * 0.5,
+          ease: 'Quad.out',
+          yoyo: true,
+          onComplete: () => {
+            barB.userData.index = i;
+            // Swap array reference elements
+            const temp = barObjects[i];
+            barObjects[i] = barObjects[j];
+            barObjects[j] = temp;
+            if (callback) callback();
+          }
+        });
+      }
+    }
+
+    // Initialize Phaser Configuration
+    const config = {
+      type: Phaser.AUTO,
+      parent: 'phaser-canvas',
+      width: 1000,
+      height: 480,
+      scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH
+      },
+      render: {
+        antialias: true
+      },
+      scene: SortingScene
+    };
+
+    const game = new Phaser.Game(config);
+
+    // Array Generation
+    function generateArray() {
+      arrayValues = [];
+      for (let i = 0; i < arraySize; i++) {
+        arrayValues.push(Math.floor(Math.random() * 85) + 15);
+      }
+      comparisonsCount = 0;
+      swapsCount = 0;
+      updateMetricsUI();
+    }
+
+    // Step Generators for Sorting Algorithms
+    function* bubbleSortGen() {
+      const n = arrayValues.length;
+      let arr = [...arrayValues];
+
+      for (let i = 0; i < n - 1; i++) {
+        for (let j = 0; j < n - i - 1; j++) {
+          yield { type: 'compare', indices: [j, j + 1], msg: `Comparing element ${arr[j]} with ${arr[j+1]}` };
+          if (arr[j] > arr[j + 1]) {
+            let temp = arr[j];
+            arr[j] = arr[j + 1];
+            arr[j + 1] = temp;
+            yield { type: 'swap', indices: [j, j + 1], msg: `Swapping ${arr[j+1]} > ${arr[j]}` };
+          }
+        }
+        yield { type: 'sorted', indices: [n - 1 - i], msg: `Element ${arr[n-1-i]} placed in sorted position` };
+      }
+      yield { type: 'sorted', indices: [0], msg: 'Sorting complete!' };
+    }
+
+    function* selectionSortGen() {
+      const n = arrayValues.length;
+      let arr = [...arrayValues];
+
+      for (let i = 0; i < n - 1; i++) {
+        let minIdx = i;
+        yield { type: 'pivot', indices: [minIdx], msg: `New min candidate at index ${i} (${arr[i]})` };
+
+        for (let j = i + 1; j < n; j++) {
+          yield { type: 'compare', indices: [j, minIdx], msg: `Comparing ${arr[j]} with min ${arr[minIdx]}` };
+          if (arr[j] < arr[minIdx]) {
+            yield { type: 'unhighlight', indices: [minIdx] };
+            minIdx = j;
+            yield { type: 'pivot', indices: [minIdx], msg: `Found smaller element ${arr[minIdx]}` };
+          }
+        }
+
+        if (minIdx !== i) {
+          let temp = arr[i];
+          arr[i] = arr[minIdx];
+          arr[minIdx] = temp;
+          yield { type: 'swap', indices: [i, minIdx], msg: `Swapping ${arr[minIdx]} into index ${i}` };
+        }
+        yield { type: 'sorted', indices: [i], msg: `Index ${i} sorted` };
+      }
+      yield { type: 'sorted', indices: [n - 1], msg: 'Sorting complete!' };
+    }
+
+    function* insertionSortGen() {
+      const n = arrayValues.length;
+      let arr = [...arrayValues];
+
+      yield { type: 'sorted', indices: [0], msg: 'First item initially sorted' };
+
+      for (let i = 1; i < n; i++) {
+        let j = i;
+        yield { type: 'pivot', indices: [j], msg: `Inserting element ${arr[j]}` };
+
+        while (j > 0) {
+          yield { type: 'compare', indices: [j - 1, j], msg: `Comparing ${arr[j-1]} and ${arr[j]}` };
+          if (arr[j - 1] > arr[j]) {
+            let temp = arr[j];
+            arr[j] = arr[j - 1];
+            arr[j - 1] = temp;
+            yield { type: 'swap', indices: [j - 1, j], msg: `Shifting ${arr[j]} left` };
+            j--;
+          } else {
+            break;
+          }
+        }
+        for (let k = 0; k <= i; k++) {
+          yield { type: 'sorted', indices: [k] };
+        }
+      }
+      yield { type: 'sorted', indices: Array.from({length: n}, (_, i) => i), msg: 'Sorting complete!' };
+    }
+
+    function* quickSortGen() {
+      let arr = [...arrayValues];
+
+      function* partition(low, high) {
+        let pivot = arr[high];
+        yield { type: 'pivot', indices: [high], msg: `Selected pivot ${pivot}` };
+
+        let i = low - 1;
+        for (let j = low; j < high; j++) {
+          yield { type: 'compare', indices: [j, high], msg: `Comparing ${arr[j]} to pivot ${pivot}` };
+          if (arr[j] < pivot) {
+            i++;
+            if (i !== j) {
+              let temp = arr[i];
+              arr[i] = arr[j];
+              arr[j] = temp;
+              yield { type: 'swap', indices: [i, j], msg: `Swapping ${arr[i]} & ${arr[j]}` };
+            }
+          }
+        }
+        let temp = arr[i + 1];
+        arr[i + 1] = arr[high];
+        arr[high] = temp;
+        yield { type: 'swap', indices: [i + 1, high], msg: `Placing pivot ${pivot} at sorted index ${i+1}` };
+        yield { type: 'sorted', indices: [i + 1] };
+        return i + 1;
+      }
+
+      function* quickSortHelper(low, high) {
+        if (low <= high) {
+          if (low === high) {
+            yield { type: 'sorted', indices: [low] };
+            return;
+          }
+          // Simple generator recursion stack simulation
+          let pIdx;
+          const pGen = partition(low, high);
+          let res = pGen.next();
+          while (!res.done) {
+            yield res.value;
+            res = pGen.next();
+          }
+          pIdx = res.value;
+
+          const leftGen = quickSortHelper(low, pIdx - 1);
+          let lRes = leftGen.next();
+          while (!lRes.done) {
+            yield lRes.value;
+            lRes = leftGen.next();
+          }
+
+          const rightGen = quickSortHelper(pIdx + 1, high);
+          let rRes = rightGen.next();
+          while (!rRes.done) {
+            yield rRes.value;
+            rRes = rightGen.next();
+          }
+        }
+      }
+
+      yield* quickSortHelper(0, arr.length - 1);
+      yield { type: 'sorted', indices: Array.from({length: arr.length}, (_, i) => i), msg: 'Quick Sort Complete!' };
+    }
+
+    // Step Execution Logic
+    function processNextStep(onComplete) {
+      if (!stepGenerator) {
+        const algo = document.getElementById('algo-select').value;
+        if (algo === 'bubble') stepGenerator = bubbleSortGen();
+        else if (algo === 'selection') stepGenerator = selectionSortGen();
+        else if (algo === 'insertion') stepGenerator = insertionSortGen();
+        else if (algo === 'quick') stepGenerator = quickSortGen();
+      }
+
+      const scene = game.scene.keys['SortingScene'];
+      const step = stepGenerator.next();
+
+      if (step.done) {
+        isPlaying = false;
+        updateUIState();
+        document.getElementById('stat-status').textContent = 'Completed!';
+        document.getElementById('stat-status').style.color = '#10b981';
+        document.getElementById('stat-op').textContent = 'DONE';
+        
+        // Final victory sound effect cascade
+        barObjects.forEach((b, i) => {
+          setTimeout(() => {
+            scene.setBarColor(b, COLOR_SORTED);
+            playTone(300 + i * 25, 0.06);
+          }, i * 40);
+        });
+
+        if (onComplete) onComplete(true);
+        return;
+      }
+
+      const action = step.value;
+      document.getElementById('stat-op').textContent = action.msg || action.type.toUpperCase();
+
+      // Reset non-sorted bar colors back to default prior to step
+      barObjects.forEach(b => {
+        if (b.userData.currentColor !== COLOR_SORTED) {
+          scene.setBarColor(b, COLOR_DEFAULT);
+        }
+      });
+
+      if (action.type === 'compare') {
+        comparisonsCount++;
+        action.indices.forEach(idx => {
+          if (barObjects[idx] && barObjects[idx].userData.currentColor !== COLOR_SORTED) {
+            scene.setBarColor(barObjects[idx], COLOR_COMPARE);
+          }
+        });
+        playTone(350, 0.05);
+        updateMetricsUI();
+        setTimeout(() => { if (onComplete) onComplete(false); }, animSpeed);
+
+      } else if (action.type === 'pivot') {
+        action.indices.forEach(idx => {
+          if (barObjects[idx]) scene.setBarColor(barObjects[idx], COLOR_PIVOT);
+        });
+        playTone(500, 0.08);
+        setTimeout(() => { if (onComplete) onComplete(false); }, animSpeed * 0.8);
+
+      } else if (action.type === 'swap') {
+        swapsCount++;
+        action.indices.forEach(idx => {
+          if (barObjects[idx]) scene.setBarColor(barObjects[idx], COLOR_SWAP);
+        });
+        updateMetricsUI();
+
+        scene.swapBars(action.indices[0], action.indices[1], () => {
+          if (onComplete) onComplete(false);
+        });
+
+      } else if (action.type === 'sorted') {
+        action.indices.forEach(idx => {
+          if (barObjects[idx]) scene.setBarColor(barObjects[idx], COLOR_SORTED);
+        });
+        playTone(600, 0.08);
+        setTimeout(() => { if (onComplete) onComplete(false); }, animSpeed * 0.5);
+
+      } else {
+        setTimeout(() => { if (onComplete) onComplete(false); }, 50);
+      }
+    }
+
+    function runAutoPlay() {
+      if (!isPlaying) return;
+      processNextStep((isFinished) => {
+        if (!isFinished && isPlaying) {
+          runAutoPlay();
+        }
+      });
+    }
+
+    function updateMetricsUI() {
+      document.getElementById('stat-comparisons').textContent = comparisonsCount;
+      document.getElementById('stat-swaps').textContent = swapsCount;
+    }
+
+    function updateUIState() {
+      document.getElementById('btn-play').textContent = isPlaying ? '⏸️ Pause' : '▶️ Play';
+      document.getElementById('btn-step').disabled = isPlaying;
+      document.getElementById('algo-select').disabled = isPlaying;
+      document.getElementById('size-range').disabled = isPlaying;
+    }
+
+    function resetSimulation() {
+      isPlaying = false;
+      stepGenerator = null;
+      document.getElementById('stat-status').textContent = 'Ready';
+      document.getElementById('stat-status').style.color = '#cbd5e1';
+      document.getElementById('stat-op').textContent = 'IDLE';
+      updateUIState();
+      
+      const scene = game.scene.keys['SortingScene'];
+      if (scene) scene.renderArrayBars();
+    }
+
+    // UI Event Listeners
+    document.getElementById('btn-shuffle').addEventListener('click', () => {
+      generateArray();
+      resetSimulation();
+    });
+
+    document.getElementById('btn-reset').addEventListener('click', () => {
+      generateArray();
+      resetSimulation();
+    });
+
+    document.getElementById('btn-step').addEventListener('click', () => {
+      document.getElementById('stat-status').textContent = 'Stepping...';
+      processNextStep();
+    });
+
+    document.getElementById('btn-play').addEventListener('click', () => {
+      isPlaying = !isPlaying;
+      updateUIState();
+      if (isPlaying) {
+        document.getElementById('stat-status').textContent = 'Running...';
+        document.getElementById('stat-status').style.color = '#38bdf8';
+        runAutoPlay();
+      } else {
+        document.getElementById('stat-status').textContent = 'Paused';
+        document.getElementById('stat-status').style.color = '#f59e0b';
+      }
+    });
+
+    document.getElementById('size-range').addEventListener('input', (e) => {
+      arraySize = parseInt(e.target.value);
+      document.getElementById('size-val').textContent = arraySize;
+      generateArray();
+      resetSimulation();
+    });
+
+    document.getElementById('speed-range').addEventListener('input', (e) => {
+      animSpeed = 650 - parseInt(e.target.value); // Invert so higher slider = faster
+    });
+
+    document.getElementById('algo-select').addEventListener('change', () => {
+      resetSimulation();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Autonomous Office Agent Phaser 3 Engine</title>
+  <!-- Load Phaser 3.80.0 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.0/dist/phaser.min.js"></script>
+  <style>
+    :root {
+      --bg-dark: #090d16;
+      --panel-bg: #1e293b;
+      --panel-border: #334155;
+      --accent-blue: #38bdf8;
+      --accent-purple: #c084fc;
+      --accent-gold: #fbbf24;
+      --accent-green: #34d399;
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      overflow-x: hidden;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      padding: 14px 24px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+    }
+
+    .title-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    h1 {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .pill {
+      background: rgba(192, 132, 252, 0.15);
+      color: var(--accent-purple);
+      border: 1px solid var(--accent-purple);
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    button {
+      background: #7e22ce;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    }
+
+    button:hover {
+      background: #6b21a8;
+      transform: translateY(-1px);
+    }
+
+    button.secondary {
+      background: #334155;
+      color: #cbd5e1;
+    }
+
+    button.secondary:hover {
+      background: #475569;
+    }
+
+    .main-layout {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 16px;
+      height: calc(100vh - 110px);
+    }
+
+    .canvas-container {
+      background: #0f172a;
+      border: 1px solid var(--panel-border);
+      border-radius: 14px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    #phaser-game {
+      width: 1050px;
+      height: 700px;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      height: 100%;
+      overflow-y: auto;
+    }
+
+    .card {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-sub);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .agent-card {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+      transition: border-color 0.2s;
+    }
+
+    .agent-card.active {
+      border-color: var(--accent-purple);
+    }
+
+    .agent-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .agent-name {
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .agent-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .agent-state {
+      font-size: 11px;
+      color: var(--text-sub);
+      margin-bottom: 6px;
+    }
+
+    .agent-thought {
+      font-size: 11px;
+      background: #1e293b;
+      padding: 6px 10px;
+      border-radius: 6px;
+      color: #c084fc;
+      font-style: italic;
+      border-left: 2px solid var(--accent-purple);
+    }
+
+    .log-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 260px;
+      overflow-y: auto;
+      font-family: 'JetBrains Mono', monospace, sans-serif;
+      font-size: 11px;
+    }
+
+    .log-item {
+      padding: 6px 8px;
+      border-radius: 4px;
+      background: #0f172a;
+      border-left: 3px solid #475569;
+      color: #cbd5e1;
+      line-height: 1.4;
+    }
+
+    .log-item.event-task { border-color: var(--accent-blue); }
+    .log-item.event-handoff { border-color: var(--accent-purple); }
+    .log-item.event-done { border-color: var(--accent-green); }
+
+    .canvas-overlay {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      display: flex;
+      gap: 10px;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .status-pill {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--panel-border);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="title-group">
+      <h1>⚡ Autonomous Agent Office — Phaser 3 Engine</h1>
+      <span class="pill">Hardware Accelerated • Event State Machine</span>
+    </div>
+
+    <div class="controls">
+      <button id="btn-spawn">⚡ Spawn Inbound Task</button>
+      <button id="btn-auto-loop" class="secondary">🔄 Auto-Loop: OFF</button>
+    </div>
+  </header>
+
+  <div class="main-layout">
+    <div class="canvas-container">
+      <div class="canvas-overlay">
+        <div class="status-pill">🟢 Tasks in Pipeline: <span id="val-active">0</span></div>
+        <div class="status-pill">🎉 Completed Contracts: <span id="val-completed">0</span></div>
+        <div class="status-pill">⚙️ Engine: <span style="color: #34d399;">Phaser 3 WebGL</span></div>
+      </div>
+      <div id="phaser-game"></div>
+    </div>
+
+    <div class="sidebar">
+      <div class="card">
+        <div class="card-title">
+          <span>🤖 Autonomous Agents</span>
+          <span style="font-size: 10px; color: var(--accent-purple);">5 Managed Nodes</span>
+        </div>
+        <div id="agent-roster"></div>
+      </div>
+
+      <div class="card" style="flex: 1; display: flex; flex-direction: column;">
+        <div class="card-title">📜 State Machine Event Log</div>
+        <div class="log-list" id="log-container">
+          <div class="log-item">Phaser 3 Scene ready. Click "Spawn Inbound Task" or turn ON Auto-Loop.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // PHASER 3 MULTI-AGENT STATE MACHINE ENGINE
+    // =========================================================================
+
+    const WAYPOINTS = {
+      MARKETING_DESK:  { x: 140, y: 150, name: "Marketing Intake" },
+      SALES_BUFFER:    { x: 410, y: 150, name: "Sales Reception Buffer" },
+      SDR_DESK:        { x: 420, y: 320, name: "SDR Desk" },
+      WHITEBOARD:      { x: 740, y: 150, name: "Tech Architecture Board" },
+      ARCHITECT_DESK:  { x: 750, y: 320, name: "Architect Desk" },
+      AE_DESK:         { x: 420, y: 560, name: "Account Executive Desk" },
+      EXECUTIVE_DESK:  { x: 750, y: 560, name: "Director Desk" },
+      FINANCE_DESK:    { x: 140, y: 560, name: "Finance Audit Station" },
+      COFFEE_BAR:      { x: 920, y: 150, name: "Breakroom Coffee Bar" }
+    };
+
+    let activePipelineTasks = 0;
+    let completedCount = 0;
+    let autoLoopEnabled = false;
+    let taskIdSequence = 200;
+    let sceneRef = null;
+
+    // Logging Utility
+    function addLog(msg, type = 'event-task') {
+      const container = document.getElementById('log-container');
+      const item = document.createElement('div');
+      item.className = `log-item ${type}`;
+      const time = new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      item.innerHTML = `<strong style="color: #94a3b8;">[${time}]</strong> ${msg}`;
+      container.prepend(item);
+    }
+
+    // Agent Class extending Phaser Container for high performance rendering
+    class AgentNode {
+      constructor(scene, id, name, role, color, homePoint) {
+        this.scene = scene;
+        this.id = id;
+        this.name = name;
+        this.role = role;
+        this.color = color;
+        this.homePoint = homePoint;
+
+        this.state = 'IDLE'; // IDLE, WALKING, WORKING, ROAMING
+        this.thought = "Monitoring workstation";
+        this.carriedTask = null;
+
+        // Container object placed at coordinates
+        this.container = scene.add.container(homePoint.x, homePoint.y);
+
+        // 1. Shadow
+        const shadow = scene.add.ellipse(0, 14, 28, 12, 0x000000, 0.4);
+
+        // 2. Status Ring
+        this.statusRing = scene.add.circle(0, 0, 18);
+        this.statusRing.setStrokeStyle(3, color);
+
+        // 3. Body Circle
+        const body = scene.add.circle(0, 0, 14, color);
+
+        // 4. Head
+        const head = scene.add.circle(0, -6, 7, 0xfde047);
+
+        // 5. Carried Task Folder Icon (Hidden by default)
+        this.taskGraphic = scene.add.rectangle(12, 0, 12, 14, 0xf59e0b);
+        this.taskGraphic.setStrokeStyle(1, 0xffffff);
+        this.taskGraphic.setVisible(false);
+
+        // 6. Name Text
+        const nameText = scene.add.text(0, -26, name, {
+          font: 'bold 11px Inter, Arial',
+          fill: '#ffffff'
+        }).setOrigin(0.5);
+
+        // 7. Role Text
+        const roleText = scene.add.text(0, -38, role, {
+          font: '9px Inter, Arial',
+          fill: '#94a3b8'
+        }).setOrigin(0.5);
+
+        // 8. Speech Bubble Graphics + Text
+        this.bubbleBg = scene.add.rectangle(0, -56, 120, 20, 0x0f172a, 0.95);
+        this.bubbleBg.setStrokeStyle(1, color);
+        this.bubbleText = scene.add.text(0, -56, '', {
+          font: '10px Inter, Arial',
+          fill: '#f8fafc'
+        }).setOrigin(0.5);
+        this.bubbleBg.setVisible(false);
+        this.bubbleText.setVisible(false);
+
+        // Add elements to Container
+        this.container.add([shadow, this.statusRing, body, head, this.taskGraphic, nameText, roleText, this.bubbleBg, this.bubbleText]);
+        this.container.setSize(36, 36);
+
+        // Idle Roam Timer
+        this.idleTimer = 0;
+      }
+
+      say(msg, duration = 2500) {
+        this.bubbleText.setText(msg);
+        const bounds = this.bubbleText.getBounds();
+        this.bubbleBg.setSize(bounds.width + 16, 22);
+        this.bubbleBg.setVisible(true);
+        this.bubbleText.setVisible(true);
+
+        if (this.sayTween) this.sayTween.stop();
+        this.sayTween = this.scene.tweens.add({
+          targets: [this.bubbleBg, this.bubbleText],
+          alpha: 1,
+          duration: 100,
+          onComplete: () => {
+            this.scene.time.delayedCall(duration, () => {
+              this.bubbleBg.setVisible(false);
+              this.bubbleText.setVisible(false);
+            });
+          }
+        });
+      }
+
+      setTask(taskId) {
+        this.carriedTask = taskId;
+        this.taskGraphic.setVisible(!!taskId);
+      }
+
+      moveTo(targetX, targetY, speedMs = 1200, onComplete) {
+        this.state = 'WALKING';
+        this.statusRing.setStrokeStyle(3, 0x38bdf8);
+
+        this.scene.tweens.add({
+          targets: this.container,
+          x: targetX,
+          y: targetY,
+          duration: speedMs,
+          ease: 'Power1',
+          onComplete: () => {
+            this.state = 'IDLE';
+            this.statusRing.setStrokeStyle(3, this.color);
+            if (onComplete) onComplete();
+          }
+        });
+      }
+
+      roamIfIdle() {
+        if (this.state !== 'IDLE' || this.carriedTask) return;
+        
+        // Random micro-roaming (e.g. coffee break or walking around desk)
+        if (Math.random() < 0.25) {
+          const targets = [WAYPOINTS.COFFEE_BAR, WAYPOINTS.WHITEBOARD, this.homePoint];
+          const dest = targets[Math.floor(Math.random() * targets.length)];
+          this.thought = `Walking to ${dest.name}...`;
+          this.moveTo(dest.x, dest.y, 2000, () => {
+            this.scene.time.delayedCall(3000, () => {
+              if (this.state === 'IDLE' && !this.carriedTask) {
+                this.moveTo(this.homePoint.x, this.homePoint.y, 1800, () => {
+                  this.thought = "Standing by at workstation";
+                });
+              }
+            });
+          });
+        }
+      }
+    }
+
+    // =========================================================================
+    // MAIN PHASER 3 SCENE
+    // =========================================================================
+    class OfficeScene extends Phaser.Scene {
+      constructor() {
+        super({ key: 'OfficeScene' });
+        this.agents = {};
+      }
+
+      create() {
+        sceneRef = this;
+
+        // 1. Draw Office Floor Grid
+        const grid = this.add.grid(525, 350, 1050, 700, 30, 30, 0x0f172a, 1, 0x1e293b, 1);
+
+        // 2. Draw Department Zones
+        this.drawZone(40, 60, 260, 220, 0x3b82f6, 'MARKETING & INBOUND');
+        this.drawZone(340, 60, 520, 600, 0xf59e0b, 'SALES DEPARTMENT (AUTONOMOUS AGENT SWARM)');
+        this.drawZone(40, 460, 260, 200, 0x10b981, 'FINANCE & LEGAL DEPT');
+        this.drawZone(880, 60, 140, 220, 0xc084fc, 'BREAKROOM');
+
+        // 3. Draw Desks
+        this.drawDesk(140, 120, 80, 50, 0x3b82f6, 'Courier Station');
+        this.drawDesk(380, 290, 100, 70, 0x38bdf8, 'SDR Workstation');
+        this.drawDesk(710, 290, 100, 70, 0xc084fc, 'Architect Station');
+        this.drawDesk(380, 530, 100, 70, 0xfbbf24, 'AE Workstation');
+        this.drawDesk(710, 530, 100, 70, 0x34d399, 'Director Station');
+        this.drawDesk(110, 530, 90, 60, 0x10b981, 'Finance Station');
+        this.drawDesk(900, 120, 80, 50, 0xa855f7, '☕ Coffee Bar');
+
+        // Whiteboard Graphics
+        const wb = this.add.rectangle(740, 110, 120, 12, 0xffffff);
+        wb.setStrokeStyle(2, 0x38bdf8);
+        this.add.text(740, 110, 'WHITEBOARD', { font: 'bold 9px Inter', fill: '#0f172a' }).setOrigin(0.5);
+
+        // 4. Initialize Agent Sprites
+        this.agents.courier = new AgentNode(this, 'courier', 'Alex', 'Marketing Courier', 0x3b82f6, WAYPOINTS.MARKETING_DESK);
+        this.agents.sdr = new AgentNode(this, 'sdr', 'Sam', 'SDR Qualifier', 0x38bdf8, WAYPOINTS.SDR_DESK);
+        this.agents.architect = new AgentNode(this, 'architect', 'Archie AI', 'Solution Architect', 0xc084fc, WAYPOINTS.ARCHITECT_DESK);
+        this.agents.ae = new AgentNode(this, 'ae', 'Taylor', 'Account Exec', 0xfbbf24, WAYPOINTS.AE_DESK);
+        this.agents.finance = new AgentNode(this, 'finance', 'Morgan', 'Billing Auditor', 0x10b981, WAYPOINTS.FINANCE_DESK);
+
+        // 5. Idle Roam Loop every 6 seconds
+        this.time.addEvent({
+          delay: 6000,
+          loop: true,
+          callback: () => {
+            Object.values(this.agents).forEach(agent => agent.roamIfIdle());
+            if (autoLoopEnabled && activePipelineTasks === 0) {
+              spawnTaskPipeline();
+            }
+          }
+        });
+
+        updateRosterUI();
+      }
+
+      drawZone(x, y, w, h, color, title) {
+        const rect = this.add.rectangle(x + w / 2, y + h / 2, w, h, color, 0.06);
+        rect.setStrokeStyle(1.5, color);
+        this.add.text(x + 10, y + 10, title, { font: 'bold 11px Inter', fill: Phaser.Display.Color.IntegerToColor(color).rgba });
+      }
+
+      drawDesk(x, y, w, h, color, label) {
+        const desk = this.add.rectangle(x + w / 2, y + h / 2, w, h, 0x1e293b);
+        desk.setStrokeStyle(2, color);
+        
+        // Monitor Screen
+        const monitor = this.add.rectangle(x + w / 2, y + 10, w - 20, 6, color);
+
+        this.add.text(x + w / 2, y + h / 2 + 6, label, { font: '10px Inter', fill: '#cbd5e1' }).setOrigin(0.5);
+      }
+    }
+
+    // =========================================================================
+    // TASK PIPELINE STATE MACHINE EXECUTION
+    // =========================================================================
+    function spawnTaskPipeline() {
+      if (!sceneRef) return;
+      
+      taskIdSequence++;
+      const taskId = `#${taskIdSequence}`;
+      activePipelineTasks++;
+      updateStatusDisplay();
+
+      addLog(`⚡ Task ${taskId} Ingested into Marketing Queue`, 'event-task');
+
+      const { courier, sdr, architect, ae, finance } = sceneRef.agents;
+
+      // STEP 1: Courier picks up task
+      courier.thought = `Processing Inbound Task ${taskId}`;
+      courier.say(`Received new lead task ${taskId}!`);
+      courier.setTask(taskId);
+
+      // Courier walks to Sales Buffer Queue
+      courier.moveTo(WAYPOINTS.SALES_BUFFER.x, WAYPOINTS.SALES_BUFFER.y, 1400, () => {
+        addLog(`📦 Courier dropped Task ${taskId} at Sales Buffer Queue`, 'event-handoff');
+        courier.say(`Dropped off ${taskId} at Sales Buffer`);
+
+        // STEP 2: SDR Agent walks to Buffer to ingest task
+        sdr.thought = `Ingesting ${taskId} at Sales Reception`;
+        sdr.say(`On my way to pick up ${taskId}!`);
+
+        sdr.moveTo(WAYPOINTS.SALES_BUFFER.x, WAYPOINTS.SALES_BUFFER.y, 1200, () => {
+          courier.setTask(null);
+          sdr.setTask(taskId);
+          sdr.say(`Acquired ${taskId}. Returning to desk...`);
+
+          // Courier returns home
+          courier.moveTo(WAYPOINTS.MARKETING_DESK.x, WAYPOINTS.MARKETING_DESK.y, 1400);
+
+          // SDR returns to Desk to qualify lead
+          sdr.moveTo(WAYPOINTS.SDR_DESK.x, WAYPOINTS.SDR_DESK.y, 1200, () => {
+            sdr.state = 'WORKING';
+            sdr.thought = `Qualifying lead & calculating intent score for ${taskId}...`;
+            sdr.say(`Qualifying Lead... Score: 98/100`);
+
+            sceneRef.time.delayedCall(2000, () => {
+              sdr.state = 'IDLE';
+              addLog(`✅ SDR Agent qualified Task ${taskId} (High Intent)`, 'event-task');
+
+              // STEP 3: SDR walks to Architect Desk for Handoff
+              sdr.say(`Handing ${taskId} to Architecture Team`);
+              sdr.moveTo(WAYPOINTS.ARCHITECT_DESK.x - 40, WAYPOINTS.ARCHITECT_DESK.y, 1200, () => {
+                sdr.setTask(null);
+                architect.setTask(taskId);
+                sdr.say(`Here is ${taskId}, Archie!`);
+
+                // SDR returns home
+                sdr.moveTo(WAYPOINTS.SDR_DESK.x, WAYPOINTS.SDR_DESK.y, 1200, () => {
+                  sdr.thought = "Standing by for next inbound lead";
+                });
+
+                // Architect walks to Whiteboard to design architecture
+                architect.thought = `Designing Custom Architecture for ${taskId}`;
+                architect.say(`Drafting System Architecture for ${taskId}...`);
+                architect.moveTo(WAYPOINTS.WHITEBOARD.x, WAYPOINTS.WHITEBOARD.y + 35, 1200, () => {
+                  architect.state = 'WORKING';
+                  architect.say(`Querying Vector DB & Building Spec...`);
+
+                  sceneRef.time.delayedCall(2500, () => {
+                    architect.state = 'IDLE';
+                    addLog(`📄 Architect generated 10-page Technical Proposal for ${taskId}`, 'event-handoff');
+
+                    // Architect walks to AE Desk
+                    architect.say(`Delivering Proposal ${taskId} to AE Desk`);
+                    architect.moveTo(WAYPOINTS.AE_DESK.x, WAYPOINTS.AE_DESK.y, 1400, () => {
+                      architect.setTask(null);
+                      ae.setTask(taskId);
+                      architect.say(`Proposal ready, Taylor!`);
+
+                      // Architect returns home
+                      architect.moveTo(WAYPOINTS.ARCHITECT_DESK.x, WAYPOINTS.ARCHITECT_DESK.y, 1400, () => {
+                        architect.thought = "Standing by for new architecture tasks";
+                      });
+
+                      // STEP 4: AE Agent signs contract at AE Desk
+                      ae.thought = `Drafting $150k Enterprise Contract for ${taskId}`;
+                      ae.state = 'WORKING';
+                      ae.say(`Generating Enterprise Contract...`);
+
+                      sceneRef.time.delayedCall(2000, () => {
+                        ae.state = 'IDLE';
+                        addLog(`🎉 AE Agent closed deal ${taskId}! Signed by Client.`, 'event-done');
+
+                        // AE walks task down to Finance Dept
+                        ae.say(`Taking contract ${taskId} to Finance!`);
+                        ae.moveTo(WAYPOINTS.FINANCE_DESK.x, WAYPOINTS.FINANCE_DESK.y, 1600, () => {
+                          ae.setTask(null);
+                          finance.setTask(taskId);
+                          ae.say(`Finance team, contract is signed!`);
+
+                          // AE returns home
+                          ae.moveTo(WAYPOINTS.AE_DESK.x, WAYPOINTS.AE_DESK.y, 1600, () => {
+                            ae.thought = "Awaiting next enterprise deal";
+                          });
+
+                          // STEP 5: Finance processes invoice
+                          finance.thought = `Issuing Stripe Invoice for ${taskId}`;
+                          finance.state = 'WORKING';
+                          finance.say(`Executing Stripe Auto-Billing...`);
+
+                          sceneRef.time.delayedCall(2000, () => {
+                            finance.state = 'IDLE';
+                            finance.setTask(null);
+                            activePipelineTasks = Math.max(0, activePipelineTasks - 1);
+                            completedCount++;
+                            updateStatusDisplay();
+
+                            addLog(`💳 Finance executed auto-billing for Task ${taskId}. Pipeline Complete!`, 'event-done');
+                            finance.say(`Task ${taskId} fully completed & billed! 🎉`);
+                            finance.thought = "Audit complete. Standing by.";
+                          });
+                        });
+                      });
+                    });
+                  });
+                });
+              });
+            });
+          });
+        });
+      });
+    }
+
+    function updateStatusDisplay() {
+      document.getElementById('val-active').innerText = activePipelineTasks;
+      document.getElementById('val-completed').innerText = completedCount;
+    }
+
+    function updateRosterUI() {
+      const roster = document.getElementById('agent-roster');
+      if (!roster || !sceneRef) return;
+      
+      roster.innerHTML = '';
+      Object.values(sceneRef.agents).forEach(agent => {
+        const card = document.createElement('div');
+        card.className = `agent-card ${agent.state !== 'IDLE' ? 'active' : ''}`;
+        card.innerHTML = `
+          <div class="agent-header">
+            <span class="agent-name">
+              <span class="agent-dot" style="background: #${agent.color.toString(16)}"></span>
+              ${agent.name}
+            </span>
+            <span style="font-size: 10px; font-weight: bold; color: ${agent.state === 'WALKING' ? '#38bdf8' : '#94a3b8'}">
+              ${agent.state}
+            </span>
+          </div>
+          <div class="agent-state">${agent.role}</div>
+          <div class="agent-thought">"${agent.thought}"</div>
+        `;
+        roster.appendChild(card);
+      });
+    }
+
+    // =========================================================================
+    // INITIALIZE PHASER 3 GAME INSTANCE
+    // =========================================================================
+    const config = {
+      type: Phaser.AUTO,
+      width: 1050,
+      height: 700,
+      parent: 'phaser-game',
+      backgroundColor: '#0f172a',
+      scene: [OfficeScene]
+    };
+
+    const game = new Phaser.Game(config);
+
+    // Event Listeners
+    document.getElementById('btn-spawn').addEventListener('click', () => {
+      spawnTaskPipeline();
+    });
+
+    document.getElementById('btn-auto-loop').addEventListener('click', (e) => {
+      autoLoopEnabled = !autoLoopEnabled;
+      e.target.innerText = autoLoopEnabled ? '🔄 Auto-Loop: ON' : '🔄 Auto-Loop: OFF';
+      e.target.style.background = autoLoopEnabled ? '#059669' : '#334155';
+      if (autoLoopEnabled && activePipelineTasks === 0) {
+        spawnTaskPipeline();
+      }
+    });
+
+    setInterval(updateRosterUI, 300);
+
+  </script>
+</body>
+</html>

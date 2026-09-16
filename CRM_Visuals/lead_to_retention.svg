@@ -21,95 +21,257 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#030712"
      inkscape:document-units="mm"
-     inkscape:current-layer="layer-pipeline-funnel" />
-  
-  <defs id="defs-lead-retention">
+     inkscape:current-layer="layer-background"
+     inkscape:zoom="0.99155754"
+     inkscape:cx="673.68758"
+     inkscape:cy="350.45873"
+     inkscape:window-width="1920"
+     inkscape:window-height="1009"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1" />
+  <defs
+     id="defs-lead-retention">
     <!-- Glow Filters -->
-    <filter id="glow-cyan" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="2.5" result="blur" />
-      <feMerge>
-        <feMergeNode in="blur" />
-        <feMergeNode in="SourceGraphic" />
+    <filter
+       id="glow-cyan"
+       x="-2"
+       y="-inf"
+       width="5"
+       height="inf">
+      <feGaussianBlur
+         stdDeviation="2.5"
+         result="blur"
+         id="feGaussianBlur1" />
+      <feMerge
+         id="feMerge2">
+        <feMergeNode
+           in="blur"
+           id="feMergeNode1" />
+        <feMergeNode
+           in="SourceGraphic"
+           id="feMergeNode2" />
       </feMerge>
     </filter>
-
-    <filter id="glow-purple" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="2.5" result="blur" />
-      <feMerge>
-        <feMergeNode in="blur" />
-        <feMergeNode in="SourceGraphic" />
+    <filter
+       id="glow-purple"
+       x="-2"
+       y="-inf"
+       width="5"
+       height="inf">
+      <feGaussianBlur
+         stdDeviation="2.5"
+         result="blur"
+         id="feGaussianBlur2" />
+      <feMerge
+         id="feMerge4">
+        <feMergeNode
+           in="blur"
+           id="feMergeNode3" />
+        <feMergeNode
+           in="SourceGraphic"
+           id="feMergeNode4" />
       </feMerge>
     </filter>
-
-    <filter id="glow-amber" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="2.5" result="blur" />
-      <feMerge>
-        <feMergeNode in="blur" />
-        <feMergeNode in="SourceGraphic" />
+    <filter
+       id="glow-amber"
+       x="-2"
+       y="-inf"
+       width="5"
+       height="inf">
+      <feGaussianBlur
+         stdDeviation="2.5"
+         result="blur"
+         id="feGaussianBlur4" />
+      <feMerge
+         id="feMerge6">
+        <feMergeNode
+           in="blur"
+           id="feMergeNode5" />
+        <feMergeNode
+           in="SourceGraphic"
+           id="feMergeNode6" />
       </feMerge>
     </filter>
-
-    <filter id="glow-emerald" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="2.5" result="blur" />
-      <feMerge>
-        <feMergeNode in="blur" />
-        <feMergeNode in="SourceGraphic" />
+    <filter
+       id="glow-emerald"
+       x="-2"
+       y="-inf"
+       width="5"
+       height="inf">
+      <feGaussianBlur
+         stdDeviation="2.5"
+         result="blur"
+         id="feGaussianBlur6" />
+      <feMerge
+         id="feMerge8">
+        <feMergeNode
+           in="blur"
+           id="feMergeNode7" />
+        <feMergeNode
+           in="SourceGraphic"
+           id="feMergeNode8" />
       </feMerge>
     </filter>
-
-    <filter id="glow-gold" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="3.5" result="blur" />
-      <feMerge>
-        <feMergeNode in="blur" />
-        <feMergeNode in="SourceGraphic" />
+    <filter
+       id="glow-gold"
+       x="-0.32592593"
+       y="-0.20952381"
+       width="1.6518519"
+       height="1.4190476">
+      <feGaussianBlur
+         stdDeviation="3.5"
+         result="blur"
+         id="feGaussianBlur8" />
+      <feMerge
+         id="feMerge10">
+        <feMergeNode
+           in="blur"
+           id="feMergeNode9" />
+        <feMergeNode
+           in="SourceGraphic"
+           id="feMergeNode10" />
       </feMerge>
     </filter>
-
     <!-- Linear Gradients -->
-    <linearGradient id="grad-card-bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0f172a" stop-opacity="0.85" />
-      <stop offset="100%" stop-color="#070b19" stop-opacity="0.90" />
+    <linearGradient
+       id="grad-card-bg"
+       x1="0%"
+       y1="0%"
+       x2="100%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#0f172a"
+         stop-opacity="0.85"
+         id="stop10" />
+      <stop
+         offset="100%"
+         stop-color="#070b19"
+         stop-opacity="0.90"
+         id="stop11" />
     </linearGradient>
-
-    <linearGradient id="grad-campaign" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#00f3ff" stop-opacity="0.9" />
-      <stop offset="100%" stop-color="#0284c7" stop-opacity="0.6" />
+    <linearGradient
+       id="grad-campaign"
+       x1="0%"
+       y1="0%"
+       x2="0%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#00f3ff"
+         stop-opacity="0.9"
+         id="stop12" />
+      <stop
+         offset="100%"
+         stop-color="#0284c7"
+         stop-opacity="0.6"
+         id="stop13" />
     </linearGradient>
-
-    <linearGradient id="grad-leads" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.35" />
-      <stop offset="100%" stop-color="#0284c7" stop-opacity="0.1" />
+    <linearGradient
+       id="grad-leads"
+       x1="0%"
+       y1="0%"
+       x2="0%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#38bdf8"
+         stop-opacity="0.35"
+         id="stop14" />
+      <stop
+         offset="100%"
+         stop-color="#0284c7"
+         stop-opacity="0.1"
+         id="stop15" />
     </linearGradient>
-
-    <linearGradient id="grad-sales" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#c084fc" stop-opacity="0.35" />
-      <stop offset="100%" stop-color="#7e22ce" stop-opacity="0.1" />
+    <linearGradient
+       id="grad-sales"
+       x1="0%"
+       y1="0%"
+       x2="0%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#c084fc"
+         stop-opacity="0.35"
+         id="stop16" />
+      <stop
+         offset="100%"
+         stop-color="#7e22ce"
+         stop-opacity="0.1"
+         id="stop17" />
     </linearGradient>
-
-    <linearGradient id="grad-invoiced" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.35" />
-      <stop offset="100%" stop-color="#b45309" stop-opacity="0.1" />
+    <linearGradient
+       id="grad-invoiced"
+       x1="0%"
+       y1="0%"
+       x2="0%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#fbbf24"
+         stop-opacity="0.35"
+         id="stop18" />
+      <stop
+         offset="100%"
+         stop-color="#b45309"
+         stop-opacity="0.1"
+         id="stop19" />
     </linearGradient>
-
-    <linearGradient id="grad-returning" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#4ade80" stop-opacity="0.35" />
-      <stop offset="100%" stop-color="#15803d" stop-opacity="0.1" />
+    <linearGradient
+       id="grad-returning"
+       x1="0%"
+       y1="0%"
+       x2="0%"
+       y2="100%">
+      <stop
+         offset="0%"
+         stop-color="#4ade80"
+         stop-opacity="0.35"
+         id="stop20" />
+      <stop
+         offset="100%"
+         stop-color="#15803d"
+         stop-opacity="0.1"
+         id="stop21" />
     </linearGradient>
-
-    <linearGradient id="grad-revenue" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#eab308" />
-      <stop offset="50%" stop-color="#22c55e" />
-      <stop offset="100%" stop-color="#00f3ff" />
+    <linearGradient
+       id="grad-revenue"
+       x1="0%"
+       y1="0%"
+       x2="100%"
+       y2="0%">
+      <stop
+         offset="0%"
+         stop-color="#eab308"
+         id="stop22" />
+      <stop
+         offset="50%"
+         stop-color="#22c55e"
+         id="stop23" />
+      <stop
+         offset="100%"
+         stop-color="#00f3ff"
+         id="stop24" />
     </linearGradient>
-
     <!-- Cyber Grid Pattern -->
-    <pattern id="grid-pattern" width="10" height="10" patternUnits="userSpaceOnUse">
-      <path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(0, 243, 255, 0.04)" stroke-width="0.3" />
+    <pattern
+       id="grid-pattern"
+       width="10"
+       height="10"
+       patternUnits="userSpaceOnUse">
+      <path
+         d="M 10 0 L 0 0 0 10"
+         fill="none"
+         stroke="rgba(0, 243, 255, 0.04)"
+         stroke-width="0.3"
+         id="path24" />
     </pattern>
   </defs>
-
   <!-- Standalone CSS Animation Engine -->
-  <style>
+  <style
+     id="style24">
     @keyframes conduit-dash {
       from { stroke-dashoffset: 40; }
       to { stroke-dashoffset: 0; }
@@ -152,218 +314,929 @@
       cursor: pointer;
     }
   </style>
-
   <!-- LAYER 0: Canvas Background & Grid -->
-  <g inkscape:groupmode="layer" inkscape:label="Canvas Background" id="layer-background">
-    <rect width="297" height="210" fill="#070b19" id="rect-bg" />
-    <rect width="297" height="210" fill="url(#grid-pattern)" id="rect-grid" />
+  <g
+     inkscape:groupmode="layer"
+     inkscape:label="Canvas Background"
+     id="layer-background">
+    <rect
+       width="297"
+       height="210"
+       fill="#070b19"
+       id="rect-bg" />
+    <rect
+       width="297"
+       height="210"
+       fill="url(#grid-pattern)"
+       id="rect-grid" />
     <!-- Outer Cyber Border Frame -->
-    <rect x="3" y="3" width="291" height="204" rx="4" fill="none" stroke="rgba(0, 243, 255, 0.2)" stroke-width="0.6" id="rect-border" />
+    <rect
+       x="3"
+       y="3"
+       width="291"
+       height="204"
+       rx="4"
+       fill="none"
+       stroke="rgba(0, 243, 255, 0.2)"
+       stroke-width="0.6"
+       id="rect-border" />
     <!-- System Title -->
-    <text x="148.5" y="12" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-weight="700" font-size="6" fill="#00f3ff" letter-spacing="1.2" id="text-title">
+    <text
+       x="148.5"
+       y="12"
+       text-anchor="middle"
+       font-family="'Segoe UI', Roboto, sans-serif"
+       font-weight="700"
+       font-size="6"
+       fill="#00f3ff"
+       letter-spacing="1.2"
+       id="text-title"
+       style="-inkscape-font-specification:'Segoe UI, Roboto, sans-serif, Bold';font-family:'Segoe UI', Roboto, sans-serif;font-weight:bold;font-style:normal;font-stretch:normal;font-variant:normal;font-size:4.23333px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:1.2;text-anchor:middle;fill:#00f3ff">
       CRM AUTOMATION ENGINE: MARKETING CAMPAIGN → LEAD FUNNEL → REVENUE OUTPUT
     </text>
   </g>
-
   <!-- LAYER 1: Flow Conduits & Data Lines -->
-  <g inkscape:groupmode="layer" inkscape:label="Conduits & Flows" id="layer-conduits">
+  <g
+     inkscape:groupmode="layer"
+     inkscape:label="Conduits  Flows"
+     id="layer-conduits">
     <!-- Conduit 1: Campaign Input -> LEADS Stage -->
-    <path id="conduit-campaign-leads" d="M 45 42 L 65 42" stroke="#00f3ff" stroke-width="1.2" fill="none" class="animated-conduit" filter="url(#glow-cyan)" />
-    
+    <path
+       id="conduit-campaign-leads"
+       d="M 45 42 L 65 42"
+       stroke="#00f3ff"
+       stroke-width="1.2"
+       fill="none"
+       class="animated-conduit"
+       filter="url(#glow-cyan)" />
     <!-- Conduit 2: LEADS -> Sales Stage -->
-    <path id="conduit-leads-sales" d="M 92.5 105 L 119.5 105" stroke="#a855f7" stroke-width="1.2" fill="none" class="animated-conduit" filter="url(#glow-purple)" />
-    
+    <path
+       id="conduit-leads-sales"
+       d="M 92.5 105 L 119.5 105"
+       stroke="#a855f7"
+       stroke-width="1.2"
+       fill="none"
+       class="animated-conduit"
+       filter="url(#glow-purple)" />
     <!-- Conduit 3: Sales -> Invoiced Stage -->
-    <path id="conduit-sales-invoiced" d="M 147 115 L 176.5 115" stroke="#f59e0b" stroke-width="1.2" fill="none" class="animated-conduit" filter="url(#glow-amber)" />
-    
+    <path
+       id="conduit-sales-invoiced"
+       d="M 147 115 L 176.5 115"
+       stroke="#f59e0b"
+       stroke-width="1.2"
+       fill="none"
+       class="animated-conduit"
+       filter="url(#glow-amber)" />
     <!-- Conduit 4: Invoiced -> Returning Customer Stage -->
-    <path id="conduit-invoiced-returning" d="M 204 125 L 232 125" stroke="#22c55e" stroke-width="1.2" fill="none" class="animated-conduit" filter="url(#glow-emerald)" />
-
+    <path
+       id="conduit-invoiced-returning"
+       d="M 204 125 L 232 125"
+       stroke="#22c55e"
+       stroke-width="1.2"
+       fill="none"
+       class="animated-conduit"
+       filter="url(#glow-emerald)" />
     <!-- Conduit 5: Returning Stage -> Financial Output Cards -->
-    <path id="conduit-returning-customers" d="M 259.5 100 L 268 62" stroke="#22c55e" stroke-width="0.8" fill="none" stroke-dasharray="3 3" />
-    <path id="conduit-returning-profit" d="M 259.5 125 L 268 117" stroke="#f59e0b" stroke-width="0.8" fill="none" stroke-dasharray="3 3" />
-    <path id="conduit-returning-revenue" d="M 259.5 145 L 268 172" stroke="#00f3ff" stroke-width="1" fill="none" stroke-dasharray="4 2" filter="url(#glow-cyan)" />
-
+    <path
+       id="conduit-returning-customers"
+       d="M 259.5 100 L 268 62"
+       stroke="#22c55e"
+       stroke-width="0.8"
+       fill="none"
+       stroke-dasharray="3 3" />
+    <path
+       id="conduit-returning-profit"
+       d="M 259.5 125 L 268 117"
+       stroke="#f59e0b"
+       stroke-width="0.8"
+       fill="none"
+       stroke-dasharray="3 3" />
+    <path
+       id="conduit-returning-revenue"
+       d="M 259.5 145 L 268 172"
+       stroke="#00f3ff"
+       stroke-width="1"
+       fill="none"
+       stroke-dasharray="4 2"
+       filter="url(#glow-cyan)" />
     <!-- Referral Feedback Conduit: Returning Stage Back to Marketing Campaign -->
-    <path id="conduit-referral-feedback" d="M 246 170 C 246 198, 28 198, 28 65" stroke="rgba(0, 243, 255, 0.4)" stroke-width="0.7" fill="none" stroke-dasharray="4 4" id="path-feedback-loop" />
-    <text x="137" y="196" text-anchor="middle" font-family="sans-serif" font-size="3" fill="#38bdf8" letter-spacing="0.5">
-      ↺ AUTOMATED REFERRAL &amp; LTV EXPANSION FEEDBACK LOOP
+    <path
+       id="path-feedback-loop"
+       d="M 246 170 C 246 198, 28 198, 28 65"
+       stroke="rgba(0, 243, 255, 0.4)"
+       stroke-width="0.7"
+       fill="none"
+       stroke-dasharray="4 4" />
+    <text
+       x="137"
+       y="196"
+       text-anchor="middle"
+       font-family="sans-serif"
+       font-size="3"
+       fill="#38bdf8"
+       letter-spacing="0.5"
+       id="text24">
+      ↺ AUTOMATED REFERRAL  LTV EXPANSION FEEDBACK LOOP
     </text>
   </g>
-
   <!-- LAYER 2: Marketing Campaign Input Node -->
-  <g inkscape:groupmode="layer" inkscape:label="Marketing Campaign Input" id="layer-marketing-campaign">
+  <g
+     inkscape:groupmode="layer"
+     inkscape:label="Marketing Campaign Input"
+     id="layer-marketing-campaign">
     <!-- Campaign Input Container Box -->
-    <rect x="10" y="20" width="35" height="160" rx="3" fill="url(#grad-card-bg)" stroke="#00f3ff" stroke-width="0.7" id="node-campaign-box" class="pulse-hover" filter="url(#glow-cyan)" />
-    
+    <rect
+       x="10"
+       y="20"
+       width="35"
+       height="160"
+       rx="3"
+       fill="url(#grad-card-bg)"
+       stroke="#00f3ff"
+       stroke-width="0.7"
+       id="node-campaign-box"
+       class="pulse-hover"
+       filter="url(#glow-cyan)" />
     <!-- Title & Status -->
-    <rect x="12" y="24" width="31" height="7" rx="1.5" fill="rgba(0, 243, 255, 0.15)" stroke="#00f3ff" stroke-width="0.4" />
-    <text x="27.5" y="28.8" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="3.2" fill="#00f3ff" id="text-campaign-title">
+    <rect
+       x="12"
+       y="24"
+       width="31"
+       height="7"
+       rx="1.5"
+       fill="rgba(0, 243, 255, 0.15)"
+       stroke="#00f3ff"
+       stroke-width="0.4"
+       id="rect24" />
+    <text
+       x="27.5"
+       y="28.8"
+       text-anchor="middle"
+       font-family="sans-serif"
+       font-weight="700"
+       font-size="3.2"
+       fill="#00f3ff"
+       id="text-campaign-title">
       MARKETING
     </text>
-    <text x="27.5" y="34" text-anchor="middle" font-family="sans-serif" font-weight="600" font-size="2.5" fill="#38bdf8">
+    <text
+       x="27.5"
+       y="34"
+       text-anchor="middle"
+       font-family="sans-serif"
+       font-weight="600"
+       font-size="2.5"
+       fill="#38bdf8"
+       id="text25">
       AD CAMPAIGN
     </text>
-
     <!-- Radar Sweep Visual -->
-    <circle cx="28" cy="48" r="11" fill="#070b19" stroke="#00f3ff" stroke-width="0.5" />
-    <circle cx="28" cy="48" r="7" fill="none" stroke="rgba(0, 243, 255, 0.4)" stroke-width="0.3" stroke-dasharray="1 1" />
-    <circle cx="28" cy="48" r="3" fill="none" stroke="rgba(0, 243, 255, 0.6)" stroke-width="0.3" />
+    <circle
+       cx="28"
+       cy="48"
+       r="11"
+       fill="#070b19"
+       stroke="#00f3ff"
+       stroke-width="0.5"
+       id="circle25" />
+    <circle
+       cx="28"
+       cy="48"
+       r="7"
+       fill="none"
+       stroke="rgba(0, 243, 255, 0.4)"
+       stroke-width="0.3"
+       stroke-dasharray="1 1"
+       id="circle26" />
+    <circle
+       cx="28"
+       cy="48"
+       r="3"
+       fill="none"
+       stroke="rgba(0, 243, 255, 0.6)"
+       stroke-width="0.3"
+       id="circle27" />
     <!-- Radar Sweep Line -->
-    <line x1="28" y1="48" x2="38" y2="48" stroke="#00f3ff" stroke-width="0.8" class="radar-beam" id="radar-beam-line" />
-
+    <line
+       x1="28"
+       y1="48"
+       x2="38"
+       y2="48"
+       stroke="#00f3ff"
+       stroke-width="0.8"
+       class="radar-beam"
+       id="radar-beam-line" />
     <!-- Marketing Ingestion Channels / Ad Spend Badges -->
-    <g id="campaign-channels" transform="translate(13, 64)">
+    <g
+       id="campaign-channels"
+       transform="translate(13, 64)">
       <!-- Channel 1: Paid Search / Google Ads -->
-      <rect x="0" y="0" width="29" height="14" rx="1.5" fill="rgba(15, 23, 42, 0.9)" stroke="rgba(0, 243, 255, 0.4)" stroke-width="0.4" />
-      <circle cx="4" cy="7" r="2" fill="#00f3ff" />
-      <text x="8" y="6" font-family="sans-serif" font-size="2.3" fill="#f8fafc">Google PPC Ads</text>
-      <text x="8" y="10.5" font-family="sans-serif" font-size="2" fill="#00f3ff">Pulling 45 leads/hr</text>
-
+      <rect
+         x="0"
+         y="0"
+         width="29"
+         height="14"
+         rx="1.5"
+         fill="rgba(15, 23, 42, 0.9)"
+         stroke="rgba(0, 243, 255, 0.4)"
+         stroke-width="0.4"
+         id="rect27" />
+      <circle
+         cx="4"
+         cy="7"
+         r="2"
+         fill="#00f3ff"
+         id="circle28" />
+      <text
+         x="8"
+         y="6"
+         font-family="sans-serif"
+         font-size="2.3"
+         fill="#f8fafc"
+         id="text28">Google PPC Ads</text>
+      <text
+         x="8"
+         y="10.5"
+         font-family="sans-serif"
+         font-size="2"
+         fill="#00f3ff"
+         id="text29">Pulling 45 leads/hr</text>
       <!-- Channel 2: Social Media Ads -->
-      <rect x="0" y="18" width="29" height="14" rx="1.5" fill="rgba(15, 23, 42, 0.9)" stroke="rgba(168, 85, 247, 0.4)" stroke-width="0.4" />
-      <circle cx="4" cy="25" r="2" fill="#a855f7" />
-      <text x="8" y="24" font-family="sans-serif" font-size="2.3" fill="#f8fafc">Social &amp; LinkedIn</text>
-      <text x="8" y="28.5" font-family="sans-serif" font-size="2" fill="#a855f7">Pulling 28 leads/hr</text>
-
+      <rect
+         x="0"
+         y="18"
+         width="29"
+         height="14"
+         rx="1.5"
+         fill="rgba(15, 23, 42, 0.9)"
+         stroke="rgba(168, 85, 247, 0.4)"
+         stroke-width="0.4"
+         id="rect29" />
+      <circle
+         cx="4"
+         cy="25"
+         r="2"
+         fill="#a855f7"
+         id="circle29" />
+      <text
+         x="8"
+         y="24"
+         font-family="sans-serif"
+         font-size="2.3"
+         fill="#f8fafc"
+         id="text30">Social  LinkedIn</text>
+      <text
+         x="8"
+         y="28.5"
+         font-family="sans-serif"
+         font-size="2"
+         fill="#a855f7"
+         id="text31">Pulling 28 leads/hr</text>
       <!-- Channel 3: Email Campaign Outbound -->
-      <rect x="0" y="36" width="29" height="14" rx="1.5" fill="rgba(15, 23, 42, 0.9)" stroke="rgba(34, 197, 94, 0.4)" stroke-width="0.4" />
-      <circle cx="4" cy="43" r="2" fill="#22c55e" />
-      <text x="8" y="42" font-family="sans-serif" font-size="2.3" fill="#f8fafc">Outbound Email</text>
-      <text x="8" y="46.5" font-family="sans-serif" font-size="2" fill="#22c55e">Pulling 18 leads/hr</text>
+      <rect
+         x="0"
+         y="36"
+         width="29"
+         height="14"
+         rx="1.5"
+         fill="rgba(15, 23, 42, 0.9)"
+         stroke="rgba(34, 197, 94, 0.4)"
+         stroke-width="0.4"
+         id="rect31" />
+      <circle
+         cx="4"
+         cy="43"
+         r="2"
+         fill="#22c55e"
+         id="circle31" />
+      <text
+         x="8"
+         y="42"
+         font-family="sans-serif"
+         font-size="2.3"
+         fill="#f8fafc"
+         id="text32">Outbound Email</text>
+      <text
+         x="8"
+         y="46.5"
+         font-family="sans-serif"
+         font-size="2"
+         fill="#22c55e"
+         id="text33">Pulling 18 leads/hr</text>
     </g>
-
     <!-- Trigger Campaign Action Button -->
-    <g id="btn-trigger-campaign" transform="translate(13, 154)" class="pulse-hover">
-      <rect x="0" y="0" width="29" height="18" rx="2" fill="url(#grad-campaign)" stroke="#ffffff" stroke-width="0.5" />
-      <text x="14.5" y="8" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="2.6" fill="#070b19">RUN CAMPAIGN</text>
-      <text x="14.5" y="13.5" text-anchor="middle" font-family="sans-serif" font-weight="600" font-size="2.2" fill="#070b19">⚡ PULL LEADS</text>
+    <g
+       id="btn-trigger-campaign"
+       transform="translate(13, 154)"
+       class="pulse-hover">
+      <rect
+         x="0"
+         y="0"
+         width="29"
+         height="18"
+         rx="2"
+         fill="url(#grad-campaign)"
+         stroke="#ffffff"
+         stroke-width="0.5"
+         id="rect33" />
+      <text
+         x="14.5"
+         y="8"
+         text-anchor="middle"
+         font-family="sans-serif"
+         font-weight="700"
+         font-size="2.6"
+         fill="#070b19"
+         id="text34">RUN CAMPAIGN</text>
+      <text
+         x="14.5"
+         y="13.5"
+         text-anchor="middle"
+         font-family="sans-serif"
+         font-weight="600"
+         font-size="2.2"
+         fill="#070b19"
+         id="text35">⚡ PULL LEADS</text>
     </g>
   </g>
-
   <!-- LAYER 3: Pipeline Funnel Stages (LEADS -> Sales -> Invoiced -> Returning) -->
-  <g inkscape:groupmode="layer" inkscape:label="Pipeline Funnel" id="layer-pipeline-funnel">
+  <g
+     inkscape:groupmode="layer"
+     inkscape:label="Pipeline Funnel"
+     id="layer-pipeline-funnel">
     <!-- STAGE 1: LEADS COLUMN -->
-    <g id="g4" transform="translate(1, 0)">
+    <g
+       id="g4"
+       transform="translate(1, 0)">
       <!-- Stage Outer Card -->
-      <rect id="rect1" x="64.34" y="20.75" width="27.55" height="160.01" rx="3.5" ry="3.5" fill="url(#grad-leads)" stroke="#00f3ff" stroke-width="0.8" class="pulse-hover" filter="url(#glow-cyan)" />
-      
+      <rect
+         id="rect1"
+         x="64.34"
+         y="20.75"
+         width="27.55"
+         height="160.01"
+         rx="3.5"
+         ry="3.5"
+         fill="url(#grad-leads)"
+         stroke="#00f3ff"
+         stroke-width="0.8"
+         class="pulse-hover"
+         filter="url(#glow-cyan)" />
       <!-- Stage Header Badge -->
-      <rect x="66.5" y="24" width="23.2" height="8" rx="1.5" fill="#070b19" stroke="#00f3ff" stroke-width="0.4" />
-      <text id="text1" x="78.1" y="29.5" text-anchor="middle" font-family="'Candara', sans-serif" font-weight="700" font-size="4" fill="#00f3ff" letter-spacing="0.4">
+      <rect
+         x="66.5"
+         y="24"
+         width="23.2"
+         height="8"
+         rx="1.5"
+         fill="#070b19"
+         stroke="#00f3ff"
+         stroke-width="0.4"
+         id="rect35" />
+      <text
+         id="text1"
+         x="78.1"
+         y="29.5"
+         text-anchor="middle"
+         font-family="'Candara', sans-serif"
+         font-weight="700"
+         font-size="4"
+         fill="#00f3ff"
+         letter-spacing="0.4">
         1. LEADS
       </text>
-
       <!-- Lead Stream Items / Particles -->
-      <rect id="rect2" x="67.36" y="38" width="21.51" height="21.13" rx="4" ry="4.2" fill="#0f172a" stroke="#00f3ff" stroke-width="0.5" />
-      <text x="78.1" y="47" text-anchor="middle" font-family="sans-serif" font-size="2.5" fill="#00f3ff" font-weight="bold">INBOUND</text>
-      <text x="78.1" y="52" text-anchor="middle" font-family="sans-serif" font-size="2" fill="#94a3b8">Score: 92/100</text>
-
+      <rect
+         id="rect2"
+         x="67.36"
+         y="38"
+         width="21.51"
+         height="21.13"
+         rx="4"
+         ry="4.2"
+         fill="#0f172a"
+         stroke="#00f3ff"
+         stroke-width="0.5" />
+      <text
+         x="78.1"
+         y="47"
+         text-anchor="middle"
+         font-family="sans-serif"
+         font-size="2.5"
+         fill="#00f3ff"
+         font-weight="bold"
+         id="text36">INBOUND</text>
+      <text
+         x="78.1"
+         y="52"
+         text-anchor="middle"
+         font-family="sans-serif"
+         font-size="2"
+         fill="#94a3b8"
+         id="text37">Score: 92/100</text>
       <!-- Hexagonal / Star Lead Particles -->
-      <path id="path2" d="m 61.513343,77.363405 c -0.905718,0.48305 -5.385973,-0.181261 -6.411872,-0.215787 -1.0259,-0.03452 -5.54068,0.327065 -6.411872,-0.215785 -0.871192,-0.54285 -2.53601,-4.75502 -3.019059,-5.660738 -0.48305,-0.905717 -3.053586,-4.634837 -3.019061,-5.660736 0.03453,-1.0259 2.849964,-4.573759 3.392814,-5.444951 0.542849,-0.871192 2.487093,-4.961902 3.392811,-5.444951 0.905718,-0.48305 5.385973,0.181261 6.411872,0.215787 1.0259,0.03453 5.54068,-0.327065 6.411872,0.215785 0.871192,0.54285 2.53601,4.75502 3.019059,5.660738 0.48305,0.905718 3.053586,4.634837 3.019061,5.660736 -0.03453,1.0259 -2.849963,4.573759 -3.392813,5.444951 -0.54285,0.871192 -2.487094,4.961902 -3.392812,5.444951 z" transform="translate(22.642948,6.9146751)" fill="#38bdf8" opacity="0.85" />
-      <path id="path2-8" d="m 49.059721,54.929956 c 0.970498,-0.560317 6.105731,3.338409 7.220225,3.455547 1.114495,0.117138 6.948102,-2.628717 7.780895,-1.878866 0.832793,0.74985 -1.288241,6.838519 -1.055248,7.934665 0.232993,1.096145 4.647139,5.795719 4.191336,6.819469 -0.455803,1.02375 -6.901907,0.888028 -7.872404,1.448345 -0.970498,0.560317 -4.076012,6.210668 -5.190507,6.09353 -1.114494,-0.117138 -2.977371,-6.289688 -3.810165,-7.039538 -0.832793,-0.749851 -7.166252,-1.957316 -7.399245,-3.053461 -0.232993,-1.096145 5.06179,-4.775269 5.517592,-5.799019 0.455803,-1.02375 -0.352976,-7.420355 0.617521,-7.980672 z" transform="translate(23.044641,37.099247)" fill="#00f3ff" opacity="0.8" />
-      <path id="path2-8-7" d="m 49.059721,54.929956 c 1.814216,-1.047438 12.03525,5.448459 13.082688,7.262674 1.047437,1.814215 1.562532,13.913839 -0.251683,14.961277 -1.814215,1.047437 -12.03525,-5.44846 -13.082688,-7.262675 -1.047437,-1.814215 -1.562532,-13.913839 0.251683,-14.961276 z" transform="translate(22.642948,67.672152)" fill="#0284c7" opacity="0.8" />
-      <path id="path2-8-7-8" d="m 49.059721,54.929956 c 0.881082,-0.508693 5.398118,3.413373 6.415503,3.413373 1.017384,0 5.534421,-3.922066 6.415502,-3.413373 0.881081,0.508692 -0.25701,6.381593 0.251683,7.262674 0.508692,0.881081 6.163819,2.831916 6.163819,3.849301 0,1.017385 -5.655127,2.96822 -6.163819,3.849301 -0.508693,0.881081 0.629398,6.753982 -0.251683,7.262675 -0.881082,0.508692 -5.398118,-3.413374 -6.415503,-3.413374 -1.017384,0 -5.534421,3.922066 -6.415502,3.413374 -0.881081,-0.508693 0.25701,-6.381594 -0.251683,-7.262675 -0.508692,-0.881081 -6.163819,-2.831916 -6.163819,-3.849301 0,-1.017385 5.655127,-2.96822 6.16382,-3.849301 0.508692,-0.881081 -0.629399,-6.753982 0.251682,-7.262674 z" transform="translate(22.642948,98.118508)" fill="#00f3ff" opacity="0.9" />
+      <path
+         id="path2"
+         d="m 61.513343,77.363405 c -0.905718,0.48305 -5.385973,-0.181261 -6.411872,-0.215787 -1.0259,-0.03452 -5.54068,0.327065 -6.411872,-0.215785 -0.871192,-0.54285 -2.53601,-4.75502 -3.019059,-5.660738 -0.48305,-0.905717 -3.053586,-4.634837 -3.019061,-5.660736 0.03453,-1.0259 2.849964,-4.573759 3.392814,-5.444951 0.542849,-0.871192 2.487093,-4.961902 3.392811,-5.444951 0.905718,-0.48305 5.385973,0.181261 6.411872,0.215787 1.0259,0.03453 5.54068,-0.327065 6.411872,0.215785 0.871192,0.54285 2.53601,4.75502 3.019059,5.660738 0.48305,0.905718 3.053586,4.634837 3.019061,5.660736 -0.03453,1.0259 -2.849963,4.573759 -3.392813,5.444951 -0.54285,0.871192 -2.487094,4.961902 -3.392812,5.444951 z"
+         transform="translate(22.642948,6.9146751)"
+         fill="#38bdf8"
+         opacity="0.85" />
+      <path
+         id="path2-8"
+         d="m 49.059721,54.929956 c 0.970498,-0.560317 6.105731,3.338409 7.220225,3.455547 1.114495,0.117138 6.948102,-2.628717 7.780895,-1.878866 0.832793,0.74985 -1.288241,6.838519 -1.055248,7.934665 0.232993,1.096145 4.647139,5.795719 4.191336,6.819469 -0.455803,1.02375 -6.901907,0.888028 -7.872404,1.448345 -0.970498,0.560317 -4.076012,6.210668 -5.190507,6.09353 -1.114494,-0.117138 -2.977371,-6.289688 -3.810165,-7.039538 -0.832793,-0.749851 -7.166252,-1.957316 -7.399245,-3.053461 -0.232993,-1.096145 5.06179,-4.775269 5.517592,-5.799019 0.455803,-1.02375 -0.352976,-7.420355 0.617521,-7.980672 z"
+         transform="translate(23.044641,37.099247)"
+         fill="#00f3ff"
+         opacity="0.8" />
+      <path
+         id="path2-8-7"
+         d="m 49.059721,54.929956 c 1.814216,-1.047438 12.03525,5.448459 13.082688,7.262674 1.047437,1.814215 1.562532,13.913839 -0.251683,14.961277 -1.814215,1.047437 -12.03525,-5.44846 -13.082688,-7.262675 -1.047437,-1.814215 -1.562532,-13.913839 0.251683,-14.961276 z"
+         transform="translate(22.642948,67.672152)"
+         fill="#0284c7"
+         opacity="0.8" />
+      <path
+         id="path2-8-7-8"
+         d="m 49.059721,54.929956 c 0.881082,-0.508693 5.398118,3.413373 6.415503,3.413373 1.017384,0 5.534421,-3.922066 6.415502,-3.413373 0.881081,0.508692 -0.25701,6.381593 0.251683,7.262674 0.508692,0.881081 6.163819,2.831916 6.163819,3.849301 0,1.017385 -5.655127,2.96822 -6.163819,3.849301 -0.508693,0.881081 0.629398,6.753982 -0.251683,7.262675 -0.881082,0.508692 -5.398118,-3.413374 -6.415503,-3.413374 -1.017384,0 -5.534421,3.922066 -6.415502,3.413374 -0.881081,-0.508693 0.25701,-6.381594 -0.251683,-7.262675 -0.508692,-0.881081 -6.163819,-2.831916 -6.163819,-3.849301 0,-1.017385 5.655127,-2.96822 6.16382,-3.849301 0.508692,-0.881081 -0.629399,-6.753982 0.251682,-7.262674 z"
+         transform="translate(22.642948,98.118508)"
+         fill="#00f3ff"
+         opacity="0.9" />
     </g>
-
     <!-- STAGE 2: SALES COLUMN -->
-    <g id="g5" transform="translate(0, 0)">
+    <g
+       id="g5"
+       transform="translate(0, 0)">
       <!-- Stage Outer Card -->
-      <rect id="rect1-8" x="119.49" y="50.61" width="27.55" height="130.15" rx="3.5" ry="3.5" fill="url(#grad-sales)" stroke="#a855f7" stroke-width="0.8" class="pulse-hover" filter="url(#glow-purple)" />
-      
+      <rect
+         id="rect1-8"
+         x="119.49"
+         y="50.61"
+         width="27.55"
+         height="130.15"
+         rx="3.5"
+         ry="3.5"
+         fill="url(#grad-sales)"
+         stroke="#a855f7"
+         stroke-width="0.8"
+         class="pulse-hover"
+         filter="url(#glow-purple)" />
       <!-- Stage Header Badge -->
-      <rect x="121.6" y="54" width="23.2" height="8" rx="1.5" fill="#070b19" stroke="#a855f7" stroke-width="0.4" />
-      <text id="text1-8" x="133.2" y="59.5" text-anchor="middle" font-family="'Candara', sans-serif" font-weight="700" font-size="4" fill="#a855f7" letter-spacing="0.4">
+      <rect
+         x="121.6"
+         y="54"
+         width="23.2"
+         height="8"
+         rx="1.5"
+         fill="#070b19"
+         stroke="#a855f7"
+         stroke-width="0.4"
+         id="rect37" />
+      <text
+         id="text1-8"
+         x="133.2"
+         y="59.5"
+         text-anchor="middle"
+         font-family="'Candara', sans-serif"
+         font-weight="700"
+         font-size="4"
+         fill="#a855f7"
+         letter-spacing="0.4">
         2. Sales
       </text>
-
       <!-- Deal Configurator Item -->
-      <rect id="rect2-6" x="122.14" y="68" width="21.51" height="21.13" rx="4" ry="4.2" fill="#0f172a" stroke="#a855f7" stroke-width="0.5" />
-      <text x="132.9" y="77" text-anchor="middle" font-family="sans-serif" font-size="2.5" fill="#a855f7" font-weight="bold">DEAL FIT</text>
-      <text x="132.9" y="82" text-anchor="middle" font-family="sans-serif" font-size="2" fill="#c084fc">Attach Product</text>
-
-      <path id="path2-8-2" d="m 49.059721,54.929956 c 0.970498,-0.560317 6.105731,3.338409 7.220225,3.455547 1.114495,0.117138 6.948102,-2.628717 7.780895,-1.878866 0.832793,0.74985 -1.288241,6.838519 -1.055248,7.934665 0.232993,1.096145 4.647139,5.795719 4.191336,6.819469 -0.455803,1.02375 -6.901907,0.888028 -7.872404,1.448345 -0.970498,0.560317 -4.076012,6.210668 -5.190507,6.09353 -1.114494,-0.117138 -2.977371,-6.289688 -3.810165,-7.039538 -0.832793,-0.749851 -7.166252,-1.957316 -7.399245,-3.053461 -0.232993,-1.096145 5.06179,-4.775269 5.517592,-5.799019 0.455803,-1.02375 -0.352976,-7.420355 0.617521,-7.980672 z" transform="translate(78.194431,36.392363)" fill="#a855f7" opacity="0.9" />
-      <path id="path2-8-7-8-8" d="m 49.059721,54.929956 c 0.881082,-0.508693 5.398118,3.413373 6.415503,3.413373 1.017384,0 5.534421,-3.922066 6.415502,-3.413373 0.881081,0.508692 -0.25701,6.381593 0.251683,7.262674 0.508692,0.881081 6.163819,2.831916 6.163819,3.849301 0,1.017385 -5.655127,2.96822 -6.163819,3.849301 -0.508693,0.881081 0.629398,6.753982 -0.251683,7.262675 -0.881082,0.508692 -5.398118,-3.413374 -6.415503,-3.413374 -1.017384,0 -5.534421,3.922066 -6.415502,3.413374 -0.881081,-0.508693 0.25701,-6.381594 -0.251683,-7.262675 -0.508692,-0.881081 -6.163819,-2.831916 -6.163819,-3.849301 0,-1.017385 5.655127,-2.96822 6.16382,-3.849301 0.508692,-0.881081 -0.629399,-6.753982 0.251682,-7.262674 z" transform="translate(77.792738,65.711497)" fill="#c084fc" opacity="0.9" />
+      <rect
+         id="rect2-6"
+         x="122.14"
+         y="68"
+         width="21.51"
+         height="21.13"
+         rx="4"
+         ry="4.2"
+         fill="#0f172a"
+         stroke="#a855f7"
+         stroke-width="0.5" />
+      <text
+         x="132.9"
+         y="77"
+         text-anchor="middle"
+         font-family="sans-serif"
+         font-size="2.5"
+         fill="#a855f7"
+         font-weight="bold"
+         id="text38">DEAL FIT</text>
+      <text
+         x="132.9"
+         y="82"
+         text-anchor="middle"
+         font-family="sans-serif"
+         font-size="2"
+         fill="#c084fc"
+         id="text39">Attach Product</text>
+      <path
+         id="path2-8-2"
+         d="m 49.059721,54.929956 c 0.970498,-0.560317 6.105731,3.338409 7.220225,3.455547 1.114495,0.117138 6.948102,-2.628717 7.780895,-1.878866 0.832793,0.74985 -1.288241,6.838519 -1.055248,7.934665 0.232993,1.096145 4.647139,5.795719 4.191336,6.819469 -0.455803,1.02375 -6.901907,0.888028 -7.872404,1.448345 -0.970498,0.560317 -4.076012,6.210668 -5.190507,6.09353 -1.114494,-0.117138 -2.977371,-6.289688 -3.810165,-7.039538 -0.832793,-0.749851 -7.166252,-1.957316 -7.399245,-3.053461 -0.232993,-1.096145 5.06179,-4.775269 5.517592,-5.799019 0.455803,-1.02375 -0.352976,-7.420355 0.617521,-7.980672 z"
+         transform="translate(78.194431,36.392363)"
+         fill="#a855f7"
+         opacity="0.9" />
+      <path
+         id="path2-8-7-8-8"
+         d="m 49.059721,54.929956 c 0.881082,-0.508693 5.398118,3.413373 6.415503,3.413373 1.017384,0 5.534421,-3.922066 6.415502,-3.413373 0.881081,0.508692 -0.25701,6.381593 0.251683,7.262674 0.508692,0.881081 6.163819,2.831916 6.163819,3.849301 0,1.017385 -5.655127,2.96822 -6.163819,3.849301 -0.508693,0.881081 0.629398,6.753982 -0.251683,7.262675 -0.881082,0.508692 -5.398118,-3.413374 -6.415503,-3.413374 -1.017384,0 -5.534421,3.922066 -6.415502,3.413374 -0.881081,-0.508693 0.25701,-6.381594 -0.251683,-7.262675 -0.508692,-0.881081 -6.163819,-2.831916 -6.163819,-3.849301 0,-1.017385 5.655127,-2.96822 6.16382,-3.849301 0.508692,-0.881081 -0.629399,-6.753982 0.251682,-7.262674 z"
+         transform="translate(77.792738,65.711497)"
+         fill="#c084fc"
+         opacity="0.9" />
     </g>
-
     <!-- STAGE 3: INVOICED COLUMN -->
-    <g id="g6" transform="translate(0, 0)">
+    <g
+       id="g6"
+       transform="translate(0, 0)">
       <!-- Stage Outer Card -->
-      <rect id="rect1-8-0" x="176.49" y="70.23" width="27.55" height="110.53" rx="3.5" ry="3.5" fill="url(#grad-invoiced)" stroke="#f59e0b" stroke-width="0.8" class="pulse-hover" filter="url(#glow-amber)" />
-      
+      <rect
+         id="rect1-8-0"
+         x="176.49"
+         y="70.23"
+         width="27.55"
+         height="110.53"
+         rx="3.5"
+         ry="3.5"
+         fill="url(#grad-invoiced)"
+         stroke="#f59e0b"
+         stroke-width="0.8"
+         class="pulse-hover"
+         filter="url(#glow-amber)" />
       <!-- Stage Header Badge -->
-      <rect x="178.6" y="74" width="23.2" height="8" rx="1.5" fill="#070b19" stroke="#f59e0b" stroke-width="0.4" />
-      <text id="text1-8-8" x="190.2" y="79.5" text-anchor="middle" font-family="'Candara', sans-serif" font-weight="700" font-size="4" fill="#f59e0b" letter-spacing="0.4">
+      <rect
+         x="178.6"
+         y="74"
+         width="23.2"
+         height="8"
+         rx="1.5"
+         fill="#070b19"
+         stroke="#f59e0b"
+         stroke-width="0.4"
+         id="rect39" />
+      <text
+         id="text1-8-8"
+         x="190.2"
+         y="79.5"
+         text-anchor="middle"
+         font-family="'Candara', sans-serif"
+         font-weight="700"
+         font-size="4"
+         fill="#f59e0b"
+         letter-spacing="0.4">
         3. Invoiced
       </text>
-
       <!-- Paid Invoice Item -->
-      <rect id="rect2-6-0" x="179.13" y="88" width="21.51" height="21.13" rx="4" ry="4.2" fill="#0f172a" stroke="#f59e0b" stroke-width="0.5" />
-      <text x="189.8" y="97" text-anchor="middle" font-family="sans-serif" font-size="2.5" fill="#f59e0b" font-weight="bold">INVOICE PAID</text>
-      <text x="189.8" y="102" text-anchor="middle" font-family="sans-serif" font-size="2" fill="#fbbf24">Instant Settle</text>
-
-      <path id="path2-8-2-6" d="m 49.059721,54.929956 c 0.970498,-0.560317 6.105731,3.338409 7.220225,3.455547 1.114495,0.117138 6.948102,-2.628717 7.780895,-1.878866 0.832793,0.74985 -1.288241,6.838519 -1.055248,7.934665 0.232993,1.096145 4.647139,5.795719 4.191336,6.819469 -0.455803,1.02375 -6.901907,0.888028 -7.872404,1.448345 -0.970498,0.560317 -4.076012,6.210668 -5.190507,6.09353 -1.114494,-0.117138 -2.977371,-6.289688 -3.810165,-7.039538 -0.832793,-0.749851 -7.166252,-1.957316 -7.399245,-3.053461 -0.232993,-1.096145 5.06179,-4.775269 5.517592,-5.799019 0.455803,-1.02375 -0.352976,-7.420355 0.617521,-7.980672 z" transform="translate(135.18791,56.00708)" fill="#f59e0b" opacity="0.9" />
+      <rect
+         id="rect2-6-0"
+         x="179.13"
+         y="88"
+         width="21.51"
+         height="21.13"
+         rx="4"
+         ry="4.2"
+         fill="#0f172a"
+         stroke="#f59e0b"
+         stroke-width="0.5" />
+      <text
+         x="189.8"
+         y="97"
+         text-anchor="middle"
+         font-family="sans-serif"
+         font-size="2.5"
+         fill="#f59e0b"
+         font-weight="bold"
+         id="text40">INVOICE PAID</text>
+      <text
+         x="189.8"
+         y="102"
+         text-anchor="middle"
+         font-family="sans-serif"
+         font-size="2"
+         fill="#fbbf24"
+         id="text41">Instant Settle</text>
+      <path
+         id="path2-8-2-6"
+         d="m 49.059721,54.929956 c 0.970498,-0.560317 6.105731,3.338409 7.220225,3.455547 1.114495,0.117138 6.948102,-2.628717 7.780895,-1.878866 0.832793,0.74985 -1.288241,6.838519 -1.055248,7.934665 0.232993,1.096145 4.647139,5.795719 4.191336,6.819469 -0.455803,1.02375 -6.901907,0.888028 -7.872404,1.448345 -0.970498,0.560317 -4.076012,6.210668 -5.190507,6.09353 -1.114494,-0.117138 -2.977371,-6.289688 -3.810165,-7.039538 -0.832793,-0.749851 -7.166252,-1.957316 -7.399245,-3.053461 -0.232993,-1.096145 5.06179,-4.775269 5.517592,-5.799019 0.455803,-1.02375 -0.352976,-7.420355 0.617521,-7.980672 z"
+         transform="translate(135.18791,56.00708)"
+         fill="#f59e0b"
+         opacity="0.9" />
     </g>
-
     <!-- STAGE 4: RETURNING / RETAINED CUSTOMER COLUMN -->
-    <g id="g7" transform="translate(0, 0)">
+    <g
+       id="g7"
+       transform="translate(0, 0)">
       <!-- Stage Outer Card -->
-      <rect id="rect1-8-0-4" x="231.98" y="90.56" width="27.55" height="90.2" rx="3.5" ry="3.5" fill="url(#grad-returning)" stroke="#22c55e" stroke-width="0.8" class="pulse-hover" filter="url(#glow-emerald)" />
-      
+      <rect
+         id="rect1-8-0-4"
+         x="231.98"
+         y="90.56"
+         width="27.55"
+         height="90.2"
+         rx="3.5"
+         ry="3.5"
+         fill="url(#grad-returning)"
+         stroke="#22c55e"
+         stroke-width="0.8"
+         class="pulse-hover"
+         filter="url(#glow-emerald)" />
       <!-- Stage Header Badge -->
-      <rect x="234.1" y="94" width="23.2" height="8" rx="1.5" fill="#070b19" stroke="#22c55e" stroke-width="0.4" />
-      <text id="text1-8-8-5" x="245.7" y="99.5" text-anchor="middle" font-family="'Candara', sans-serif" font-weight="700" font-size="3.8" fill="#22c55e" letter-spacing="0.3">
+      <rect
+         x="234.1"
+         y="94"
+         width="23.2"
+         height="8"
+         rx="1.5"
+         fill="#070b19"
+         stroke="#22c55e"
+         stroke-width="0.4"
+         id="rect41" />
+      <text
+         id="text1-8-8-5"
+         x="245.7"
+         y="99.5"
+         text-anchor="middle"
+         font-family="'Candara', sans-serif"
+         font-weight="700"
+         font-size="3.8"
+         fill="#22c55e"
+         letter-spacing="0.3">
         4. Returning
       </text>
-
       <!-- Customer Onboarding / Loyalty Star Badge -->
-      <rect id="rect2-6-0-4" x="234.62" y="108" width="21.51" height="21.13" rx="4" ry="4.2" fill="#0f172a" stroke="#22c55e" stroke-width="0.5" />
-      <text x="245.3" y="117" text-anchor="middle" font-family="sans-serif" font-size="2.5" fill="#22c55e" font-weight="bold">LOYAL CSAT</text>
-      <text x="245.3" y="122" text-anchor="middle" font-family="sans-serif" font-size="2" fill="#86efac">99.4% Health</text>
+      <rect
+         id="rect2-6-0-4"
+         x="234.62"
+         y="108"
+         width="21.51"
+         height="21.13"
+         rx="4"
+         ry="4.2"
+         fill="#0f172a"
+         stroke="#22c55e"
+         stroke-width="0.5" />
+      <text
+         x="245.3"
+         y="117"
+         text-anchor="middle"
+         font-family="sans-serif"
+         font-size="2.5"
+         fill="#22c55e"
+         font-weight="bold"
+         id="text42">LOYAL CSAT</text>
+      <text
+         x="245.3"
+         y="122"
+         text-anchor="middle"
+         font-family="sans-serif"
+         font-size="2"
+         fill="#86efac"
+         id="text43">99.4% Health</text>
     </g>
   </g>
-
   <!-- LAYER 4: Output Financial & Customer KPI Cards -->
-  <g inkscape:groupmode="layer" inkscape:label="Output Financial Metrics" id="layer-outputs">
+  <g
+     inkscape:groupmode="layer"
+     inkscape:label="Output Financial Metrics"
+     id="layer-outputs">
     <!-- OUTPUT CARD 1: CONVERTED CUSTOMERS -->
-    <g id="output-card-customers" transform="translate(266, 35)">
-      <rect x="0" y="0" width="27" height="38" rx="2.5" fill="url(#grad-card-bg)" stroke="#22c55e" stroke-width="0.6" filter="url(#glow-emerald)" />
-      <rect x="2" y="3" width="23" height="6" rx="1" fill="rgba(34, 197, 94, 0.15)" />
-      <text x="13.5" y="7.2" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="2.4" fill="#86efac">CUSTOMERS</text>
-      <text x="13.5" y="18" text-anchor="middle" font-family="sans-serif" font-weight="800" font-size="5" fill="#22c55e" class="kpi-value-text" id="val-output-customers">1,280</text>
-      <text x="13.5" y="24" text-anchor="middle" font-family="sans-serif" font-size="2" fill="#94a3b8">Active Retention</text>
-      <rect x="3" y="28" width="21" height="6" rx="1" fill="#15803d" opacity="0.6" />
-      <text x="13.5" y="32.2" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="2.2" fill="#ffffff">+24% MoM</text>
+    <g
+       id="output-card-customers"
+       transform="translate(266, 35)">
+      <rect
+         x="0"
+         y="0"
+         width="27"
+         height="38"
+         rx="2.5"
+         fill="url(#grad-card-bg)"
+         stroke="#22c55e"
+         stroke-width="0.6"
+         filter="url(#glow-emerald)"
+         id="rect43" />
+      <rect
+         x="2"
+         y="3"
+         width="23"
+         height="6"
+         rx="1"
+         fill="rgba(34, 197, 94, 0.15)"
+         id="rect44" />
+      <text
+         x="13.5"
+         y="7.2"
+         text-anchor="middle"
+         font-family="sans-serif"
+         font-weight="700"
+         font-size="2.4"
+         fill="#86efac"
+         id="text44">CUSTOMERS</text>
+      <text
+         x="13.5"
+         y="18"
+         text-anchor="middle"
+         font-family="sans-serif"
+         font-weight="800"
+         font-size="5"
+         fill="#22c55e"
+         class="kpi-value-text"
+         id="val-output-customers">1,280</text>
+      <text
+         x="13.5"
+         y="24"
+         text-anchor="middle"
+         font-family="sans-serif"
+         font-size="2"
+         fill="#94a3b8"
+         id="text45">Active Retention</text>
+      <rect
+         x="3"
+         y="28"
+         width="21"
+         height="6"
+         rx="1"
+         fill="#15803d"
+         opacity="0.6"
+         id="rect45" />
+      <text
+         x="13.5"
+         y="32.2"
+         text-anchor="middle"
+         font-family="sans-serif"
+         font-weight="700"
+         font-size="2.2"
+         fill="#ffffff"
+         id="text46">+24% MoM</text>
     </g>
-
     <!-- OUTPUT CARD 2: NET PROFIT -->
-    <g id="output-card-profit" transform="translate(266, 85)">
-      <rect x="0" y="0" width="27" height="38" rx="2.5" fill="url(#grad-card-bg)" stroke="#f59e0b" stroke-width="0.6" filter="url(#glow-amber)" />
-      <rect x="2" y="3" width="23" height="6" rx="1" fill="rgba(245, 158, 11, 0.15)" />
-      <text x="13.5" y="7.2" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="2.4" fill="#fde047">NET PROFIT</text>
-      <text x="13.5" y="18" text-anchor="middle" font-family="sans-serif" font-weight="800" font-size="4.2" fill="#f59e0b" class="kpi-value-text" id="val-output-profit">$142.5K</text>
-      <text x="13.5" y="24" text-anchor="middle" font-family="sans-serif" font-size="2" fill="#94a3b8">Net Margin: 38%</text>
-      <rect x="3" y="28" width="21" height="6" rx="1" fill="#b45309" opacity="0.6" />
-      <text x="13.5" y="32.2" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="2.2" fill="#ffffff">+31% Profit Growth</text>
+    <g
+       id="output-card-profit"
+       transform="translate(266, 85)">
+      <rect
+         x="0"
+         y="0"
+         width="27"
+         height="38"
+         rx="2.5"
+         fill="url(#grad-card-bg)"
+         stroke="#f59e0b"
+         stroke-width="0.6"
+         filter="url(#glow-amber)"
+         id="rect46" />
+      <rect
+         x="2"
+         y="3"
+         width="23"
+         height="6"
+         rx="1"
+         fill="rgba(245, 158, 11, 0.15)"
+         id="rect47" />
+      <text
+         x="13.5"
+         y="7.2"
+         text-anchor="middle"
+         font-family="sans-serif"
+         font-weight="700"
+         font-size="2.4"
+         fill="#fde047"
+         id="text47">NET PROFIT</text>
+      <text
+         x="13.5"
+         y="18"
+         text-anchor="middle"
+         font-family="sans-serif"
+         font-weight="800"
+         font-size="4.2"
+         fill="#f59e0b"
+         class="kpi-value-text"
+         id="val-output-profit">$142.5K</text>
+      <text
+         x="13.5"
+         y="24"
+         text-anchor="middle"
+         font-family="sans-serif"
+         font-size="2"
+         fill="#94a3b8"
+         id="text48">Net Margin: 38%</text>
+      <rect
+         x="3"
+         y="28"
+         width="21"
+         height="6"
+         rx="1"
+         fill="#b45309"
+         opacity="0.6"
+         id="rect48" />
+      <text
+         x="13.5"
+         y="32.2"
+         text-anchor="middle"
+         font-family="sans-serif"
+         font-weight="700"
+         font-size="2.2"
+         fill="#ffffff"
+         id="text49">+31% Profit Growth</text>
     </g>
-
     <!-- OUTPUT CARD 3: FINAL REVENUE -->
-    <g id="output-card-revenue" transform="translate(266, 135)">
-      <rect x="0" y="0" width="27" height="42" rx="2.5" fill="url(#grad-card-bg)" stroke="#00f3ff" stroke-width="0.8" filter="url(#glow-gold)" />
-      <rect x="2" y="3" width="23" height="6" rx="1" fill="url(#grad-revenue)" opacity="0.8" />
-      <text x="13.5" y="7.2" text-anchor="middle" font-family="sans-serif" font-weight="800" font-size="2.4" fill="#070b19">FINAL REVENUE</text>
-      <text x="13.5" y="19" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="4.8" fill="#00f3ff" class="kpi-value-text" id="val-output-revenue">$485.0K</text>
-      <text x="13.5" y="25" text-anchor="middle" font-family="sans-serif" font-size="2" fill="#38bdf8">Gross ARR Yield</text>
-      <rect x="3" y="30" width="21" height="8" rx="1.5" fill="url(#grad-revenue)" />
-      <text x="13.5" y="35.5" text-anchor="middle" font-family="sans-serif" font-weight="800" font-size="2.6" fill="#070b19">MAX ROI 4.2x</text>
+    <g
+       id="output-card-revenue"
+       transform="translate(266, 135)">
+      <rect
+         x="0"
+         y="0"
+         width="27"
+         height="42"
+         rx="2.5"
+         fill="url(#grad-card-bg)"
+         stroke="#00f3ff"
+         stroke-width="0.8"
+         filter="url(#glow-gold)"
+         id="rect49" />
+      <rect
+         x="2"
+         y="3"
+         width="23"
+         height="6"
+         rx="1"
+         fill="url(#grad-revenue)"
+         opacity="0.8"
+         id="rect50" />
+      <text
+         x="13.5"
+         y="7.2"
+         text-anchor="middle"
+         font-family="sans-serif"
+         font-weight="800"
+         font-size="2.4"
+         fill="#070b19"
+         id="text50">FINAL REVENUE</text>
+      <text
+         x="13.5"
+         y="19"
+         text-anchor="middle"
+         font-family="sans-serif"
+         font-weight="900"
+         font-size="4.8"
+         fill="#00f3ff"
+         class="kpi-value-text"
+         id="val-output-revenue">$485.0K</text>
+      <text
+         x="13.5"
+         y="25"
+         text-anchor="middle"
+         font-family="sans-serif"
+         font-size="2"
+         fill="#38bdf8"
+         id="text51">Gross ARR Yield</text>
+      <rect
+         x="3"
+         y="30"
+         width="21"
+         height="8"
+         rx="1.5"
+         fill="url(#grad-revenue)"
+         id="rect51" />
+      <text
+         x="13.5"
+         y="35.5"
+         text-anchor="middle"
+         font-family="sans-serif"
+         font-weight="800"
+         font-size="2.6"
+         fill="#070b19"
+         id="text52">MAX ROI 4.2x</text>
     </g>
   </g>
-
   <!-- LAYER 5: Animated Energy Particles (Data Packets) -->
-  <g inkscape:groupmode="layer" inkscape:label="Particle Flow Engine" id="layer-particles">
-    <circle cx="55" cy="42" r="1.5" fill="#00f3ff" filter="url(#glow-cyan)" id="particle-lead-1" />
-    <circle cx="106" cy="105" r="1.5" fill="#a855f7" filter="url(#glow-purple)" id="particle-sales-1" />
-    <circle cx="162" cy="115" r="1.5" fill="#f59e0b" filter="url(#glow-amber)" id="particle-invoice-1" />
-    <circle cx="218" cy="125" r="1.5" fill="#22c55e" filter="url(#glow-emerald)" id="particle-returning-1" />
+  <g
+     inkscape:groupmode="layer"
+     inkscape:label="Particle Flow Engine"
+     id="layer-particles">
+    <circle
+       cx="55"
+       cy="42"
+       r="1.5"
+       fill="#00f3ff"
+       filter="url(#glow-cyan)"
+       id="particle-lead-1" />
+    <circle
+       cx="106"
+       cy="105"
+       r="1.5"
+       fill="#a855f7"
+       filter="url(#glow-purple)"
+       id="particle-sales-1" />
+    <circle
+       cx="162"
+       cy="115"
+       r="1.5"
+       fill="#f59e0b"
+       filter="url(#glow-amber)"
+       id="particle-invoice-1" />
+    <circle
+       cx="218"
+       cy="125"
+       r="1.5"
+       fill="#22c55e"
+       filter="url(#glow-emerald)"
+       id="particle-returning-1" />
   </g>
 </svg>

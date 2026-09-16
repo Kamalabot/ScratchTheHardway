@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phaser 3: External SVG & Mouse Input</title>
+    <!-- We use the CDN here so it runs out of the box. You can change this to your local phaser.min.js -->
+    <script src="phaser.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #090d16;
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 { color: #38bdf8; margin-bottom: 5px; }
+        p { color: #94a3b8; margin-bottom: 20px; }
+        #game-container {
+            border: 2px solid #334155;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Interactive Office Blueprint</h1>
+    <p>Point & Click: Click anywhere on the floorplan to move the agent. Drag & Drop the yellow task folders!</p>
+
+    <div id="game-container"></div>
+
+    <script>
+        class InteractiveScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'InteractiveScene' });
+            }
+
+            preload() {
+                // 1. Load an External SVG as an image
+                // We specify a width and height so Phaser knows how to rasterize the vector graphic
+                this.load.svg('office_bg', 'office_plan_updated.svg', { width: 1400, height: 900 });
+
+                // We generate a simple texture for the agent and folders to avoid missing file errors
+                const agentG = this.make.graphics({x: 0, y: 0, add: false});
+                agentG.fillStyle(0x38bdf8, 1);
+                agentG.fillCircle(16, 16, 16);
+                agentG.lineStyle(2, 0xffffff, 1);
+                agentG.strokeCircle(16, 16, 16);
+                agentG.generateTexture('agent', 32, 32);
+
+                const folderG = this.make.graphics({x: 0, y: 0, add: false});
+                folderG.fillStyle(0xf59e0b, 1);
+                folderG.fillRect(0, 0, 24, 18);
+                folderG.generateTexture('folder', 24, 18);
+            }
+
+            create() {
+                // --- BACKGROUND ---
+                // Add the loaded external SVG to the scene. 
+                // setOrigin(0,0) aligns the top-left corner of the image with the top-left of the canvas.
+                this.add.image(0, 0, 'office_bg').setOrigin(0, 0);
+
+                // --- POINT & CLICK MOVEMENT (TWEEN) ---
+                // Create our agent sprite
+                this.agent = this.add.image(700, 450, 'agent');
+                
+                // Add an active pointer marker (a small circle)
+                this.targetMarker = this.add.circle(0, 0, 5, 0x10b981);
+                this.targetMarker.setVisible(false);
+
+                // Listen for clicks on the entire scene background
+                this.input.on('pointerdown', (pointer) => {
+                    // Only move if we aren't clicking on a draggable object (the folders)
+                    const clickedObjects = this.input.hitTestPointer(pointer);
+                    if (clickedObjects.length > 0) return; // We clicked a folder, ignore movement
+
+                    // Show marker where clicked
+                    this.targetMarker.setPosition(pointer.x, pointer.y);
+                    this.targetMarker.setVisible(true);
+
+                    // Stop any existing movement tween on the agent
+                    if (this.moveTween) this.moveTween.stop();
+
+                    // Calculate distance to adjust duration so speed is constant
+                    const distance = Phaser.Math.Distance.Between(this.agent.x, this.agent.y, pointer.x, pointer.y);
+                    const speed = 300; // pixels per second
+                    const duration = (distance / speed) * 1000;
+
+                    // Create a tween to move the agent to the pointer
+                    this.moveTween = this.tweens.add({
+                        targets: this.agent,
+                        x: pointer.x,
+                        y: pointer.y,
+                        duration: duration,
+                        ease: 'Power1', // Smooth start and end
+                        onComplete: () => {
+                            this.targetMarker.setVisible(false);
+                        }
+                    });
+                });
+
+                // --- DRAG & DROP ITEMS ---
+                // Spawn a few task folders that the user can drag around
+                for (let i = 0; i < 3; i++) {
+                    const folder = this.add.image(100 + (i * 40), 100, 'folder');
+                    
+                    // Make the folder interactive and draggable
+                    folder.setInteractive({ cursor: 'pointer' });
+                    this.input.setDraggable(folder);
+                }
+
+                // Global drag events
+                this.input.on('dragstart', (pointer, gameObject) => {
+                    // Make the dragged object slightly larger and bring it to the top
+                    gameObject.setScale(1.2);
+                    gameObject.setDepth(10);
+                });
+
+                this.input.on('drag', (pointer, gameObject, dragX, dragY) => {
+                    // Update object position based on mouse drag
+                    gameObject.x = dragX;
+                    gameObject.y = dragY;
+                });
+
+                this.input.on('dragend', (pointer, gameObject) => {
+                    // Reset scale when dropped
+                    gameObject.setScale(1);
+                    gameObject.setDepth(1);
+                });
+            }
+        }
+
+        const config = {
+            type: Phaser.AUTO,
+            width: 1400,
+            height: 900,
+            parent: 'game-container',
+            scene: InteractiveScene
+        };
+
+        const game = new Phaser.Game(config);
+    </script>
+</body>
+</html>

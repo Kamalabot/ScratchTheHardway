@@ -1,0 +1,389 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1400 900" width="100%" height="100%" style="background-color: #0f172a; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+  <defs>
+    <!-- Background Grid Pattern -->
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="1.5"/>
+      <path d="M 20 0 L 20 40 M 0 20 L 40 20" fill="none" stroke="#1e293b" stroke-width="0.5" stroke-dasharray="2,2"/>
+    </pattern>
+
+    <!-- Glow Filters -->
+    <filter id="glow-gold" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+
+    <filter id="glow-cyan" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+
+    <filter id="glow-green" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+
+    <filter id="glow-purple" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#000000" flood-opacity="0.4"/>
+    </filter>
+
+    <!-- Gradient Definitions -->
+    <linearGradient id="marketing-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#1d4ed8" stop-opacity="0.05"/>
+    </linearGradient>
+
+    <linearGradient id="sales-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#b45309" stop-opacity="0.03"/>
+    </linearGradient>
+
+    <linearGradient id="finance-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#047857" stop-opacity="0.03"/>
+    </linearGradient>
+
+    <linearGradient id="flow-line-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="50%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+
+    <!-- Markers -->
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#3b82f6"/>
+    </marker>
+    <marker id="arrow-purple" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#8b5cf6"/>
+    </marker>
+    <marker id="arrow-gold" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#f59e0b"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#10b981"/>
+    </marker>
+  </defs>
+
+  <!-- Floor Grid -->
+  <rect width="1400" height="900" fill="url(#grid)" />
+
+  <!-- ==================== DEPARTMENT ZONES & BOUNDARIES ==================== -->
+
+  <!-- Marketing / External Inbound Department (Top Left) -->
+  <g id="dept-marketing">
+    <rect x="50" y="60" width="340" height="280" rx="16" fill="url(#marketing-grad)" stroke="#3b82f6" stroke-width="2" stroke-dasharray="6,4" />
+    <rect x="70" y="45" width="220" height="30" rx="6" fill="#1e3a8a" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="180" y="65" fill="#93c5fd" font-size="13" font-weight="700" text-anchor="middle" letter-spacing="1">MARKETING &amp; INBOUND</text>
+    
+    <!-- Department Content / Source Node -->
+    <rect x="80" y="100" width="280" height="110" rx="10" fill="#0f172a" stroke="#3b82f6" stroke-width="1.5" filter="url(#shadow)"/>
+    <circle cx="115" cy="140" r="18" fill="#1d4ed8" />
+    <text x="115" y="145" fill="#ffffff" font-size="16" text-anchor="middle">📢</text>
+    <text x="148" y="133" fill="#f8fafc" font-size="14" font-weight="700">Inbound Campaign Engine</text>
+    <text x="148" y="153" fill="#94a3b8" font-size="12">Triggers Webhooks &amp; Form Leads</text>
+    <rect x="95" y="170" width="110" height="24" rx="12" fill="#1e293b" stroke="#3b82f6" stroke-width="1"/>
+    <text x="150" y="186" fill="#60a5fa" font-size="11" font-weight="600" text-anchor="middle">⚡ Auto-Trigger</text>
+    <rect x="215" y="170" width="130" height="24" rx="12" fill="#1e293b" stroke="#3b82f6" stroke-width="1"/>
+    <text x="280" y="186" fill="#93c5fd" font-size="11" font-weight="600" text-anchor="middle">Source: Web Inquiry</text>
+
+    <!-- Outbound Queue Terminal -->
+    <rect x="110" y="240" width="220" height="70" rx="8" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+    <text x="125" y="263" fill="#cbd5e1" font-size="12" font-weight="600">📤 Outbound Lead Queue</text>
+    <text x="125" y="285" fill="#64748b" font-size="11">Status: Dispatching to Sales...</text>
+    <circle cx="305" cy="275" r="8" fill="#3b82f6">
+      <animate attributeName="opacity" values="0.4;1;0.4" dur="2s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- Finance & Operations Department (Bottom Left) -->
+  <g id="dept-finance">
+    <rect x="50" y="540" width="340" height="300" rx="16" fill="url(#finance-grad)" stroke="#10b981" stroke-width="2" stroke-dasharray="6,4" />
+    <rect x="70" y="525" width="220" height="30" rx="6" fill="#064e3b" stroke="#10b981" stroke-width="1.5"/>
+    <text x="180" y="545" fill="#6ee7b7" font-size="13" font-weight="700" text-anchor="middle" letter-spacing="1">FINANCE &amp; LEGAL DEPT</text>
+
+    <!-- Desk / Agent Station in Finance -->
+    <rect x="80" y="580" width="280" height="120" rx="10" fill="#0f172a" stroke="#10b981" stroke-width="1.5" filter="url(#shadow)"/>
+    <circle cx="120" cy="625" r="22" fill="#065f46" stroke="#10b981" stroke-width="2"/>
+    <!-- Top-Down Agent Avatar -->
+    <circle cx="120" cy="625" r="14" fill="#34d399"/>
+    <circle cx="120" cy="620" r="6" fill="#064e3b"/>
+    <text x="155" y="618" fill="#f8fafc" font-size="14" font-weight="700">Billing &amp; Audit Agent</text>
+    <text x="155" y="638" fill="#94a3b8" font-size="12">Role: Autonomous Invoicing</text>
+    <rect x="95" y="660" width="130" height="24" rx="12" fill="#064e3b" stroke="#10b981" stroke-width="1"/>
+    <text x="160" y="676" fill="#a7f3d0" font-size="11" font-weight="600" text-anchor="middle">STATUS: Awaiting Deal</text>
+
+    <!-- Financial Ledger Node -->
+    <rect x="110" y="730" width="220" height="80" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+    <text x="130" y="755" fill="#e2e8f0" font-size="12" font-weight="600">💳 ERP / Stripe API Gateway</text>
+    <text x="130" y="775" fill="#64748b" font-size="11">Automated Contract Execution</text>
+    <text x="130" y="793" fill="#10b981" font-size="11" font-weight="600">✓ Ready for Sync</text>
+  </g>
+
+  <!-- Sales Department (Main Central & Right Zone) -->
+  <g id="dept-sales">
+    <rect x="440" y="60" width="910" height="780" rx="20" fill="url(#sales-grad)" stroke="#f59e0b" stroke-width="2.5" />
+    <rect x="470" y="42" width="360" height="36" rx="8" fill="#78350f" stroke="#f59e0b" stroke-width="2" filter="url(#shadow)"/>
+    <text x="650" y="65" fill="#fef3c7" font-size="15" font-weight="800" text-anchor="middle" letter-spacing="1.5">🏢 SALES DEPARTMENT (AUTONOMOUS AGENT SWARM)</text>
+
+    <!-- Department Reception / Work Intake Desk -->
+    <g id="sales-intake-desk" transform="translate(480, 110)">
+      <rect x="0" y="0" width="260" height="70" rx="10" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5" filter="url(#shadow)"/>
+      <rect x="15" y="12" width="40" height="46" rx="6" fill="#b45309"/>
+      <text x="35" y="40" fill="#ffffff" font-size="18" text-anchor="middle">📥</text>
+      <text x="68" y="32" fill="#f8fafc" font-size="13" font-weight="700">Sales Inbound Buffer</text>
+      <text x="68" y="50" fill="#fbbf24" font-size="11" font-weight="600">Task Router &amp; Load Balancer</text>
+      <rect x="175" y="35" width="70" height="22" rx="11" fill="#78350f" stroke="#f59e0b" stroke-width="1"/>
+      <text x="210" y="50" fill="#fef3c7" font-size="10" font-weight="700" text-anchor="middle">QUEUE: 1</text>
+    </g>
+
+    <!-- ================= WORKSTATION 1: INBOUND SDR AGENT ================= -->
+    <g id="workstation-sdr" transform="translate(480, 240)">
+      <!-- Desk Structure (Top-Down View) -->
+      <rect x="0" y="0" width="380" height="220" rx="14" fill="#1e293b" stroke="#334155" stroke-width="2" filter="url(#shadow)"/>
+      
+      <!-- Desk Surface Details -->
+      <rect x="15" y="15" width="350" height="190" rx="8" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
+      
+      <!-- Dual Monitors Top-Down -->
+      <rect x="40" y="25" width="110" height="12" rx="3" fill="#38bdf8" filter="url(#glow-cyan)"/>
+      <rect x="160" y="25" width="110" height="12" rx="3" fill="#38bdf8"/>
+      <!-- Monitor Stands -->
+      <rect x="85" y="37" width="20" height="8" fill="#475569"/>
+      <rect x="205" y="37" width="20" height="8" fill="#475569"/>
+      <!-- Keyboard & Mouse -->
+      <rect x="110" y="65" width="70" height="25" rx="3" fill="#334155"/>
+      <rect x="195" y="70" width="14" height="20" rx="4" fill="#475569"/>
+
+      <!-- Agent Top-Down Representation (Chair + Agent Head/Shoulders + Glow Ring) -->
+      <!-- Office Chair Top-Down -->
+      <circle cx="145" cy="140" r="32" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+      <!-- Active Status Glow Ring -->
+      <circle cx="145" cy="140" r="26" fill="none" stroke="#38bdf8" stroke-width="3" filter="url(#glow-cyan)">
+        <animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="1.5s" repeatCount="indefinite"/>
+      </circle>
+      <!-- Agent Body / Head -->
+      <circle cx="145" cy="140" r="20" fill="#0284c7"/>
+      <circle cx="145" cy="136" r="9" fill="#e0f2fe"/>
+      <!-- Headset Icon / Visual -->
+      <path d="M 132 136 A 13 13 0 0 1 158 136" fill="none" stroke="#f8fafc" stroke-width="3"/>
+
+      <!-- Agent Info Overlay Label -->
+      <rect x="200" y="105" width="165" height="90" rx="8" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>
+      <text x="210" y="125" fill="#38bdf8" font-size="12" font-weight="700">🤖 AGENT: Lead Qualifier</text>
+      <text x="210" y="143" fill="#e2e8f0" font-size="11" font-weight="600">Model: Claude 3.5 Sonnet</text>
+      <text x="210" y="160" fill="#94a3b8" font-size="10">State: Parsing Intent &amp; Budget</text>
+      <rect x="210" y="168" width="145" height="18" rx="9" fill="#0369a1"/>
+      <text x="282" y="181" fill="#e0f2fe" font-size="9" font-weight="700" text-anchor="middle">TOOL: Salesforce API Sync</text>
+    </g>
+
+    <!-- ================= WORKSTATION 2: SOLUTIONS ARCHITECT AGENT ================= -->
+    <g id="workstation-solutions" transform="translate(930, 240)">
+      <rect x="0" y="0" width="380" height="220" rx="14" fill="#1e293b" stroke="#334155" stroke-width="2" filter="url(#shadow)"/>
+      <rect x="15" y="15" width="350" height="190" rx="8" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
+      
+      <!-- Dual Monitors Top-Down -->
+      <rect x="40" y="25" width="110" height="12" rx="3" fill="#a855f7" filter="url(#glow-purple)"/>
+      <rect x="160" y="25" width="110" height="12" rx="3" fill="#a855f7"/>
+      <rect x="85" y="37" width="20" height="8" fill="#475569"/>
+      <rect x="205" y="37" width="20" height="8" fill="#475569"/>
+      <rect x="110" y="65" width="70" height="25" rx="3" fill="#334155"/>
+      <rect x="195" y="70" width="14" height="20" rx="4" fill="#475569"/>
+
+      <!-- Agent Top-Down -->
+      <circle cx="145" cy="140" r="32" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+      <circle cx="145" cy="140" r="26" fill="none" stroke="#a855f7" stroke-width="3" filter="url(#glow-purple)">
+        <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="145" cy="140" r="20" fill="#7e22ce"/>
+      <circle cx="145" cy="136" r="9" fill="#f3e8ff"/>
+      <path d="M 132 136 A 13 13 0 0 1 158 136" fill="none" stroke="#f8fafc" stroke-width="3"/>
+
+      <!-- Info Card -->
+      <rect x="200" y="105" width="165" height="90" rx="8" fill="#0f172a" stroke="#a855f7" stroke-width="1.5"/>
+      <text x="210" y="125" fill="#c084fc" font-size="12" font-weight="700">🧠 AGENT: Solution Builder</text>
+      <text x="210" y="143" fill="#e2e8f0" font-size="11" font-weight="600">Model: GPT-4o RAG</text>
+      <text x="210" y="160" fill="#94a3b8" font-size="10">State: Crafting Architecture</text>
+      <rect x="210" y="168" width="145" height="18" rx="9" fill="#6b21a8"/>
+      <text x="282" y="181" fill="#f3e8ff" font-size="9" font-weight="700" text-anchor="middle">TOOL: Vector DB &amp; PDF</text>
+    </g>
+
+    <!-- ================= WORKSTATION 3: ACCOUNT EXECUTIVE AGENT ================= -->
+    <g id="workstation-ae" transform="translate(480, 520)">
+      <rect x="0" y="0" width="380" height="230" rx="14" fill="#1e293b" stroke="#334155" stroke-width="2" filter="url(#shadow)"/>
+      <rect x="15" y="15" width="350" height="200" rx="8" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
+      
+      <!-- Monitors -->
+      <rect x="40" y="25" width="110" height="12" rx="3" fill="#f59e0b" filter="url(#glow-gold)"/>
+      <rect x="160" y="25" width="110" height="12" rx="3" fill="#f59e0b"/>
+      <rect x="85" y="37" width="20" height="8" fill="#475569"/>
+      <rect x="205" y="37" width="20" height="8" fill="#475569"/>
+      <rect x="110" y="65" width="70" height="25" rx="3" fill="#334155"/>
+      <rect x="195" y="70" width="14" height="20" rx="4" fill="#475569"/>
+
+      <!-- Agent Top-Down -->
+      <circle cx="145" cy="145" r="32" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+      <circle cx="145" cy="145" r="26" fill="none" stroke="#f59e0b" stroke-width="3" filter="url(#glow-gold)">
+        <animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="1.8s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="145" cy="145" r="20" fill="#b45309"/>
+      <circle cx="145" cy="141" r="9" fill="#fef3c7"/>
+      <path d="M 132 141 A 13 13 0 0 1 158 141" fill="none" stroke="#f8fafc" stroke-width="3"/>
+
+      <!-- Info Card -->
+      <rect x="200" y="110" width="165" height="95" rx="8" fill="#0f172a" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="210" y="130" fill="#fbbf24" font-size="12" font-weight="700">💼 AGENT: Account Exec</text>
+      <text x="210" y="148" fill="#e2e8f0" font-size="11" font-weight="600">Model: Gemini 1.5 Pro</text>
+      <text x="210" y="165" fill="#94a3b8" font-size="10">State: Pricing &amp; Contract</text>
+      <rect x="210" y="173" width="145" height="18" rx="9" fill="#78350f"/>
+      <text x="282" y="186" fill="#fef3c7" font-size="9" font-weight="700" text-anchor="middle">TOOL: DocuSign / Stripe</text>
+    </g>
+
+    <!-- ================= EXECUTIVE MANAGER / SUPERVISOR AGENT ================= -->
+    <g id="workstation-manager" transform="translate(930, 520)">
+      <rect x="0" y="0" width="380" height="230" rx="14" fill="#1e293b" stroke="#334155" stroke-width="2" filter="url(#shadow)"/>
+      <rect x="15" y="15" width="350" height="200" rx="8" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
+      
+      <!-- Executive Curved Desk Display -->
+      <rect x="40" y="25" width="230" height="14" rx="4" fill="#10b981" filter="url(#glow-green)"/>
+      <rect x="145" y="39" width="20" height="8" fill="#475569"/>
+      <rect x="110" y="65" width="90" height="25" rx="3" fill="#334155"/>
+
+      <!-- Manager Agent Top-Down -->
+      <circle cx="155" cy="145" r="32" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+      <circle cx="155" cy="145" r="26" fill="none" stroke="#10b981" stroke-width="3" filter="url(#glow-green)"/>
+      <circle cx="155" cy="145" r="20" fill="#047857"/>
+      <circle cx="155" cy="141" r="9" fill="#d1fae5"/>
+
+      <!-- Info Card -->
+      <rect x="210" y="110" width="155" height="95" rx="8" fill="#0f172a" stroke="#10b981" stroke-width="1.5"/>
+      <text x="220" y="130" fill="#34d399" font-size="12" font-weight="700">👑 AGENT: Swarm Director</text>
+      <text x="220" y="148" fill="#e2e8f0" font-size="11" font-weight="600">Role: Supervisor / Audit</text>
+      <text x="220" y="165" fill="#94a3b8" font-size="10">State: Human-in-the-Loop</text>
+      <rect x="220" y="173" width="135" height="18" rx="9" fill="#064e3b"/>
+      <text x="287" y="186" fill="#a7f3d0" font-size="9" font-weight="700" text-anchor="middle">STATUS: Workflow OK</text>
+    </g>
+
+    <!-- Potted Plants & Office Aesthetics in Sales -->
+    <g id="decorations">
+      <!-- Top Left Plant -->
+      <circle cx="465" cy="95" r="14" fill="#065f46"/>
+      <circle cx="465" cy="95" r="10" fill="#10b981"/>
+      <circle cx="462" cy="92" r="4" fill="#6ee7b7"/>
+
+      <!-- Top Right Plant -->
+      <circle cx="1325" cy="95" r="14" fill="#065f46"/>
+      <circle cx="1325" cy="95" r="10" fill="#10b981"/>
+
+      <!-- Center Coffee Bar / Lounge Table -->
+      <rect x="880" y="105" width="100" height="70" rx="35" fill="#334155" stroke="#475569" stroke-width="2"/>
+      <text x="930" y="145" fill="#cbd5e1" font-size="12" font-weight="600" text-anchor="middle">☕ Coffee Bar</text>
+    </g>
+  </g>
+
+  <!-- ==================== ANIMATED FLOW PATHS & TASK CARDS ==================== -->
+
+  <!-- STEP 1: Marketing -> Sales Buffer Flow -->
+  <path d="M 330 275 L 410 275 L 410 145 L 475 145" fill="none" stroke="#3b82f6" stroke-width="3" stroke-dasharray="8,6" marker-end="url(#arrow-blue)">
+    <animate attributeName="stroke-dashoffset" from="28" to="0" dur="1s" repeatCount="indefinite"/>
+  </path>
+
+  <!-- Floating Task Packet 1 (Incoming from Marketing) -->
+  <g id="task-packet-1" transform="translate(350, 195)" filter="url(#shadow)">
+    <rect x="0" y="0" width="170" height="56" rx="8" fill="#1e3a8a" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="12" y="20" fill="#93c5fd" font-size="10" font-weight="800" letter-spacing="0.5">📥 INCOMING TASK #104</text>
+    <text x="12" y="36" fill="#ffffff" font-size="11" font-weight="700">Acme Corp Enterprise</text>
+    <text x="12" y="49" fill="#bfdbfe" font-size="9">Budget: $150k • 500 Seats</text>
+  </g>
+
+  <!-- STEP 2: Sales Intake -> SDR Agent -->
+  <path d="M 610 180 L 610 235" fill="none" stroke="#38bdf8" stroke-width="3" stroke-dasharray="6,4" marker-end="url(#arrow-blue)">
+    <animate attributeName="stroke-dashoffset" from="20" to="0" dur="1.2s" repeatCount="indefinite"/>
+  </path>
+  <rect x="618" y="195" width="115" height="22" rx="4" fill="#0f172a" stroke="#38bdf8" stroke-width="1"/>
+  <text x="675" y="210" fill="#7dd3fc" font-size="10" font-weight="600" text-anchor="middle">Dispatch Lead ➔ SDR</text>
+
+  <!-- STEP 3: SDR Agent -> Solution Architect Agent -->
+  <path d="M 860 350 L 925 350" fill="none" stroke="#8b5cf6" stroke-width="3.5" stroke-dasharray="8,5" marker-end="url(#arrow-purple)">
+    <animate attributeName="stroke-dashoffset" from="26" to="0" dur="1s" repeatCount="indefinite"/>
+  </path>
+  
+  <!-- Floating Handoff Packet 2 (SDR -> Solutions) -->
+  <g id="task-packet-2" transform="translate(850, 290)" filter="url(#shadow)">
+    <rect x="0" y="0" width="160" height="48" rx="6" fill="#4c1d95" stroke="#a855f7" stroke-width="1.5"/>
+    <text x="10" y="18" fill="#e9d5ff" font-size="10" font-weight="700">⚡ QUALIFIED LEAD HANDOFF</text>
+    <text x="10" y="34" fill="#f3e8ff" font-size="9">Intent Score: 98/100 (High)</text>
+  </g>
+
+  <!-- STEP 4: Solution Architect -> Account Executive Agent -->
+  <path d="M 1120 460 L 1120 490 L 670 490 L 670 515" fill="none" stroke="#f59e0b" stroke-width="3" stroke-dasharray="7,5" marker-end="url(#arrow-gold)">
+    <animate attributeName="stroke-dashoffset" from="24" to="0" dur="1.5s" repeatCount="indefinite"/>
+  </path>
+  <g transform="translate(830, 472)" filter="url(#shadow)">
+    <rect x="0" y="0" width="190" height="32" rx="6" fill="#78350f" stroke="#f59e0b" stroke-width="1.5"/>
+    <text x="95" y="20" fill="#fef3c7" font-size="10" font-weight="700" text-anchor="middle">📄 Tech Proposal Generated ➔ AE</text>
+  </g>
+
+  <!-- STEP 5: Account Executive -> Finance Department (Deal Closed / Invoice) -->
+  <path d="M 480 635 L 420 635 L 420 635 L 395 635" fill="none" stroke="#10b981" stroke-width="3.5" stroke-dasharray="8,4" marker-end="url(#arrow-green)">
+    <animate attributeName="stroke-dashoffset" from="24" to="0" dur="1.2s" repeatCount="indefinite"/>
+  </path>
+
+  <!-- Floating Deal Closed Packet -->
+  <g id="task-packet-3" transform="translate(390, 655)" filter="url(#shadow)">
+    <rect x="0" y="0" width="165" height="50" rx="8" fill="#064e3b" stroke="#10b981" stroke-width="1.5"/>
+    <text x="10" y="18" fill="#6ee7b7" font-size="10" font-weight="800">🎉 CONTRACT SIGNED ($150k)</text>
+    <text x="10" y="34" fill="#a7f3d0" font-size="9">Dispatching Invoice to Finance</text>
+  </g>
+
+  <!-- Manager Supervision Feedback Loop -->
+  <path d="M 860 635 L 925 635" fill="none" stroke="#64748b" stroke-width="2" stroke-dasharray="4,4" marker-end="url(#arrow-purple)"/>
+  <text x="892" y="625" fill="#94a3b8" font-size="9" font-weight="600" text-anchor="middle">Supervision &amp; Audit</text>
+
+  <!-- ==================== TOP HEADER BAR & AGENT SYSTEM DASHBOARD ==================== -->
+  <g id="top-header">
+    <rect x="50" y="10" width="1300" height="36" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1.5" filter="url(#shadow)"/>
+    <circle cx="75" cy="28" r="6" fill="#10b981">
+      <animate attributeName="opacity" values="0.3;1;0.3" dur="1s" repeatCount="indefinite"/>
+    </circle>
+    <text x="90" y="33" fill="#f8fafc" font-size="13" font-weight="700">AUTONOMOUS MULTI-AGENT OFFICE TOP-DOWN ACTIVITY SIMULATION</text>
+    
+    <!-- Metrics Pills -->
+    <rect x="760" y="16" width="140" height="24" rx="12" fill="#0f172a" stroke="#3b82f6" stroke-width="1"/>
+    <text x="830" y="32" fill="#60a5fa" font-size="11" font-weight="600" text-anchor="middle">Tasks Processed: 42/hr</text>
+
+    <rect x="910" y="16" width="150" height="24" rx="12" fill="#0f172a" stroke="#10b981" stroke-width="1"/>
+    <text x="985" y="32" fill="#34d399" font-size="11" font-weight="600" text-anchor="middle">Avg Handoff: 1.4 sec</text>
+
+    <rect x="1070" y="16" width="150" height="24" rx="12" fill="#0f172a" stroke="#f59e0b" stroke-width="1"/>
+    <text x="1145" y="32" fill="#fbbf24" font-size="11" font-weight="600" text-anchor="middle">Human Overrides: 0</text>
+
+    <rect x="1230" y="16" width="105" height="24" rx="12" fill="#065f46"/>
+    <text x="1282" y="32" fill="#a7f3d0" font-size="11" font-weight="700" text-anchor="middle">SYSTEM: LIVE</text>
+  </g>
+
+  <!-- ==================== BOTTOM LEGEND & ARCHITECTURE SUMMARY ==================== -->
+  <g id="bottom-legend" transform="translate(50, 850)">
+    <rect x="0" y="-15" width="1300" height="50" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+    <text x="20" y="15" fill="#94a3b8" font-size="11" font-weight="700">VISUAL LEGEND:</text>
+    
+    <!-- Legend Items -->
+    <circle cx="120" cy="11" r="8" fill="#0284c7" stroke="#38bdf8" stroke-width="2"/>
+    <text x="135" y="15" fill="#e2e8f0" font-size="11">Agent Head &amp; Workstation</text>
+
+    <line x1="300" y1="11" x2="340" y2="11" stroke="#3b82f6" stroke-width="3" stroke-dasharray="4,2"/>
+    <text x="350" y="15" fill="#e2e8f0" font-size="11">Work Packet Flow / Task Path</text>
+
+    <rect x="540" y="3" width="16" height="16" rx="4" fill="#4c1d95" stroke="#a855f7" stroke-width="1"/>
+    <text x="565" y="15" fill="#e2e8f0" font-size="11">Autonomous Inter-Agent Handoff Card</text>
+
+    <rect x="830" y="3" width="16" height="16" rx="8" fill="#0369a1"/>
+    <text x="855" y="15" fill="#e2e8f0" font-size="11">Tool Execution Badge (API / DB / RAG)</text>
+
+    <circle cx="1110" cy="11" r="6" fill="#10b981" filter="url(#glow-green)"/>
+    <text x="1125" y="15" fill="#a7f3d0" font-size="11" font-weight="600">Supervisor / Audit Loop</text>
+  </g>
+</svg>

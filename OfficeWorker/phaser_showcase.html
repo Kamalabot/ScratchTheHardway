@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phaser.js Feature Showcase</title>
+    <!-- Load Phaser 3 -->
+    <script src="phaser.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #1a202c;
+            color: #e2e8f0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            margin-bottom: 5px;
+            color: #38bdf8;
+        }
+        p {
+            margin-bottom: 20px;
+            color: #94a3b8;
+        }
+        #game-container {
+            border: 2px solid #334155;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Phaser.js Feature Showcase</h1>
+    <p>Interact with the canvas: Click to spawn physics objects, move your mouse for particles!</p>
+
+    <div id="game-container"></div>
+
+    <script>
+        class ShowcaseScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'ShowcaseScene' });
+            }
+
+            preload() {
+                // We'll generate textures programmatically so no external assets are needed!
+                
+                // 1. Create a ball texture
+                const ballG = this.make.graphics({ x: 0, y: 0, add: false });
+                ballG.fillStyle(0xf59e0b, 1);
+                ballG.fillCircle(16, 16, 16);
+                ballG.generateTexture('ball', 32, 32);
+
+                // 2. Create a box texture
+                const boxG = this.make.graphics({ x: 0, y: 0, add: false });
+                boxG.fillStyle(0xc084fc, 1);
+                boxG.fillRect(0, 0, 40, 40);
+                boxG.lineStyle(2, 0xffffff, 1);
+                boxG.strokeRect(0, 0, 40, 40);
+                boxG.generateTexture('box', 40, 40);
+
+                // 3. Create a particle texture
+                const partG = this.make.graphics({ x: 0, y: 0, add: false });
+                partG.fillStyle(0x38bdf8, 1);
+                partG.fillCircle(4, 4, 4);
+                partG.generateTexture('particle', 8, 8);
+            }
+
+            create() {
+                // --- FEATURE 1: PHYSICS (Arcade) ---
+                // Add a bouncing ball
+                this.bouncingBall = this.physics.add.image(400, 100, 'ball');
+                this.bouncingBall.setBounce(0.9);
+                this.bouncingBall.setCollideWorldBounds(true);
+
+                // Add a static floor
+                this.floor = this.add.rectangle(400, 580, 800, 40, 0x334155);
+                this.physics.add.existing(this.floor, true); // true = static body
+                this.physics.add.collider(this.bouncingBall, this.floor);
+
+                // --- FEATURE 2: TWEENS ---
+                // Add a rotating box
+                this.spinningBox = this.add.image(100, 300, 'box');
+                this.tweens.add({
+                    targets: this.spinningBox,
+                    angle: 360, // Rotate a full circle
+                    duration: 2000,
+                    repeat: -1, // Infinite loop
+                    ease: 'Linear'
+                });
+
+                // --- FEATURE 3: PARTICLES & INPUT ---
+                // Create a particle emitter that follows the pointer
+                this.emitter = this.add.particles(0, 0, 'particle', {
+                    speed: { min: -100, max: 100 },
+                    angle: { min: 0, max: 360 },
+                    scale: { start: 1, end: 0 },
+                    alpha: { start: 1, end: 0 },
+                    lifespan: 1000,
+                    frequency: 20, // Emit every 20ms
+                    blendMode: 'ADD'
+                });
+
+                // Have the emitter follow the mouse
+                this.input.on('pointermove', (pointer) => {
+                    this.emitter.setPosition(pointer.x, pointer.y);
+                });
+
+                // Spawn new physics objects on click
+                this.input.on('pointerdown', (pointer) => {
+                    const newBox = this.physics.add.image(pointer.x, pointer.y, 'box');
+                    newBox.setBounce(0.6);
+                    newBox.setCollideWorldBounds(true);
+                    this.physics.add.collider(newBox, this.floor);
+                    
+                    // Add collider between new box and ball
+                    this.physics.add.collider(newBox, this.bouncingBall);
+                });
+
+                // --- FEATURE 4: TEXT & UI ---
+                this.add.text(10, 10, 'Phaser 3 Features:', { font: 'bold 16px Arial', fill: '#ffffff' });
+                this.add.text(10, 35, '- Arcade Physics (Bouncing)\n- Tweens (Spinning Box)\n- Particles (Mouse trail)\n- Input (Click to spawn boxes)', { font: '14px Arial', fill: '#94a3b8' });
+            }
+
+            update(time, delta) {
+                // The game loop. We don't strictly need it here because physics and tweens are handled automatically!
+            }
+        }
+
+        const config = {
+            type: Phaser.AUTO, // Automatically chooses WebGL, falls back to Canvas
+            width: 800,
+            height: 600,
+            parent: 'game-container',
+            backgroundColor: '#0f172a',
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 300 }, // Gravity pulls things down
+                    debug: false
+                }
+            },
+            scene: ShowcaseScene
+        };
+
+        const game = new Phaser.Game(config);
+    </script>
+</body>
+</html>

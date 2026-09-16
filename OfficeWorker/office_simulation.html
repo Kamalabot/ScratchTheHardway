@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Autonomous Office Agent Sprite Simulation</title>
+  <style>
+    :root {
+      --bg-dark: #090d16;
+      --panel-bg: #1e293b;
+      --panel-border: #334155;
+      --accent-blue: #38bdf8;
+      --accent-purple: #c084fc;
+      --accent-gold: #fbbf24;
+      --accent-green: #34d399;
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      overflow-x: hidden;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      padding: 14px 24px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+    }
+
+    .title-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    h1 {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .pill {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent-blue);
+      border: 1px solid var(--accent-blue);
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    button {
+      background: #0284c7;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    }
+
+    button:hover {
+      background: #0369a1;
+      transform: translateY(-1px);
+    }
+
+    button.secondary {
+      background: #334155;
+      color: #cbd5e1;
+    }
+
+    button.secondary:hover {
+      background: #475569;
+    }
+
+    .main-layout {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 16px;
+      height: calc(100vh - 110px);
+    }
+
+    .canvas-container {
+      background: #0f172a;
+      border: 1px solid var(--panel-border);
+      border-radius: 14px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    canvas {
+      display: block;
+      background: #0f172a;
+      border-radius: 8px;
+    }
+
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      height: 100%;
+      overflow-y: auto;
+    }
+
+    .card {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-sub);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .agent-card {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+      transition: border-color 0.2s;
+    }
+
+    .agent-card.active {
+      border-color: var(--accent-blue);
+    }
+
+    .agent-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .agent-name {
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .agent-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .agent-state {
+      font-size: 11px;
+      color: var(--text-sub);
+      margin-bottom: 6px;
+    }
+
+    .agent-thought {
+      font-size: 11px;
+      background: #1e293b;
+      padding: 6px 10px;
+      border-radius: 6px;
+      color: #7dd3fc;
+      font-style: italic;
+      border-left: 2px solid var(--accent-blue);
+    }
+
+    .log-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 260px;
+      overflow-y: auto;
+      font-family: 'JetBrains Mono', monospace, sans-serif;
+      font-size: 11px;
+    }
+
+    .log-item {
+      padding: 6px 8px;
+      border-radius: 4px;
+      background: #0f172a;
+      border-left: 3px solid #475569;
+      color: #cbd5e1;
+      line-height: 1.4;
+    }
+
+    .log-item.event-task { border-color: var(--accent-blue); }
+    .log-item.event-handoff { border-color: var(--accent-purple); }
+    .log-item.event-done { border-color: var(--accent-green); }
+
+    /* Floating UI Overlay over Canvas */
+    .canvas-overlay {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      display: flex;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .status-pill {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--panel-border);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="title-group">
+      <h1>🏢 Autonomous Agent Office Sprite Simulation</h1>
+      <span class="pill">2D Pathfinding &amp; Physical Task Handoff</span>
+    </div>
+
+    <div class="controls">
+      <button id="btn-spawn">⚡ Trigger Inbound Lead Task</button>
+      <button id="btn-toggle" class="secondary">⏸️ Pause</button>
+      <button id="btn-speed" class="secondary">⏩ Speed: 1x</button>
+    </div>
+  </header>
+
+  <div class="main-layout">
+    <div class="canvas-container">
+      <div class="canvas-overlay">
+        <div class="status-pill" id="sim-status">🟢 Active Workflows: <span id="val-active">0</span></div>
+        <div class="status-pill" id="sim-completed">🎉 Completed Deals: <span id="val-completed">0</span></div>
+      </div>
+      <canvas id="officeCanvas" width="1050" height="720"></canvas>
+    </div>
+
+    <div class="sidebar">
+      <!-- Active Agents List -->
+      <div class="card">
+        <div class="card-title">
+          <span>🤖 Autonomous Agent Roster</span>
+          <span style="font-size: 10px; color: var(--accent-blue);">4 Active</span>
+        </div>
+        <div id="agent-roster"></div>
+      </div>
+
+      <!-- Live Activity Stream -->
+      <div class="card" style="flex: 1; display: flex; flex-direction: column;">
+        <div class="card-title">📜 Real-time Agent Event Log</div>
+        <div class="log-list" id="log-container">
+          <div class="log-item">System initialized. Click "Trigger Inbound Lead Task" to start agent movement.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 2D OFFICE SPRITE SIMULATION ENGINE
+    // =========================================================================
+
+    const canvas = document.getElementById('officeCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Simulation state
+    let simSpeed = 1;
+    let isPaused = false;
+    let activeTasksCount = 0;
+    let completedDealsCount = 0;
+    let frameCount = 0;
+
+    // Office Floorplan Grid & Waypoints
+    const WAYPOINTS = {
+      MARKETING_SPAWN:  { x: 120, y: 140, label: "Marketing Intake" },
+      MARKETING_COURIER_DESK: { x: 180, y: 140, label: "Courier Station" },
+      
+      SALES_RECEPTION:  { x: 420, y: 140, label: "Sales Buffer Queue" },
+      SDR_DESK:         { x: 440, y: 320, label: "SDR Workstation" },
+      WHITEBOARD:       { x: 720, y: 140, label: "Tech Architecture Board" },
+      ARCHITECT_DESK:   { x: 740, y: 320, label: "Architect Workstation" },
+      AE_DESK:          { x: 440, y: 560, label: "Account Exec Desk" },
+      EXECUTIVE_DESK:   { x: 740, y: 560, label: "Director Desk" },
+
+      COFFEE_BAR:       { x: 920, y: 140, label: "Breakroom Coffee" },
+      FINANCE_DESK:     { x: 150, y: 560, label: "Finance Audit Station" }
+    };
+
+    // Office Furniture & Zone Layout
+    const ZONES = [
+      { id: 'marketing', name: 'MARKETING & INBOUND', x: 40, y: 60, w: 260, h: 220, color: 'rgba(59, 130, 246, 0.08)', stroke: '#3b82f6' },
+      { id: 'sales', name: 'SALES DEPT (AUTONOMOUS SWARM)', x: 340, y: 60, w: 520, h: 600, color: 'rgba(245, 158, 11, 0.06)', stroke: '#f59e0b' },
+      { id: 'finance', name: 'FINANCE & LEGAL DEPT', x: 40, y: 460, w: 260, h: 200, color: 'rgba(16, 185, 129, 0.08)', stroke: '#10b981' },
+      { id: 'breakroom', name: 'BREAKROOM & COFFEE', x: 880, y: 60, w: 140, h: 220, color: 'rgba(192, 132, 252, 0.08)', stroke: '#c084fc' }
+    ];
+
+    const DESKS = [
+      { x: 140, y: 110, w: 80, h: 50, label: "Courier Desk", color: "#3b82f6" },
+      { x: 400, y: 290, w: 110, h: 70, label: "SDR Desk", color: "#38bdf8" },
+      { x: 700, y: 290, w: 110, h: 70, label: "Architect Desk", color: "#c084fc" },
+      { x: 400, y: 530, w: 110, h: 70, label: "AE Desk", color: "#fbbf24" },
+      { x: 700, y: 530, w: 110, h: 70, label: "Director Desk", color: "#34d399" },
+      { x: 110, y: 530, w: 100, h: 60, label: "Finance Desk", color: "#10b981" },
+      { x: 900, y: 110, w: 80, h: 50, label: "☕ Coffee Machine", color: "#a855f7" }
+    ];
+
+    // =========================================================================
+    // AGENT CLASS WITH TOP-DOWN ANIMATED SPRITE RENDERING
+    // =========================================================================
+    class Agent {
+      constructor(id, name, role, color, homeWaypoint) {
+        this.id = id;
+        this.name = name;
+        this.role = role;
+        this.color = color;
+        this.homeWaypoint = homeWaypoint;
+
+        // Physical position & rendering
+        this.x = homeWaypoint.x;
+        this.y = homeWaypoint.y;
+        this.targetX = homeWaypoint.x;
+        this.targetY = homeWaypoint.y;
+        this.speed = 2.5;
+
+        // Sprite animation properties
+        this.facing = 'down'; // 'down', 'up', 'left', 'right'
+        this.isMoving = false;
+        this.walkCycle = 0;
+        this.radius = 16;
+        
+        // Autonomous task state
+        this.state = 'IDLE'; // IDLE, WALKING, WORKING, WAITING
+        this.speechBubble = null;
+        this.speechTimer = 0;
+        this.thought = "Standing by at workstation";
+        this.carriedTask = null; // Physical task folder held by sprite
+        this.pathQueue = [];
+      }
+
+      setDestination(waypoint, onArrival) {
+        this.pathQueue.push({ waypoint, onArrival });
+        if (this.state === 'IDLE' || this.state === 'WAITING') {
+          this.processNextPath();
+        }
+      }
+
+      processNextPath() {
+        if (this.pathQueue.length === 0) {
+          this.isMoving = false;
+          return;
+        }
+        const next = this.pathQueue.shift();
+        this.targetX = next.waypoint.x;
+        this.targetY = next.waypoint.y;
+        this.onArrivalCallback = next.onArrival;
+        this.state = 'WALKING';
+        this.isMoving = true;
+      }
+
+      say(text, duration = 180) {
+        this.speechBubble = text;
+        this.speechTimer = duration;
+      }
+
+      update() {
+        if (this.speechTimer > 0) {
+          this.speechTimer--;
+          if (this.speechTimer === 0) this.speechBubble = null;
+        }
+
+        if (this.isMoving) {
+          const dx = this.targetX - this.x;
+          const dy = this.targetY - this.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist > 3) {
+            // Determine facing direction
+            if (Math.abs(dx) > Math.abs(dy)) {
+              this.facing = dx > 0 ? 'right' : 'left';
+            } else {
+              this.facing = dy > 0 ? 'down' : 'up';
+            }
+
+            this.x += (dx / dist) * this.speed * simSpeed;
+            this.y += (dy / dist) * this.speed * simSpeed;
+            this.walkCycle += 0.25 * simSpeed;
+          } else {
+            this.x = this.targetX;
+            this.y = this.targetY;
+            this.isMoving = false;
+            
+            if (this.onArrivalCallback) {
+              const cb = this.onArrivalCallback;
+              this.onArrivalCallback = null;
+              cb();
+            }
+
+            this.processNextPath();
+          }
+        }
+      }
+
+      draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // 1. Drop Shadow under Sprite
+        ctx.beginPath();
+        ctx.ellipse(0, 14, 14, 6, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+        ctx.fill();
+
+        // 2. Animated Legs / Bounce
+        let legOffset = this.isMoving ? Math.sin(this.walkCycle) * 4 : 0;
+        let bodyBounce = this.isMoving ? Math.abs(Math.sin(this.walkCycle)) * 2 : 0;
+
+        // Left & Right Shoes/Feet
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath();
+        ctx.arc(-6, 10 + legOffset, 4, 0, Math.PI * 2);
+        ctx.arc(6, 10 - legOffset, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 3. Torso / Body (Top-Down Shirt)
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.ellipse(0, 0 - bodyBounce, 15, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Active Status Ring around body
+        ctx.beginPath();
+        ctx.arc(0, 0 - bodyBounce, 17, 0, Math.PI * 2);
+        ctx.strokeStyle = this.isMoving ? '#38bdf8' : (this.state === 'WORKING' ? '#fbbf24' : '#475569');
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // 4. Head & Hair
+        ctx.fillStyle = '#fde047'; // Skin / Head tint
+        ctx.beginPath();
+        ctx.arc(0, -6 - bodyBounce, 10, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Hair / Cap Top
+        ctx.fillStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.arc(0, -8 - bodyBounce, 9, Math.PI, Math.PI * 2);
+        ctx.fill();
+
+        // 5. Facing Direction Indicator Eye/Visor
+        ctx.fillStyle = '#ffffff';
+        let visorX = 0, visorY = -5 - bodyBounce;
+        if (this.facing === 'left') visorX = -6;
+        if (this.facing === 'right') visorX = 6;
+        if (this.facing === 'down') visorY = -2 - bodyBounce;
+        if (this.facing === 'up') visorY = -9 - bodyBounce;
+        
+        ctx.beginPath();
+        ctx.arc(visorX, visorY, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 6. Carried Task Item (Physical Folder in Sprite's Hands)
+        if (this.carriedTask) {
+          ctx.fillStyle = '#f59e0b';
+          ctx.fillRect(8, -4 - bodyBounce, 12, 14);
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(8, -4 - bodyBounce, 12, 14);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = '8px sans-serif';
+          ctx.fillText('📄', 10, 6 - bodyBounce);
+        }
+
+        // 7. Sprite Name Label
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 11px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(this.name, 0, -24 - bodyBounce);
+
+        // Role Badge
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '9px Inter, sans-serif';
+        ctx.fillText(this.role, 0, -36 - bodyBounce);
+
+        // 8. Speech / Thought Bubble
+        if (this.speechBubble) {
+          ctx.font = '11px Inter, sans-serif';
+          const textWidth = ctx.measureText(this.speechBubble).width;
+          const bubbleWidth = textWidth + 16;
+
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+          ctx.strokeStyle = this.color;
+          ctx.lineWidth = 1.5;
+
+          ctx.beginPath();
+          ctx.roundRect(-bubbleWidth / 2, -65 - bodyBounce, bubbleWidth, 22, 6);
+          ctx.fill();
+          ctx.stroke();
+
+          // Bubble pointer
+          ctx.beginPath();
+          ctx.moveTo(-4, -43 - bodyBounce);
+          ctx.lineTo(0, -37 - bodyBounce);
+          ctx.lineTo(4, -43 - bodyBounce);
+          ctx.fill();
+
+          ctx.fillStyle = '#f8fafc';
+          ctx.textAlign = 'center';
+          ctx.fillText(this.speechBubble, 0, -50 - bodyBounce);
+        }
+
+        ctx.restore();
+      }
+    }
+
+    // =========================================================================
+    // INITIALIZE AGENTS
+    // =========================================================================
+    const agents = [
+      new Agent('courier', 'Marketing Alex', 'Inbound Courier', '#3b82f6', WAYPOINTS.MARKETING_COURIER_DESK),
+      new Agent('sdr', 'SDR Agent Sam', 'Lead Qualifier', '#38bdf8', WAYPOINTS.SDR_DESK),
+      new Agent('architect', 'Archie AI', 'Solution Architect', '#c084fc', WAYPOINTS.ARCHITECT_DESK),
+      new Agent('ae', 'AE Agent Taylor', 'Account Executive', '#fbbf24', WAYPOINTS.AE_DESK),
+      new Agent('finance', 'Finance Morgan', 'Billing Auditor', '#10b981', WAYPOINTS.FINANCE_DESK)
+    ];
+
+    // Logging Utility
+    function addLog(msg, type = 'event-task') {
+      const container = document.getElementById('log-container');
+      const item = document.createElement('div');
+      item.className = `log-item ${type}`;
+      const time = new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      item.innerHTML = `<strong style="color: #94a3b8;">[${time}]</strong> ${msg}`;
+      container.prepend(item);
+    }
+
+    // Update Sidebar Cards
+    function updateSidebar() {
+      const roster = document.getElementById('agent-roster');
+      roster.innerHTML = '';
+      
+      agents.forEach(agent => {
+        const card = document.createElement('div');
+        card.className = `agent-card ${agent.state !== 'IDLE' ? 'active' : ''}`;
+        card.innerHTML = `
+          <div class="agent-header">
+            <span class="agent-name">
+              <span class="agent-dot" style="background: ${agent.color}"></span>
+              ${agent.name}
+            </span>
+            <span style="font-size: 10px; font-weight: bold; color: ${agent.isMoving ? '#38bdf8' : '#94a3b8'}">
+              ${agent.state}
+            </span>
+          </div>
+          <div class="agent-state">${agent.role}</div>
+          <div class="agent-thought">"${agent.thought}"</div>
+        `;
+        roster.appendChild(card);
+      });
+
+      document.getElementById('val-active').innerText = activeTasksCount;
+      document.getElementById('val-completed').innerText = completedDealsCount;
+    }
+
+    // =========================================================================
+    // AUTONOMOUS WORKFLOW CONTROLLER
+    // =========================================================================
+    let taskIdCounter = 100;
+
+    function triggerInboundWorkflow() {
+      taskIdCounter++;
+      const taskId = `#${taskIdCounter}`;
+      activeTasksCount++;
+      addLog(`⚡ New Inbound Webform Inquiry Triggered! Task ${taskId}`, 'event-task');
+
+      const courier = agents.find(a => a.id === 'courier');
+      const sdr = agents.find(a => a.id === 'sdr');
+      const architect = agents.find(a => a.id === 'architect');
+      const ae = agents.find(a => a.id === 'ae');
+      const finance = agents.find(a => a.id === 'finance');
+
+      // STEP 1: Courier picks up task at Marketing Intake
+      courier.thought = `Picked up Task ${taskId} from Marketing Queue`;
+      courier.say(`Received new lead task ${taskId}!`);
+      courier.carriedTask = taskId;
+
+      // Courier walks to Sales Reception Desk
+      courier.setDestination(WAYPOINTS.SALES_RECEPTION, () => {
+        addLog(`📦 Courier delivered Task ${taskId} to Sales Reception Queue`, 'event-handoff');
+        courier.say(`Dropped off Task ${taskId} at Sales Reception`);
+
+        // STEP 2: SDR Agent walks from Desk to Reception to pick it up
+        sdr.thought = `Walking to Sales Reception to ingest ${taskId}`;
+        sdr.say(`On my way to pick up ${taskId}!`);
+        
+        sdr.setDestination(WAYPOINTS.SALES_RECEPTION, () => {
+          courier.carriedTask = null;
+          sdr.carriedTask = taskId;
+          sdr.say(`Acquired ${taskId}. Returning to desk...`);
+
+          // SDR walks back to SDR Desk to qualify lead
+          sdr.setDestination(WAYPOINTS.SDR_DESK, () => {
+            sdr.state = 'WORKING';
+            sdr.thought = `Executing CRM Lookup & Lead Scoring for ${taskId}...`;
+            sdr.say(`Qualifying lead... Score: 96/100`);
+
+            setTimeout(() => {
+              sdr.state = 'IDLE';
+              addLog(`✅ SDR Agent qualified Task ${taskId} (High-Intent Enterprise)`, 'event-task');
+
+              // STEP 3: SDR Agent walks over to Architect Desk for Handoff
+              sdr.say(`Handoff ${taskId} to Architecture Team`);
+              sdr.setDestination({ x: WAYPOINTS.ARCHITECT_DESK.x - 35, y: WAYPOINTS.ARCHITECT_DESK.y }, () => {
+                sdr.carriedTask = null;
+                architect.carriedTask = taskId;
+                sdr.say(`Here is ${taskId}, Archie!`);
+
+                // SDR returns home
+                sdr.setDestination(WAYPOINTS.SDR_DESK, () => {
+                  sdr.thought = "Standing by at workstation";
+                });
+
+                // Architect Agent walks to Whiteboard to design tech plan
+                architect.thought = `Designing Custom Cloud Architecture for ${taskId}`;
+                architect.say(`Planning system spec for ${taskId}...`);
+                architect.setDestination(WAYPOINTS.WHITEBOARD, () => {
+                  architect.state = 'WORKING';
+                  architect.say(`Querying Vector DB & Generating Diagram...`);
+
+                  setTimeout(() => {
+                    architect.state = 'IDLE';
+                    addLog(`📄 Architect generated 12-page Tech Proposal for ${taskId}`, 'event-handoff');
+
+                    // Architect walks to AE Desk to hand over proposal
+                    architect.say(`Delivering Proposal ${taskId} to AE Desk`);
+                    architect.setDestination(WAYPOINTS.AE_DESK, () => {
+                      architect.carriedTask = null;
+                      ae.carriedTask = taskId;
+                      architect.say(`Proposal ready, Taylor!`);
+
+                      // Architect returns home
+                      architect.setDestination(WAYPOINTS.ARCHITECT_DESK, () => {
+                        architect.thought = "Standing by for new architecture tasks";
+                      });
+
+                      // STEP 4: AE Agent signs contract at AE Desk
+                      ae.thought = `Drafting DocuSign Contract & Executive Summary for ${taskId}`;
+                      ae.state = 'WORKING';
+                      ae.say(`Generating $150k Enterprise Contract...`);
+
+                      setTimeout(() => {
+                        ae.state = 'IDLE';
+                        addLog(`🎉 AE Agent closed deal ${taskId}! Signed by Client.`, 'event-done');
+
+                        // AE Agent walks task down to Finance Dept
+                        ae.say(`Taking contract ${taskId} to Finance!`);
+                        ae.setDestination(WAYPOINTS.FINANCE_DESK, () => {
+                          ae.carriedTask = null;
+                          finance.carriedTask = taskId;
+                          ae.say(`Finance team, contract is signed!`);
+                          
+                          // AE returns home
+                          ae.setDestination(WAYPOINTS.AE_DESK, () => {
+                            ae.thought = "Awaiting next enterprise deal";
+                          });
+
+                          // STEP 5: Finance processes invoice
+                          finance.thought = `Issuing Stripe Invoice & Syncing NetSuite for ${taskId}`;
+                          finance.state = 'WORKING';
+                          finance.say(`Executing Stripe Auto-Invoice...`);
+
+                          setTimeout(() => {
+                            finance.state = 'IDLE';
+                            finance.carriedTask = null;
+                            activeTasksCount = Math.max(0, activeTasksCount - 1);
+                            completedDealsCount++;
+                            addLog(`💳 Finance executed auto-billing for Task ${taskId}. Workflow Completed!`, 'event-done');
+                            finance.say(`Task ${taskId} fully completed & billed! 🎉`);
+                            finance.thought = "Audit complete. Standing by.";
+                          }, 2000 / simSpeed);
+                        });
+                      }, 2000 / simSpeed);
+                    });
+                  }, 2500 / simSpeed);
+                });
+              });
+            }, 2000 / simSpeed);
+          });
+        });
+      });
+
+      // Courier returns to Marketing Station after handoff
+      setTimeout(() => {
+        courier.setDestination(WAYPOINTS.MARKETING_COURIER_DESK, () => {
+          courier.thought = "Monitoring Marketing Webhook for new leads";
+        });
+      }, 3000 / simSpeed);
+    }
+
+    // =========================================================================
+    // RENDERING LOOP & DRAWING PROCEDURAL OFFICE TILES
+    // =========================================================================
+    function drawOfficeFloor() {
+      // Background Grid
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Floor Tiles Pattern
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1;
+      const tileSize = 30;
+      for (let x = 0; x < canvas.width; x += tileSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+      }
+      for (let y = 0; y < canvas.height; y += tileSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+      }
+
+      // Draw Department Zones
+      ZONES.forEach(zone => {
+        ctx.fillStyle = zone.color;
+        ctx.fillRect(zone.x, zone.y, zone.w, zone.h);
+
+        ctx.strokeStyle = zone.stroke;
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([6, 4]);
+        ctx.strokeRect(zone.x, zone.y, zone.w, zone.h);
+        ctx.setLineDash([]);
+
+        // Department Title Badge
+        ctx.fillStyle = zone.stroke;
+        ctx.font = 'bold 11px Inter, sans-serif';
+        ctx.fillText(zone.name, zone.x + 10, zone.y + 20);
+      });
+
+      // Draw Desks & Furniture
+      DESKS.forEach(desk => {
+        // Desk Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.fillRect(desk.x + 4, desk.y + 4, desk.w, desk.h);
+
+        // Desk Surface
+        ctx.fillStyle = '#1e293b';
+        ctx.strokeStyle = desk.color;
+        ctx.lineWidth = 2;
+        ctx.fillRect(desk.x, desk.y, desk.w, desk.h);
+        ctx.strokeRect(desk.x, desk.y, desk.w, desk.h);
+
+        // Monitors Top-Down
+        ctx.fillStyle = desk.color;
+        ctx.fillRect(desk.x + 15, desk.y + 6, desk.w - 30, 6);
+
+        // Desk Label
+        ctx.fillStyle = '#cbd5e1';
+        ctx.font = '10px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(desk.label, desk.x + desk.w / 2, desk.y + desk.h / 2 + 8);
+      });
+
+      // Draw Waypoint Walking Paths / Dotted Guides
+      ctx.strokeStyle = 'rgba(51, 65, 85, 0.4)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 4]);
+      
+      ctx.beginPath();
+      ctx.moveTo(WAYPOINTS.MARKETING_COURIER_DESK.x, WAYPOINTS.MARKETING_COURIER_DESK.y);
+      ctx.lineTo(WAYPOINTS.SALES_RECEPTION.x, WAYPOINTS.SALES_RECEPTION.y);
+      ctx.lineTo(WAYPOINTS.SDR_DESK.x, WAYPOINTS.SDR_DESK.y);
+      ctx.lineTo(WAYPOINTS.WHITEBOARD.x, WAYPOINTS.WHITEBOARD.y);
+      ctx.lineTo(WAYPOINTS.ARCHITECT_DESK.x, WAYPOINTS.ARCHITECT_DESK.y);
+      ctx.lineTo(WAYPOINTS.AE_DESK.x, WAYPOINTS.AE_DESK.y);
+      ctx.lineTo(WAYPOINTS.FINANCE_DESK.x, WAYPOINTS.FINANCE_DESK.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    function render() {
+      if (!isPaused) {
+        frameCount++;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        drawOfficeFloor();
+
+        // Update and draw each agent sprite
+        agents.forEach(agent => {
+          agent.update();
+          agent.draw(ctx);
+        });
+
+        updateSidebar();
+      }
+
+      requestAnimationFrame(render);
+    }
+
+    // =========================================================================
+    // EVENT LISTENERS & UI CONTROLS
+    // =========================================================================
+    document.getElementById('btn-spawn').addEventListener('click', () => {
+      triggerInboundWorkflow();
+    });
+
+    document.getElementById('btn-toggle').addEventListener('click', (e) => {
+      isPaused = !isPaused;
+      e.target.innerText = isPaused ? '▶️ Resume' : '⏸️ Pause';
+    });
+
+    document.getElementById('btn-speed').addEventListener('click', (e) => {
+      if (simSpeed === 1) simSpeed = 2;
+      else if (simSpeed === 2) simSpeed = 4;
+      else simSpeed = 1;
+      e.target.innerText = `⏩ Speed: ${simSpeed}x`;
+    });
+
+    // Start Simulation Loop & Auto-trigger first workflow
+    render();
+    setTimeout(() => {
+      triggerInboundWorkflow();
+    }, 1000);
+
+  </script>
+</body>
+</html>
