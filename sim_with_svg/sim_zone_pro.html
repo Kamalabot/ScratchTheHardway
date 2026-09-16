@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Simulation</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            background-color: #1a1a1a;
+            color: white;
+            font-family: monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #controls {
+            padding: 15px;
+            background: #333;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            z-index: 10;
+        }
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
+            background: #555;
+            color: white;
+            border: 1px solid #777;
+            font-family: monospace;
+            text-transform: uppercase;
+        }
+        button:hover { background: #666; }
+        #svg-container {
+            width: 90vw;
+            height: 80vh;
+            margin-top: 20px;
+        }
+        svg {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="controls">
+        <button id="btnStart">Start System</button>
+        <button id="btnStop">Stop System</button>
+        <button id="btnAdd">Add Pillar</button>
+        <button id="btnRemove">Remove Pillar</button>
+    </div>
+
+    <div id="svg-container">
+        <svg viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+            <rect width="1000" height="700" fill="#0099ff" />
+            
+            <rect id="hud-box" x="50" y="30" width="200" height="80" fill="none" stroke="#000000" stroke-width="3" />
+            
+            <rect id="capacitor" x="800" y="30" width="150" height="150" fill="#ffcc00" />
+            
+            <rect id="cooler-bg" x="800" y="520" width="150" height="150" fill="#556b2f" />
+            <rect id="cooler-level" x="800" y="520" width="150" height="150" fill="#88aa00" />
+            
+            <rect x="425" y="275" width="150" height="150" rx="15" fill="#ffcc00" />
+            <path id="generator-core" d="M500,285 L525,325 L570,320 L545,360 L575,395 L525,385 L490,420 L475,375 L430,370 L460,335 L440,295 L485,310 Z" fill="#998888" stroke="#ffffff" stroke-width="2"/>
+            
+            <g class="pillar" transform="translate(130, 140)">
+                <rect x="0" y="0" width="60" height="460" fill="none" stroke="#ffffff" stroke-width="2" />
+                <path d="M0,40 L30,60 L60,40" fill="none" stroke="#ffffff" stroke-width="2" />
+                <path d="M0,420 L30,400 L60,420" fill="none" stroke="#ffffff" stroke-width="2" />
+                <rect class="node" x="15" y="60" width="30" height="80" fill="#d4c375" />
+                <rect class="node" x="15" y="240" width="30" height="80" fill="#d4c375" />
+                <rect class="node" x="15" y="420" width="30" height="80" fill="#d4c375" transform="translate(0, -60)" />
+            </g>
+            
+            <g class="pillar" transform="translate(730, 140)">
+                <rect x="0" y="0" width="60" height="460" fill="none" stroke="#ffffff" stroke-width="2" />
+                <path d="M0,40 L30,60 L60,40" fill="none" stroke="#ffffff" stroke-width="2" />
+                <path d="M0,420 L30,400 L60,420" fill="none" stroke="#ffffff" stroke-width="2" />
+                <rect class="node" x="15" y="60" width="30" height="80" fill="#d4c375" />
+                <rect class="node" x="15" y="240" width="30" height="80" fill="#d4c375" />
+                <rect class="node" x="15" y="420" width="30" height="80" fill="#d4c375" transform="translate(0, -60)" />
+            </g>
+        </svg>
+    </div>
+
+    <script>
+        try {
+            console.log("Starting simulation initialization...");
+
+            const svg = document.querySelector('svg');
+            const svgNS = "http://www.w3.org/2000/svg";
+
+            const defs = document.createElementNS(svgNS, 'defs');
+            const filter = document.createElementNS(svgNS, 'filter');
+            filter.setAttribute('id', 'bloom');
+            const feGaussianBlur = document.createElementNS(svgNS, 'feGaussianBlur');
+            feGaussianBlur.setAttribute('stdDeviation', '15');
+            feGaussianBlur.setAttribute('result', 'coloredBlur');
+            const feMerge = document.createElementNS(svgNS, 'feMerge');
+            const feMergeNode1 = document.createElementNS(svgNS, 'feMergeNode');
+            feMergeNode1.setAttribute('in', 'coloredBlur');
+            const feMergeNode2 = document.createElementNS(svgNS, 'feMergeNode');
+            feMergeNode2.setAttribute('in', 'SourceGraphic');
+            
+            feMerge.appendChild(feMergeNode1);
+            feMerge.appendChild(feMergeNode2);
+            filter.appendChild(feGaussianBlur);
+            filter.appendChild(feMerge);
+            defs.appendChild(filter);
+            svg.prepend(defs);
+
+            const hudBox = document.getElementById('hud-box');
+            const textLine1 = document.createElementNS(svgNS, 'text');
+            const textLine2 = document.createElementNS(svgNS, 'text');
+            
+            textLine1.setAttribute('x', '60');
+            textLine1.setAttribute('y', '60');
+            textLine1.setAttribute('fill', 'white');
+            textLine1.setAttribute('font-family', 'monospace');
+            textLine1.setAttribute('font-size', '18px');
+            textLine1.textContent = "STATUS: STANDBY";
+
+            textLine2.setAttribute('x', '60');
+            textLine2.setAttribute('y', '90');
+            textLine2.setAttribute('fill', 'white');
+            textLine2.setAttribute('font-family', 'monospace');
+            textLine2.setAttribute('font-size', '18px');
+            textLine2.textContent = "OUTPUT: 0%";
+
+            svg.appendChild(textLine1);
+            svg.appendChild(textLine2);
+
+            let masterTimeline;
+            let isRunning = false;
+            let pillarTimelines = [];
+
+            const generatorCore = document.getElementById('generator-core');
+            const capacitor = document.getElementById('capacitor');
+            const coolerLevel = document.getElementById('cooler-level');
+            
+            gsap.set(generatorCore, { transformOrigin: "center center" });
+            gsap.set(capacitor, { transformOrigin: "center center" });
+            gsap.set(coolerLevel, { transformOrigin: "bottom center" });
+
+            function createPillarAnimation(pillarElement) {
+                console.log("Building pillar sequence...");
+                const nodes = pillarElement.querySelectorAll('.node');
+                
+                nodes.forEach(node => {
+                    node.setAttribute('filter', 'url(#bloom)');
+                    gsap.set(node, { fill: "#d4c375", opacity: 0.3 });
+                });
+
+                const tl = gsap.timeline({ paused: true, repeat: -1 });
+                
+                tl.to(nodes[2], { opacity: 1, fill: "#ffff99", duration: 0.3 })
+                  .to(nodes[2], { opacity: 0.3, fill: "#d4c375", duration: 0.3 })
+                  .to(nodes[1], { opacity: 1, fill: "#ffff99", duration: 0.3 }, "-=0.3")
+                  .to(nodes[1], { opacity: 0.3, fill: "#d4c375", duration: 0.3 })
+                  .to(nodes[0], { opacity: 1, fill: "#ffff99", duration: 0.3 }, "-=0.3")
+                  .to(nodes[0], { opacity: 0.3, fill: "#d4c375", duration: 0.3 });
+                  
+                return tl;
+            }
+
+            function initializePillars() {
+                const pillars = document.querySelectorAll('.pillar');
+                pillarTimelines.forEach(tl => tl.kill());
+                pillarTimelines = [];
+                pillars.forEach(pillar => {
+                    pillarTimelines.push(createPillarAnimation(pillar));
+                });
+            }
+
+            initializePillars();
+
+            masterTimeline = gsap.timeline({ paused: true, repeat: -1 })
+                .to(generatorCore, { rotation: 360, duration: 4, ease: "none" })
+                .to(capacitor, { scale: 1.1, duration: 2, yoyo: true, ease: "power1.inOut" }, 0)
+                .to(coolerLevel, { scaleY: 0.2, duration: 4, yoyo: true, ease: "power1.inOut" }, 0);
+
+            document.getElementById('btnStart').addEventListener('click', () => {
+                if (isRunning) return;
+                console.log("System started.");
+                isRunning = true;
+                textLine1.textContent = "STATUS: ACTIVE";
+                textLine2.textContent = "OUTPUT: 100%";
+                masterTimeline.play();
+                pillarTimelines.forEach(tl => tl.play());
+            });
+
+            document.getElementById('btnStop').addEventListener('click', () => {
+                if (!isRunning) return;
+                console.log("System stopped.");
+                isRunning = false;
+                textLine1.textContent = "STATUS: STANDBY";
+                textLine2.textContent = "OUTPUT: 0%";
+                masterTimeline.pause();
+                pillarTimelines.forEach(tl => tl.pause());
+                gsap.to('.node', { opacity: 0.3, fill: "#d4c375", duration: 0.5 });
+            });
+
+            document.getElementById('btnAdd').addEventListener('click', () => {
+                const pillars = document.querySelectorAll('.pillar');
+                if (pillars.length === 0) return;
+                
+                console.log("Cloning pillar...");
+                const template = pillars[0].cloneNode(true);
+                const currentCount = pillars.length;
+                
+                const newX = 130 + (currentCount * 200); 
+                template.setAttribute('transform', `translate(${newX}, 140)`);
+                template.setAttribute('opacity', '0');
+                
+                svg.appendChild(template);
+                
+                gsap.to(template, { opacity: 1, duration: 0.5 });
+                
+                const newTl = createPillarAnimation(template);
+                pillarTimelines.push(newTl);
+                if (isRunning) newTl.play();
+            });
+
+            document.getElementById('btnRemove').addEventListener('click', () => {
+                const pillars = document.querySelectorAll('.pillar');
+                if (pillars.length <= 2) {
+                    console.log("Cannot remove core pillars.");
+                    return;
+                }
+                
+                console.log("Removing pillar branch...");
+                const lastPillar = pillars[pillars.length - 1];
+                const lastTl = pillarTimelines.pop();
+                lastTl.kill();
+                
+                gsap.to(lastPillar, { opacity: 0, duration: 0.5, onComplete: () => {
+                    lastPillar.remove();
+                }});
+            });
+
+        } catch (error) {
+            console.error("Critical Execution Error:", error);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enforced Native SVG Simulation</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            background-color: #111;
+            color: white;
+            font-family: monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #controls {
+            padding: 12px;
+            background: #222;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            z-index: 10;
+        }
+        button {
+            padding: 8px 16px;
+            cursor: pointer;
+            background: #444;
+            color: white;
+            border: 1px solid #666;
+            font-family: monospace;
+        }
+        button:hover { background: #555; }
+        #svg-container {
+            width: 90vw;
+            height: 80vh;
+            margin-top: 15px;
+        }
+        svg {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="controls">
+        <button id="btnStart">Start</button>
+        <button id="btnStop">Stop</button>
+        <button id="btnAdd">Add Pillar</button>
+        <button id="btnRemove">Remove Pillar</button>
+    </div>
+
+    <div id="svg-container"></div>
+
+    <script>
+        (async function init() {
+            try {
+                console.log("Fetching original untouched SVG...");
+                const response = await fetch('sim_zone.svg');
+                if (!response.ok) throw new Error("HTTP error: " + response.status);
+                
+                const svgText = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(svgText, "image/svg+xml");
+                const svg = doc.querySelector('svg');
+                
+                const container = document.getElementById('svg-container');
+                container.innerHTML = '';
+                container.appendChild(svg);
+                console.log("SVG mounted to document.");
+
+                const svgNS = "http://www.w3.org/2000/svg";
+                const svgBox = svg.viewBox.baseVal.width ? svg.viewBox.baseVal : svg.getBBox();
+                const midX = svgBox.width / 2;
+                const midY = svgBox.height / 2;
+
+                const allElements = Array.from(svg.querySelectorAll('path, rect, polygon, circle, polyline'));
+                console.log(`Inspecting ${allElements.length} vector nodes...`);
+
+                let hudBox = null;
+                let generatorCore = null;
+                let capacitorBox = null;
+                let coolerBox = null;
+                const lightNodes = [];
+                const pillarOutlines = [];
+
+                allElements.forEach(el => {
+                    const bbox = el.getBBox();
+                    if (bbox.width === 0 || bbox.height === 0) return;
+
+                    const style = window.getComputedStyle(el);
+                    const fill = (style.fill || el.getAttribute('fill') || '').toLowerCase();
+                    const stroke = (style.stroke || el.getAttribute('stroke') || '').toLowerCase();
+
+                    if (bbox.x < midX * 0.6 && bbox.y < midY * 0.6 && (stroke.includes('rgb(0, 0, 0)') || stroke === '#000000' || stroke === 'black')) {
+                        hudBox = el;
+                    }
+
+                    const distFromCenter = Math.hypot((bbox.x + bbox.width / 2) - midX, (bbox.y + bbox.height / 2) - midY);
+                    if (distFromCenter < 140 && el.tagName.toLowerCase() === 'path' && bbox.width > 40 && bbox.height > 40) {
+                        generatorCore = el;
+                    }
+
+                    if (bbox.x > midX && bbox.y < midY * 0.7 && bbox.width > 60 && bbox.height > 60) {
+                        capacitorBox = el;
+                    }
+
+                    if (bbox.x > midX && bbox.y > midY * 1.1 && bbox.width > 60 && bbox.height > 60) {
+                        coolerBox = el;
+                    }
+
+                    if (bbox.width > 10 && bbox.width < 60 && bbox.height > 30 && bbox.height < 140) {
+                        lightNodes.push(el);
+                    }
+
+                    if (bbox.width > 30 && bbox.width < 120 && bbox.height > 250) {
+                        pillarOutlines.push(el);
+                    }
+                });
+
+                console.log(`Resolved parts -> HUD: ${!!hudBox}, Core: ${!!generatorCore}, Nodes: ${lightNodes.length}, Outlines: ${pillarOutlines.length}, Capacitor: ${!!capacitorBox}, Cooler: ${!!coolerBox}`);
+
+                let defs = svg.querySelector('defs');
+                if (!defs) {
+                    defs = document.createElementNS(svgNS, 'defs');
+                    svg.prepend(defs);
+                }
+                
+                let filter = svg.querySelector('#runtime-bloom');
+                if (!filter) {
+                    filter = document.createElementNS(svgNS, 'filter');
+                    filter.setAttribute('id', 'runtime-bloom');
+                    filter.innerHTML = `
+                        <feGaussianBlur stdDeviation="8" result="blur" />
+                        <feMerge>
+                            <feMergeNode in="blur" />
+                            <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                    `;
+                    defs.appendChild(filter);
+                }
+
+                let textLine1, textLine2;
+                if (hudBox) {
+                    const hBox = hudBox.getBBox();
+                    const padX = hBox.width * 0.08;
+                    const padY = hBox.height * 0.15;
+                    const fontSize = Math.max(12, Math.min(18, Math.floor(hBox.height * 0.25)));
+
+                    textLine1 = document.createElementNS(svgNS, 'text');
+                    textLine1.setAttribute('x', hBox.x + padX);
+                    textLine1.setAttribute('y', hBox.y + padY);
+                    textLine1.setAttribute('fill', '#ffffff');
+                    textLine1.setAttribute('dominant-baseline', 'hanging');
+                    textLine1.setAttribute('font-family', 'monospace');
+                    textLine1.setAttribute('font-weight', 'bold');
+                    textLine1.setAttribute('font-size', `${fontSize}px`);
+                    textLine1.textContent = "CORE: STANDBY";
+
+                    textLine2 = document.createElementNS(svgNS, 'text');
+                    textLine2.setAttribute('x', hBox.x + padX);
+                    textLine2.setAttribute('y', hBox.y + padY + (fontSize * 1.4));
+                    textLine2.setAttribute('fill', '#00ffcc');
+                    textLine2.setAttribute('dominant-baseline', 'hanging');
+                    textLine2.setAttribute('font-family', 'monospace');
+                    textLine2.setAttribute('font-size', `${fontSize * 0.85}px`);
+                    textLine2.textContent = "SYS_PWR: 0%";
+
+                    svg.appendChild(textLine1);
+                    svg.appendChild(textLine2);
+                }
+
+                function injectCornerHUD(targetBox, titleText, metricText) {
+                    if (!targetBox) return null;
+                    const b = targetBox.getBBox();
+                    const group = document.createElementNS(svgNS, 'g');
+                    
+                    const t1 = document.createElementNS(svgNS, 'text');
+                    t1.setAttribute('x', b.x + (b.width / 2));
+                    t1.setAttribute('y', b.y + (b.height / 2) - 8);
+                    t1.setAttribute('fill', '#000000');
+                    t1.setAttribute('text-anchor', 'middle');
+                    t1.setAttribute('dominant-baseline', 'middle');
+                    t1.setAttribute('font-family', 'monospace');
+                    t1.setAttribute('font-weight', 'bold');
+                    t1.setAttribute('font-size', '14px');
+                    t1.textContent = titleText;
+
+                    const t2 = document.createElementNS(svgNS, 'text');
+                    t2.setAttribute('x', b.x + (b.width / 2));
+                    t2.setAttribute('y', b.y + (b.height / 2) + 12);
+                    t2.setAttribute('fill', '#111111');
+                    t2.setAttribute('text-anchor', 'middle');
+                    t2.setAttribute('dominant-baseline', 'middle');
+                    t2.setAttribute('font-family', 'monospace');
+                    t2.setAttribute('font-size', '12px');
+                    t2.textContent = metricText;
+
+                    group.appendChild(t1);
+                    group.appendChild(t2);
+                    svg.appendChild(group);
+                    return { group, t1, t2 };
+                }
+
+                const capHUD = injectCornerHUD(capacitorBox, "CAPACITOR", "0 kV");
+                const coolerHUD = injectCornerHUD(coolerBox, "COOLER", "24°C");
+
+                if (generatorCore) {
+                    gsap.set(generatorCore, { transformOrigin: "50% 50%", transformBox: "fill-box" });
+                }
+                if (capacitorBox) {
+                    gsap.set(capacitorBox, { transformOrigin: "50% 50%", transformBox: "fill-box" });
+                }
+                if (coolerBox) {
+                    gsap.set(coolerBox, { transformOrigin: "50% 50%", transformBox: "fill-box" });
+                }
+
+                const coreTl = gsap.timeline({ paused: true, repeat: -1 });
+                if (generatorCore) {
+                    coreTl.to(generatorCore, { rotation: 360, duration: 4, ease: "none" }, 0)
+                        .to(generatorCore, { scale: 1.15, duration: 0.8, yoyo: true, repeat: -1, ease: "sine.inOut" }, 0);
+                }
+
+                const cornerTl = gsap.timeline({ paused: true, repeat: -1 });
+                if (capacitorBox) {
+                    cornerTl.to(capacitorBox, { scale: 1.05, duration: 1.2, yoyo: true, repeat: -1, ease: "power1.inOut" }, 0);
+                }
+                if (coolerBox) {
+                    cornerTl.to(coolerBox, { opacity: 0.7, duration: 0.6, yoyo: true, repeat: -1, ease: "sine.inOut" }, 0);
+                }
+
+                const nodeTl = gsap.timeline({ paused: true, repeat: -1 });
+                if (lightNodes.length > 0) {
+                    lightNodes.sort((a, b) => b.getBBox().y - a.getBBox().y);
+                    lightNodes.forEach(node => node.setAttribute('filter', 'url(#runtime-bloom)'));
+
+                    lightNodes.forEach((node, idx) => {
+                        nodeTl.to(node, { opacity: 1, duration: 0.25 }, idx * 0.15)
+                            .to(node, { opacity: 0.3, duration: 0.25 }, (idx * 0.15) + 0.25);
+                    });
+                }
+
+                let isRunning = false;
+                document.getElementById('btnStart').onclick = () => {
+                    if (isRunning) return;
+                    console.log("Starting simulation loop...");
+                    isRunning = true;
+                    if (textLine1) textLine1.textContent = "CORE: ACTIVE";
+                    if (textLine2) textLine2.textContent = "SYS_PWR: 100%";
+                    if (capHUD) capHUD.t2.textContent = "750 kV";
+                    if (coolerHUD) coolerHUD.t2.textContent = "84°C";
+                    coreTl.play();
+                    cornerTl.play();
+                    nodeTl.play();
+                };
+
+                document.getElementById('btnStop').onclick = () => {
+                    if (!isRunning) return;
+                    console.log("Halting simulation loop...");
+                    isRunning = false;
+                    if (textLine1) textLine1.textContent = "CORE: STANDBY";
+                    if (textLine2) textLine2.textContent = "SYS_PWR: 0%";
+                    if (capHUD) capHUD.t2.textContent = "0 kV";
+                    if (coolerHUD) coolerHUD.t2.textContent = "24°C";
+                    coreTl.pause();
+                    cornerTl.pause();
+                    nodeTl.pause();
+                    gsap.to(lightNodes, { opacity: 0.3, duration: 0.3 });
+                    if (generatorCore) gsap.to(generatorCore, { scale: 1, duration: 0.5 });
+                    if (capacitorBox) gsap.to(capacitorBox, { scale: 1, duration: 0.5 });
+                    if (coolerBox) gsap.to(coolerBox, { opacity: 1, duration: 0.5 });
+                };
+
+                const pillarCluster = document.createElementNS(svgNS, 'g');
+                pillarCluster.setAttribute('id', 'extracted-pillar-template');
+                
+                let templateAnchorX = 0;
+                if (pillarOutlines.length > 0) {
+                    const baseOutline = pillarOutlines[0];
+                    const baseBox = baseOutline.getBBox();
+                    templateAnchorX = baseBox.x;
+                    
+                    const clusterElements = allElements.filter(el => {
+                        const b = el.getBBox();
+                        return Math.abs(b.x - baseBox.x) < 40 && b.y >= baseBox.y - 15 && (b.y + b.height) <= (baseBox.y + baseBox.height + 15);
+                    });
+                    clusterElements.forEach(el => pillarCluster.appendChild(el.cloneNode(true)));
+                } else if (lightNodes.length >= 3) {
+                    const leftNodes = lightNodes.filter(n => n.getBBox().x < midX);
+                    if (leftNodes.length > 0) {
+                        templateAnchorX = leftNodes[0].getBBox().x;
+                        leftNodes.forEach(node => pillarCluster.appendChild(node.cloneNode(true)));
+                    }
+                }
+
+                const dynamicClones = [];
+                document.getElementById('btnAdd').onclick = () => {
+                    if (pillarCluster.children.length === 0) {
+                        console.warn("No base pillar cluster could be isolated.");
+                        return;
+                    }
+                    console.log("Cloning isolated pillar geometry...");
+                    const clone = pillarCluster.cloneNode(true);
+                    const step = (dynamicClones.length + 1) * 110;
+                    clone.setAttribute('transform', `translate(${step}, 0)`);
+                    clone.setAttribute('opacity', '0');
+                    svg.appendChild(clone);
+                    gsap.to(clone, { opacity: 1, duration: 0.3 });
+                    dynamicClones.push(clone);
+                };
+
+                document.getElementById('btnRemove').onclick = () => {
+                    if (dynamicClones.length === 0) {
+                        console.warn("No cloned pillars to remove.");
+                        return;
+                    }
+                    console.log("Removing last cloned pillar...");
+                    const target = dynamicClones.pop();
+                    gsap.to(target, { opacity: 0, duration: 0.3, onComplete: () => target.remove() });
+                };
+
+            } catch (e) {
+                console.error("Spatial Parser Failure:", e);
+            }
+        })();
+    </script>
+</body>
+</html>

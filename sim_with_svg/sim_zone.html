@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>System Field Simulation</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+    body {
+      background-color: #030a16;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: monospace;
+      overflow: hidden;
+    }
+    .simulation-wrapper {
+      position: relative;
+      width: 95vw;
+      max-width: 1100px;
+      aspect-ratio: 1000 / 707;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    svg#sim-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    /* Controls and telemetry overlay inside top-left unit */
+    .telemetry-overlay {
+      position: absolute;
+      top: 3%;
+      left: 3.2%;
+      width: 19.8%;
+      height: 10.9%;
+      padding: 6px 10px;
+      color: #00ffcc;
+      font-size: 11px;
+      line-height: 1.4;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      pointer-events: none;
+    }
+    .status-badge {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #00ffcc;
+      box-shadow: 0 0 8px #00ffcc;
+      margin-right: 4px;
+    }
+    .actions-bar {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      z-index: 10;
+    }
+    .btn {
+      background: rgba(4, 20, 44, 0.85);
+      border: 1px solid #00d2ff;
+      color: #00d2ff;
+      padding: 8px 16px;
+      font-family: monospace;
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+    }
+    .btn:hover {
+      background: #00d2ff;
+      color: #04142c;
+      box-shadow: 0 0 12px rgba(0, 210, 255, 0.6);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="simulation-wrapper">
+    <!-- SVG SCENE -->
+    <svg id="sim-canvas" viewBox="0 0 1000 707" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <!-- Intense Glow Filter for Lights & Emitters -->
+        <filter id="bloom-strong" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="12" result="blur1" />
+          <feGaussianBlur stdDeviation="6" result="blur2" />
+          <feMerge>
+            <feMergeNode in="blur1" />
+            <feMergeNode in="blur2" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+
+        <!-- Soft Core Radiance -->
+        <filter id="glow-ambient" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="18" result="ambient" />
+          <feMerge>
+            <feMergeNode in="ambient" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+
+        <!-- Dynamic light beam gradients (spreading laterally from pillars) -->
+        <radialGradient id="left-beam" cx="0%" cy="50%" r="100%">
+          <stop offset="0%" stop-color="#fff5a8" stop-opacity="0.8" />
+          <stop offset="30%" stop-color="#ffd200" stop-opacity="0.4" />
+          <stop offset="100%" stop-color="#0080ff" stop-opacity="0" />
+        </radialGradient>
+
+        <radialGradient id="right-beam" cx="100%" cy="50%" r="100%">
+          <stop offset="0%" stop-color="#fff5a8" stop-opacity="0.8" />
+          <stop offset="30%" stop-color="#ffd200" stop-opacity="0.4" />
+          <stop offset="100%" stop-color="#0080ff" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+
+      <!-- Background Field -->
+      <rect width="1000" height="707" fill="#008ce3" id="bg-field" />
+
+      <!-- Energy Field Lines / Conduits -->
+      <g id="circuit-traces" stroke="#ffffff" stroke-dasharray="6 6" opacity="0.25" stroke-width="1.5">
+        <line x1="500" y1="353" x2="145" y2="175" />
+        <line x1="500" y1="353" x2="145" y2="353" />
+        <line x1="500" y1="353" x2="145" y2="532" />
+        <line x1="500" y1="353" x2="785" y2="175" />
+        <line x1="500" y1="353" x2="785" y2="353" />
+        <line x1="500" y1="353" x2="785" y2="532" />
+      </g>
+
+      <!-- SYSTEM 1: Top-Left Telemetry Console Frame -->
+      <g id="system-telemetry">
+        <rect x="32" y="21" width="198" height="77" fill="none" stroke="#000000" stroke-width="3" />
+        <line x1="32" y1="75" x2="230" y2="75" stroke="#000000" stroke-width="1" stroke-dasharray="3 3" />
+      </g>
+
+      <!-- SYSTEM 2: Top-Right High Voltage Capacitor -->
+      <g id="system-capacitor">
+        <rect x="840" y="14" width="150" height="144" fill="#fcbe00" id="capacitor-core" />
+        <rect x="840" y="14" width="150" height="144" fill="#ffffff" opacity="0" id="capacitor-flash" />
+      </g>
+
+      <!-- SYSTEM 3: Bottom-Right Coolant / Grounding Unit -->
+      <g id="system-coolant">
+        <rect x="830" y="542" width="152" height="152" fill="#7a9a01" id="coolant-core" />
+        <circle cx="906" cy="618" r="45" fill="none" stroke="#a7d600" stroke-width="3" id="coolant-ring" opacity="0.3" />
+      </g>
+
+      <!-- CENTER GENERATOR -->
+      <g id="generator-station" transform-origin="500 353">
+        <!-- Housing box -->
+        <rect x="425" y="280" width="150" height="147" rx="14" fill="#fcbe00" id="gen-housing" filter="url(#glow-ambient)" />
+        
+        <!-- Rotating/Pulsing Star Core with Contour -->
+        <g id="gen-star" transform-origin="500 353">
+          <path d="M 500,290 
+                   C 506,328 522,328 550,315 
+                   C 538,342 546,358 560,378 
+                   C 532,374 520,387 510,416 
+                   C 496,390 484,394 456,400 
+                   C 470,376 462,360 440,340 
+                   C 468,342 480,325 500,290 Z"
+                fill="#a08585" 
+                stroke="#ffffff" 
+                stroke-width="3.5" 
+                stroke-linejoin="round"
+                id="star-shape" />
+          <circle cx="500" cy="353" r="12" fill="#fff5a8" opacity="0.6" filter="url(#bloom-strong)" id="star-spark" />
+        </g>
+      </g>
+
+      <!-- VOLUMETRIC LIGHT BEAMS (Spread Layers) -->
+      <g id="light-spreads" opacity="0">
+        <!-- Left Pillar Beams -->
+        <ellipse cx="220" cy="175" rx="120" ry="45" fill="url(#left-beam)" />
+        <ellipse cx="220" cy="353" rx="120" ry="45" fill="url(#left-beam)" />
+        <ellipse cx="220" cy="532" rx="120" ry="45" fill="url(#left-beam)" />
+
+        <!-- Right Pillar Beams -->
+        <ellipse cx="710" cy="175" rx="120" ry="45" fill="url(#right-beam)" />
+        <ellipse cx="710" cy="353" rx="120" ry="45" fill="url(#right-beam)" />
+        <ellipse cx="710" cy="532" rx="120" ry="45" fill="url(#right-beam)" />
+      </g>
+
+      <!-- LEFT LIGHT PILLAR -->
+      <g id="pillar-left">
+        <!-- Structural Enclosure -->
+        <rect x="115" y="128" width="60" height="448" fill="none" stroke="#ffffff" stroke-width="2.5" />
+        <path d="M 115,166 L 145,180 L 175,166" fill="none" stroke="#ffffff" stroke-width="2" />
+        <path d="M 115,520 L 145,505 L 175,520" fill="none" stroke="#ffffff" stroke-width="2" />
+
+        <!-- 3 Light Emitters (Amber Pale Cores) -->
+        <rect class="emitter emitter-left" id="p1-light-top" x="132" y="137" width="24.5" height="93" fill="#cfba73" />
+        <rect class="emitter emitter-left" id="p1-light-mid" x="132" y="306" width="24.5" height="93" fill="#cfba73" />
+        <rect class="emitter emitter-left" id="p1-light-bot" x="132" y="465" width="24.5" height="93" fill="#cfba73" />
+      </g>
+
+      <!-- RIGHT LIGHT PILLAR -->
+      <g id="pillar-right">
+        <!-- Structural Enclosure -->
+        <rect x="757" y="128" width="60" height="448" fill="none" stroke="#ffffff" stroke-width="2.5" />
+        <path d="M 757,166 L 787,180 L 817,166" fill="none" stroke="#ffffff" stroke-width="2" />
+        <path d="M 757,520 L 787,505 L 817,520" fill="none" stroke="#ffffff" stroke-width="2" />
+
+        <!-- 3 Light Emitters (Amber Pale Cores) -->
+        <rect class="emitter emitter-right" id="p2-light-top" x="774.5" y="137" width="24.5" height="93" fill="#cfba73" />
+        <rect class="emitter emitter-right" id="p2-light-mid" x="774.5" y="306" width="24.5" height="93" fill="#cfba73" />
+        <rect class="emitter emitter-right" id="p2-light-bot" x="774.5" y="465" width="24.5" height="93" fill="#cfba73" />
+      </g>
+
+      <!-- Wavefront Energy Particles Container -->
+      <g id="pulse-container"></g>
+    </svg>
+
+    <!-- Real-time HTML Console inside Top-Left Frame -->
+    <div class="telemetry-overlay">
+      <div><span class="status-badge" id="live-dot"></span>SYS_STAT: <span id="sys-mode">SYNC_IDLE</span></div>
+      <div>CORE_OUT: <span id="core-val">84.2</span> kW</div>
+      <div>CAP_CHG: <span id="cap-val">68</span>%</div>
+    </div>
+
+    <!-- Simulation Control Actions -->
+    <div class="actions-bar">
+      <button class="btn" onclick="triggerOvercharge()">Boost Induction</button>
+      <button class="btn" onclick="toggleEmergencyCooling()">Ground Bleed</button>
+      <button class="btn" onclick="restartCycle()">Cycle Reset</button>
+    </div>
+  </div>
+
+  <script>
+    // System Elements
+    const starCore = document.getElementById('gen-star');
+    const spark = document.getElementById('star-spark');
+    const emitters = document.querySelectorAll('.emitter');
+    const lightSpreads = document.getElementById('light-spreads');
+    const capCore = document.getElementById('capacitor-core');
+    const capFlash = document.getElementById('capacitor-flash');
+    const coolantRing = document.getElementById('coolant-ring');
+    const sysModeText = document.getElementById('sys-mode');
+    const coreValText = document.getElementById('core-val');
+    const capValText = document.getElementById('cap-val');
+    const pulseContainer = document.getElementById('pulse-container');
+
+    let mainMasterTimeline;
+
+    // Build Master Simulation Loop
+    function initSimulation() {
+      if (mainMasterTimeline) mainMasterTimeline.kill();
+
+      mainMasterTimeline = gsap.timeline({ repeat: -1 });
+
+      // Core Breathing & Rotation Loop
+      gsap.to(starCore, {
+        rotation: "+=360",
+        duration: 24,
+        ease: "none",
+        repeat: -1
+      });
+
+      // Synchronous telemetry ticker
+      const teleTicker = { core: 70, cap: 50 };
+      gsap.to(teleTicker, {
+        core: 140,
+        cap: 98,
+        duration: 3.5,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut",
+        onUpdate: () => {
+          coreValText.textContent = teleTicker.core.toFixed(1);
+          capValText.textContent = Math.round(teleTicker.cap);
+        }
+      });
+
+      // Simulation Routine Timeline
+      mainMasterTimeline
+        // Phase 1: Core Charge
+        .set(sysModeText, { textContent: "CORE_INDUCTION" })
+        .to(spark, { opacity: 1, scale: 2.2, duration: 0.8, ease: "power2.out" })
+        .to('#gen-housing', { scale: 1.04, duration: 0.8, yoyo: true, repeat: 1, ease: "sine.inOut" }, 0)
+        .call(spawnWavefrontPackets, null, 0.4)
+
+        // Phase 2: Lateral Transmission & Pillar Emitters Stagger
+        .set(sysModeText, { textContent: "PYLON_IGNITION" }, "+=0.2")
+        .to(emitters, {
+          fill: "#fff280",
+          filter: "url(#bloom-strong)",
+          duration: 0.45,
+          stagger: {
+            each: 0.12,
+            from: "center"
+          },
+          ease: "power3.out"
+        })
+        .to(lightSpreads, { opacity: 0.65, duration: 0.6, ease: "power2.out" }, "-=0.3")
+
+        // Phase 3: Corner Stabilization (Capacitor charge surge & Ground bleed)
+        .set(sysModeText, { textContent: "GRID_SATURATED" })
+        .to(capFlash, { opacity: 0.5, duration: 0.15, yoyo: true, repeat: 3 })
+        .to(capCore, { filter: "url(#bloom-strong)", duration: 0.4, yoyo: true, repeat: 1 }, "-=0.3")
+        .to(coolantRing, { scale: 1.6, opacity: 0.9, duration: 0.8, ease: "sine.out" }, "-=0.4")
+        .to(coolantRing, { scale: 1.0, opacity: 0.3, duration: 0.4 })
+
+        // Phase 4: Cool-down & Dissipation
+        .set(sysModeText, { textContent: "BUS_STABILIZING" }, "+=0.3")
+        .to(lightSpreads, { opacity: 0.12, duration: 1.2, ease: "power2.in" })
+        .to(emitters, {
+          fill: "#cfba73",
+          filter: "none",
+          duration: 1.0,
+          stagger: 0.08
+        }, "-=1.0")
+        .to(spark, { opacity: 0.4, scale: 1.0, duration: 0.8 });
+    }
+
+    // Dynamic Visual FX: Energy Rings traveling from center to pylons
+    function spawnWavefrontPackets() {
+      for (let i = 0; i < 2; i++) {
+        const ring = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        ring.setAttribute("cx", "500");
+        ring.setAttribute("cy", "353");
+        ring.setAttribute("r", "15");
+        ring.setAttribute("fill", "none");
+        ring.setAttribute("stroke", "#ffffff");
+        ring.setAttribute("stroke-width", "2");
+        pulseContainer.appendChild(ring);
+
+        gsap.to(ring, {
+          attr: { r: 280 },
+          opacity: 0,
+          duration: 1.2,
+          ease: "power2.out",
+          onComplete: () => ring.remove()
+        });
+      }
+    }
+
+    // Interactive Functions
+    function triggerOvercharge() {
+      gsap.timeline()
+        .to('#gen-housing', { fill: '#ffffff', duration: 0.1, yoyo: true, repeat: 3 })
+        .to('#gen-housing', { fill: '#fcbe00', duration: 0.2 })
+        .to(emitters, {
+          fill: '#ffffff',
+          filter: 'url(#bloom-strong)',
+          duration: 0.2,
+          stagger: 0.05
+        }, 0)
+        .to(lightSpreads, { opacity: 1, duration: 0.2 }, 0)
+        .to(lightSpreads, { opacity: 0.3, duration: 1.2, ease: "power2.in" }, 0.4)
+        .to(emitters, { fill: '#cfba73', filter: 'none', duration: 0.8 }, 0.6);
+    }
+
+    function toggleEmergencyCooling() {
+      gsap.timeline()
+        .to('#coolant-core', { fill: '#b4ff00', duration: 0.2, yoyo: true, repeat: 2 })
+        .to('#coolant-core', { fill: '#7a9a01', duration: 0.2 })
+        .to(coolantRing, { scale: 2.2, opacity: 1, duration: 0.6, ease: "power2.out" })
+        .to(coolantRing, { scale: 1, opacity: 0.3, duration: 0.5 });
+    }
+
+    function restartCycle() {
+      initSimulation();
+    }
+
+    // Launch simulation on mount
+    window.addEventListener('DOMContentLoaded', initSimulation);
+  </script>
+</body>
+</html>
