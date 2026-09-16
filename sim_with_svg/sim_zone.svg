@@ -1,42 +1,93 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
 <svg
    width="297mm"
    height="210mm"
    viewBox="0 0 297 210"
    version="1.1"
-   id="svg-sim-zone"
+   id="svg1"
+   inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
+   sodipodi:docname="sim_zone.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns="http://www.w3.org/2000/svg"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns:xlink="http://www.w3.org/1999/xlink">
-
-  <defs id="defs-sim-zone">
-    <!-- Multi-stage Bloom & Glow Filter -->
-    <filter id="cyber-bloom" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="3.5" result="blur1" />
-      <feGaussianBlur stdDeviation="7.0" result="blur2" />
-      <feMerge>
-        <feMergeNode in="blur1" />
-        <feMergeNode in="blur2" />
-        <feMergeNode in="SourceGraphic" />
-      </feMerge>
-    </filter>
-
-    <!-- Subtle Ambient Glow -->
-    <filter id="hud-glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="2.0" result="blur" />
-      <feMerge>
-        <feMergeNode in="blur" />
-        <feMergeNode in="SourceGraphic" />
-      </feMerge>
-    </filter>
-
-    <!-- Energy Radial Gradient -->
-    <linearGradient id="linearGradient13">
-      <stop style="stop-color:#f3ff00;stop-opacity:1;" offset="0" id="stop13" />
-      <stop style="stop-color:#c3c493;stop-opacity:0.447;" offset="1" id="stop14" />
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="0.70710678"
+     inkscape:cx="560.02857"
+     inkscape:cy="492.85343"
+     inkscape:window-width="1920"
+     inkscape:window-height="1009"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1">
+    <linearGradient
+       id="linearGradient13"
+       inkscape:collect="always">
+      <stop
+         style="stop-color:#f3ff00;stop-opacity:1;"
+         offset="0"
+         id="stop13" />
+      <stop
+         style="stop-color:#c3c493;stop-opacity:0.44783714;"
+         offset="1"
+         id="stop14" />
     </linearGradient>
-
+    <inkscape:path-effect
+       effect="fillet_chamfer"
+       id="path-effect12"
+       is_visible="true"
+       lpeversion="1"
+       nodesatellites_param="F,0,0,1,0,0,0,1 @ F,0,0,1,0,0,0,1 @ F,0,0,1,0,0,0,1 @ F,0,0,1,0,0,0,1 @ F,0,0,1,0,0.89289147,0,1 @ F,0,0,1,0,0,0,1 @ F,0,0,1,0,0,0,1 @ F,0,0,1,0,0,0,1"
+       radius="0"
+       unit="px"
+       method="auto"
+       mode="F"
+       chamfer_steps="1"
+       flexible="false"
+       use_knot_distance="true"
+       apply_no_radius="true"
+       apply_with_radius="true"
+       only_selected="false"
+       hide_knots="false" />
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath10">
+      <rect
+         style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:0.750001;stroke-linecap:round;stroke-opacity:0.944206;-inkscape-stroke:none"
+         id="rect11"
+         width="16.98221"
+         height="133.216"
+         x="34.341805"
+         y="38.115627" />
+    </clipPath>
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath10-1">
+      <rect
+         style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:0.750001;stroke-linecap:round;stroke-opacity:0.944206;-inkscape-stroke:none"
+         id="rect11-8"
+         width="16.98221"
+         height="133.216"
+         x="34.341805"
+         y="38.115627" />
+    </clipPath>
     <radialGradient
+       inkscape:collect="always"
        xlink:href="#linearGradient13"
        id="radialGradient14"
        cx="43.404568"
@@ -46,176 +97,221 @@
        r="20.579754"
        gradientTransform="matrix(1,0,0,0.97272718,0,1.5562425)"
        gradientUnits="userSpaceOnUse" />
-
-    <clipPath clipPathUnits="userSpaceOnUse" id="clipPathLeftPylon">
-      <rect width="16.98221" height="133.216" x="34.341805" y="38.115627" />
-    </clipPath>
-
-    <clipPath clipPathUnits="userSpaceOnUse" id="clipPathRightPylon">
-      <rect width="16.98221" height="133.216" x="34.341805" y="38.115627" />
-    </clipPath>
   </defs>
-
-  <style id="style-sim-zone">
-    :root {
-      --bg-color: #009bff;
-      --conduit-color: #ffffff;
-      --housing-color: #ffcc00;
-      --node-inactive: #decd87;
-      --node-active: #fff5a8;
-      --capacitor-color: #ffcc00;
-      --coolant-color: #88aa00;
-    }
-
-    /* Standalone CSS Animations */
-    .energy-conduit {
-      stroke: var(--conduit-color);
-      stroke-width: 0.8;
-      stroke-linecap: round;
-      stroke-dasharray: 6 4;
-      opacity: 0.4;
-      animation: conduit-flow 2s linear infinite;
-    }
-
-    #center-generator-core {
-      transform-box: fill-box;
-      transform-origin: center;
-      animation: core-rotate 10s linear infinite;
-      filter: url(#cyber-bloom);
-    }
-
-    #center-energy-halo {
-      transform-box: fill-box;
-      transform-origin: center;
-      animation: halo-pulse 3s ease-in-out infinite alternate;
-    }
-
-    .pylon-emitter-node {
-      transition: fill 0.3s ease, filter 0.3s ease;
-      animation: node-breathing 3s ease-in-out infinite alternate;
-    }
-
-    #node-left-1, #node-right-1 { animation-delay: 0s; }
-    #node-left-2, #node-right-2 { animation-delay: 0.4s; }
-    #node-left-3, #node-right-3 { animation-delay: 0.8s; }
-
-    #capacitor-core {
-      animation: capacitor-charge 4s ease-in-out infinite alternate;
-    }
-
-    #coolant-core {
-      animation: coolant-pulse 5s ease-in-out infinite alternate;
-    }
-
-    /* Keyframes */
-    @keyframes conduit-flow {
-      from { stroke-dashoffset: 20; }
-      to { stroke-dashoffset: 0; }
-    }
-
-    @keyframes core-rotate {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-
-    @keyframes halo-pulse {
-      0% { opacity: 0.3; transform: scale(0.95); }
-      100% { opacity: 0.8; transform: scale(1.1); filter: url(#cyber-bloom); }
-    }
-
-    @keyframes node-breathing {
-      0% { fill: var(--node-inactive); filter: none; }
-      100% { fill: var(--node-active); filter: url(#cyber-bloom); }
-    }
-
-    @keyframes capacitor-charge {
-      0% { fill: var(--capacitor-color); filter: none; }
-      100% { fill: #ffe875; filter: url(#cyber-bloom); }
-    }
-
-    @keyframes coolant-pulse {
-      0% { fill: var(--coolant-color); opacity: 0.8; }
-      100% { fill: #aacc11; opacity: 1; filter: url(#hud-glow); }
-    }
-  </style>
-
-  <!-- LAYER 1: Background Grid -->
-  <g id="layer-background">
-    <rect id="bg-rect" width="297" height="210" x="0" y="0" fill="var(--bg-color)" />
-  </g>
-
-  <!-- LAYER 2: Circuit Energy Conduits -->
-  <g id="layer-conduits">
-    <!-- Conduits from Center Generator (approx 148, 105) to System Elements -->
-    <path class="energy-conduit" d="M 148.5,105 L 42.7,55" />
-    <path class="energy-conduit" d="M 148.5,105 L 42.7,105" />
-    <path class="energy-conduit" d="M 148.5,105 L 42.7,152" />
-    <path class="energy-conduit" d="M 148.5,105 L 233.7,55" />
-    <path class="energy-conduit" d="M 148.5,105 L 233.7,105" />
-    <path class="energy-conduit" d="M 148.5,105 L 233.7,152" />
-    <path class="energy-conduit" d="M 148.5,105 L 272,25" />
-    <path class="energy-conduit" d="M 148.5,105 L 269,184" />
-  </g>
-
-  <!-- LAYER 3: Telemetry HUD Box (Top Left) -->
-  <g id="layer-hud">
-    <rect id="hud-telemetry-box" width="58.44" height="22.59" x="9.83" y="6.06" fill="none" stroke="#000000" stroke-width="0.8" />
-  </g>
-
-  <!-- LAYER 4: High Voltage Capacitor Unit (Top Right) -->
-  <g id="layer-capacitor">
-    <rect id="capacitor-core" width="44.53" height="43.02" x="249.82" y="3.77" fill="var(--capacitor-color)" />
-  </g>
-
-  <!-- LAYER 5: Coolant Grounding Unit (Bottom Right) -->
-  <g id="layer-coolant">
-    <rect id="coolant-core" width="44.90" height="46.04" x="246.80" y="161.14" fill="var(--coolant-color)" />
-  </g>
-
-  <!-- LAYER 6: Left Light Pylon -->
-  <g id="layer-pylon-left">
-    <!-- Light Emitter Nodes -->
-    <rect id="node-left-1" class="pylon-emitter-node pylon-left-node" width="6.79" height="27.54" x="39.31" y="41.13" fill="var(--node-inactive)" />
-    <rect id="node-left-2" class="pylon-emitter-node pylon-left-node" width="6.79" height="27.54" x="39.31" y="91.03" fill="var(--node-inactive)" />
-    <rect id="node-left-3" class="pylon-emitter-node pylon-left-node" width="6.79" height="27.54" x="39.31" y="138.34" fill="var(--node-inactive)" />
-    
-    <!-- Outer Structural Enclosure -->
-    <g id="pylon-left-enclosure">
-      <rect id="pylon-left-border" width="16.98" height="133.21" x="34.34" y="38.11" fill="none" stroke="#ffffff" stroke-width="0.75" />
-    </g>
-  </g>
-
-  <!-- LAYER 7: Right Light Pylon -->
-  <g id="layer-pylon-right">
-    <!-- Light Emitter Nodes -->
-    <rect id="node-right-1" class="pylon-emitter-node pylon-right-node" width="6.79" height="27.54" x="230.38" y="41.33" fill="var(--node-inactive)" />
-    <rect id="node-right-2" class="pylon-emitter-node pylon-right-node" width="6.79" height="27.54" x="230.38" y="91.24" fill="var(--node-inactive)" />
-    <rect id="node-right-3" class="pylon-emitter-node pylon-right-node" width="6.79" height="27.54" x="230.38" y="138.54" fill="var(--node-inactive)" />
-    
-    <!-- Outer Structural Enclosure -->
-    <g id="pylon-right-enclosure">
-      <rect id="pylon-right-border" width="16.98" height="133.21" x="225.04" y="38.11" fill="none" stroke="#ffffff" stroke-width="0.75" />
-    </g>
-  </g>
-
-  <!-- LAYER 8: Center Generator Station -->
-  <g id="layer-center-generator">
-    <!-- Housing Box -->
-    <rect id="center-generator-housing" width="44.53" height="43.02" x="126.23" y="83.48" rx="2.58" ry="3.51" fill="var(--housing-color)" />
-    
-    <!-- Rotating Star Generator Core -->
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:#009bff;fill-opacity:1;stroke-width:0.249055;stroke-linecap:round;stroke-opacity:0.944206;-inkscape-stroke:none"
+       id="rect1"
+       width="297"
+       height="210"
+       x="1.3822277e-14"
+       y="-9.9920072e-15"
+       ry="0"
+       sodipodi:insensitive="true" />
+    <rect
+       style="fill:#decd87;fill-opacity:1;stroke-width:0.25;stroke-linecap:round;stroke-opacity:0.944206;-inkscape-stroke:none"
+       id="rect2"
+       width="6.7928872"
+       height="27.548925"
+       x="39.314274"
+       y="41.134689" />
+    <rect
+       style="fill:#decd87;fill-opacity:1;stroke-width:0.25;stroke-linecap:round;stroke-opacity:0.944206;-inkscape-stroke:none"
+       id="rect2-8"
+       width="6.7928872"
+       height="27.548925"
+       x="39.314274"
+       y="91.036453" />
+    <rect
+       style="fill:#decd87;fill-opacity:1;stroke-width:0.25;stroke-linecap:round;stroke-opacity:0.944206;-inkscape-stroke:none"
+       id="rect2-8-1"
+       width="6.7928872"
+       height="27.548925"
+       x="39.314274"
+       y="138.34541" />
+    <rect
+       style="fill:#88aa00;fill-opacity:1;stroke-width:0.25;stroke-linecap:round;stroke-opacity:0.944206;-inkscape-stroke:none"
+       id="rect3"
+       width="44.908504"
+       height="46.040649"
+       x="246.80812"
+       y="161.1423" />
+    <rect
+       style="fill:#ffcc00;fill-opacity:1;stroke-width:0.25;stroke-linecap:round;stroke-opacity:0.944206;-inkscape-stroke:none"
+       id="rect4"
+       width="44.531132"
+       height="43.021603"
+       x="249.82719"
+       y="3.7738245" />
     <path
-       id="center-generator-core"
+       style="fill:#ffcc00;fill-opacity:1;stroke-width:0.25;stroke-linecap:round;stroke-opacity:0.944206;-inkscape-stroke:none"
+       id="rect4-3"
+       width="44.530998"
+       height="43.021603"
+       x="126.23444"
+       y="83.489197"
+       inkscape:path-effect="#path-effect12"
+       sodipodi:type="rect"
+       d="m 128.82194,83.489197 h 39.356 c 1.43348,0 2.5875,1.567039 2.5875,3.513541 v 35.994522 c 0,1.53527 -0.71792,2.83448 -1.72463,3.31491 -0.44133,0.21062 -1.26263,0.19863 -1.75576,0.19863 h -38.46311 c -1.43347,0 -2.5875,-1.56704 -2.5875,-3.51354 V 87.002738 c 0,-1.946502 1.15403,-3.513541 2.5875,-3.513541 z"
+       rx="2.5875001"
+       ry="3.5135417"
+       inkscape:export-filename="generator.svg"
+       inkscape:export-xdpi="96"
+       inkscape:export-ydpi="96" />
+    <rect
+       style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.796848;stroke-linecap:round;stroke-opacity:0.944206;-inkscape-stroke:none"
+       id="rect5"
+       width="58.447433"
+       height="22.5961"
+       x="9.8353672"
+       y="6.0615425" />
+    <g
+       id="g12"
+       inkscape:label="lightPillar1">
+      <g
+         id="g6"
+         clip-path="url(#clipPath10)">
+        <path
+           sodipodi:type="star"
+           style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:0.750001;stroke-linecap:round;stroke-opacity:0.944206;-inkscape-stroke:none"
+           id="path6"
+           inkscape:flatsided="true"
+           sodipodi:sides="6"
+           sodipodi:cx="41.51207"
+           sodipodi:cy="173.21855"
+           sodipodi:r1="16.986404"
+           sodipodi:r2="14.710657"
+           sodipodi:arg1="1.5930149"
+           sodipodi:arg2="2.1166137"
+           inkscape:rounded="0.16"
+           inkscape:randomized="0"
+           d="m 41.134687,190.20076 c -2.717154,-0.0604 -13.21205,-6.43461 -14.518335,-8.81793 -1.306286,-2.38331 -1.033486,-14.65927 0.377382,-16.98221 1.410869,-2.32293 12.178564,-8.22466 14.895718,-8.16428 2.717154,0.0604 13.212051,6.43461 14.518336,8.81793 1.306285,2.38331 1.033486,14.65928 -0.377383,16.98221 -1.410868,2.32293 -12.178564,8.22466 -14.895718,8.16428 z"
+           transform="translate(1.1321474,-2.2642948)" />
+        <path
+           sodipodi:type="star"
+           style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:0.750001;stroke-linecap:round;stroke-opacity:0.944206;-inkscape-stroke:none"
+           id="path6-2"
+           inkscape:flatsided="true"
+           sodipodi:sides="6"
+           sodipodi:cx="41.51207"
+           sodipodi:cy="173.21855"
+           sodipodi:r1="16.986404"
+           sodipodi:r2="14.710657"
+           sodipodi:arg1="1.5930149"
+           sodipodi:arg2="2.1166137"
+           inkscape:rounded="0.16"
+           inkscape:randomized="0"
+           d="m 41.134687,190.20076 c -2.717154,-0.0604 -13.21205,-6.43461 -14.518335,-8.81793 -1.306286,-2.38331 -1.033486,-14.65927 0.377382,-16.98221 1.410869,-2.32293 12.178564,-8.22466 14.895718,-8.16428 2.717154,0.0604 13.212051,6.43461 14.518336,8.81793 1.306285,2.38331 1.033486,14.65928 -0.377383,16.98221 -1.410868,2.32293 -12.178564,8.22466 -14.895718,8.16428 z"
+           transform="translate(2.3623099,-136.68671)" />
+      </g>
+      <rect
+         style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:0.750001;stroke-linecap:round;stroke-opacity:0.944206;-inkscape-stroke:none"
+         id="rect6"
+         width="16.98221"
+         height="133.216"
+         x="34.341805"
+         y="38.115627" />
+    </g>
+    <g
+       id="g11"
+       inkscape:label="lightPillar0">
+      <rect
+         style="fill:#decd87;fill-opacity:1;stroke-width:0.25;stroke-linecap:round;stroke-opacity:0.944206;-inkscape-stroke:none"
+         id="rect2-2"
+         width="6.7928872"
+         height="27.548925"
+         x="230.38103"
+         y="41.338333" />
+      <rect
+         style="fill:#decd87;fill-opacity:1;stroke-width:0.25;stroke-linecap:round;stroke-opacity:0.944206;-inkscape-stroke:none"
+         id="rect2-8-7"
+         width="6.7928872"
+         height="27.548925"
+         x="230.38103"
+         y="91.240097" />
+      <rect
+         style="fill:#decd87;fill-opacity:1;stroke-width:0.25;stroke-linecap:round;stroke-opacity:0.944206;-inkscape-stroke:none"
+         id="rect2-8-1-6"
+         width="6.7928872"
+         height="27.548925"
+         x="230.38103"
+         y="138.54906" />
+      <g
+         id="g6-7"
+         clip-path="url(#clipPath10-1)"
+         transform="translate(190.70502,-0.37500051)">
+        <path
+           sodipodi:type="star"
+           style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:0.750001;stroke-linecap:round;stroke-opacity:0.944206;-inkscape-stroke:none"
+           id="path6-9"
+           inkscape:flatsided="true"
+           sodipodi:sides="6"
+           sodipodi:cx="41.51207"
+           sodipodi:cy="173.21855"
+           sodipodi:r1="16.986404"
+           sodipodi:r2="14.710657"
+           sodipodi:arg1="1.5930149"
+           sodipodi:arg2="2.1166137"
+           inkscape:rounded="0.16"
+           inkscape:randomized="0"
+           d="m 41.134687,190.20076 c -2.717154,-0.0604 -13.21205,-6.43461 -14.518335,-8.81793 -1.306286,-2.38331 -1.033486,-14.65927 0.377382,-16.98221 1.410869,-2.32293 12.178564,-8.22466 14.895718,-8.16428 2.717154,0.0604 13.212051,6.43461 14.518336,8.81793 1.306285,2.38331 1.033486,14.65928 -0.377383,16.98221 -1.410868,2.32293 -12.178564,8.22466 -14.895718,8.16428 z"
+           transform="translate(1.1321474,-2.2642948)" />
+        <path
+           sodipodi:type="star"
+           style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:0.750001;stroke-linecap:round;stroke-opacity:0.944206;-inkscape-stroke:none"
+           id="path6-2-5"
+           inkscape:flatsided="true"
+           sodipodi:sides="6"
+           sodipodi:cx="41.51207"
+           sodipodi:cy="173.21855"
+           sodipodi:r1="16.986404"
+           sodipodi:r2="14.710657"
+           sodipodi:arg1="1.5930149"
+           sodipodi:arg2="2.1166137"
+           inkscape:rounded="0.16"
+           inkscape:randomized="0"
+           d="m 41.134687,190.20076 c -2.717154,-0.0604 -13.21205,-6.43461 -14.518335,-8.81793 -1.306286,-2.38331 -1.033486,-14.65927 0.377382,-16.98221 1.410869,-2.32293 12.178564,-8.22466 14.895718,-8.16428 2.717154,0.0604 13.212051,6.43461 14.518336,8.81793 1.306285,2.38331 1.033486,14.65928 -0.377383,16.98221 -1.410868,2.32293 -12.178564,8.22466 -14.895718,8.16428 z"
+           transform="translate(2.3623099,-136.68671)" />
+      </g>
+      <rect
+         style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:0.750001;stroke-linecap:round;stroke-opacity:0.944206;-inkscape-stroke:none"
+         id="rect6-4"
+         width="16.98221"
+         height="133.216"
+         x="225.04681"
+         y="38.115627" />
+    </g>
+    <path
+       sodipodi:type="star"
+       style="fill:#ac9393;fill-opacity:1;stroke:#ffffff;stroke-width:0.750001;stroke-linecap:round;stroke-opacity:0.944206;-inkscape-stroke:none"
+       id="path12"
+       inkscape:flatsided="false"
+       sodipodi:sides="6"
+       sodipodi:cx="142.27319"
+       sodipodi:cy="94.723"
+       sodipodi:r1="11.997276"
+       sodipodi:r2="21.813229"
+       sodipodi:arg1="0.92037491"
+       sodipodi:arg2="1.4439737"
+       inkscape:rounded="0.16"
+       inkscape:randomized="0"
        d="m 149.53781,104.27078 c -1.64292,1.25004 -2.45779,11.82915 -4.50562,12.09026 -2.04782,0.26111 -5.49128,-9.77503 -7.39531,-10.57281 -1.90402,-0.79779 -11.47324,3.78607 -12.72328,2.14316 -1.25004,-1.64292 5.71978,-9.643116 5.45867,-11.69094 -0.26111,-2.047823 -9.01545,-8.043083 -8.21767,-9.947106 0.79778,-1.904024 11.21107,0.13192 12.85398,-1.118121 1.64291,-1.250041 2.45779,-11.829153 4.50561,-12.090265 2.04783,-0.261112 5.49129,9.775032 7.39531,10.572814 1.90403,0.797782 11.47325,-3.78607 12.72329,-2.143158 1.25004,1.642911 -5.71978,9.643111 -5.45867,11.690935 0.26111,2.047823 9.01545,8.043081 8.21767,9.947111 -0.79778,1.90402 -11.21107,-0.13192 -12.85398,1.11812 z"
-       fill="#ac9393"
-       stroke="#ffffff"
-       stroke-width="0.75"
        transform="matrix(0.87901814,0,0,0.83266953,23.252204,25.939954)" />
-
-    <!-- Ambient Energy Halo -->
     <path
-       id="center-energy-halo"
-       style="opacity:0.6;fill:url(#radialGradient14);"
+       style="opacity:0.560878;mix-blend-mode:normal;fill:url(#radialGradient14);fill-opacity:1;stroke:none;stroke-width:0.750001;stroke-linecap:round;stroke-opacity:0.944206;-inkscape-stroke:none"
+       id="path13"
+       sodipodi:type="arc"
+       sodipodi:cx="43.404568"
+       sodipodi:cy="57.062038"
+       sodipodi:rx="20.579754"
+       sodipodi:ry="20.018486"
+       sodipodi:start="0"
+       sodipodi:end="6.2531916"
+       sodipodi:open="true"
+       sodipodi:arc-type="arc"
        d="M 63.984322,57.062038 A 20.579754,20.018486 0 0 1 43.558882,77.079962 20.579754,20.018486 0 0 1 22.827128,57.362241 20.579754,20.018486 0 0 1 42.941659,37.048617 20.579754,20.018486 0 0 1 63.975065,56.4617" />
   </g>
 </svg>
