@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM Visual Automation Pipeline</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+    body {
+      background-color: #030712;
+      color: #f8fafc;
+      font-family: 'Fira Code', monospace, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding-bottom: 40px;
+    }
+
+    /* Top Navigation / Telemetry Header */
+    .telemetry-bar {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.9);
+      border-bottom: 1px solid rgba(0, 243, 255, 0.3);
+      padding: 14px 28px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+    }
+
+    .telemetry-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .telemetry-label {
+      font-size: 11px;
+      color: #94a3b8;
+      letter-spacing: 1px;
+    }
+
+    .telemetry-value {
+      font-size: 18px;
+      font-weight: bold;
+      color: #00f3ff;
+      margin-top: 2px;
+    }
+
+    /* Main Canvas Wrapper */
+    .canvas-wrapper {
+      position: relative;
+      width: 95vw;
+      max-width: 1250px;
+      aspect-ratio: 1200 / 700;
+      margin-top: 25px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+      background: #070b19;
+    }
+
+    svg#crm-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Interactive Action Controls */
+    .controls-panel {
+      margin-top: 25px;
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    .btn-stage {
+      background: rgba(15, 23, 42, 0.9);
+      padding: 12px 22px;
+      font-family: monospace;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.25s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-lead { border: 1px solid #00f3ff; color: #00f3ff; }
+    .btn-lead:hover { background: #00f3ff; color: #070b19; box-shadow: 0 0 16px rgba(0, 243, 255, 0.6); }
+
+    .btn-product { border: 1px solid #a855f7; color: #a855f7; }
+    .btn-product:hover { background: #a855f7; color: #070b19; box-shadow: 0 0 16px rgba(168, 85, 247, 0.6); }
+
+    .btn-invoice { border: 1px solid #f59e0b; color: #f59e0b; }
+    .btn-invoice:hover { background: #f59e0b; color: #070b19; box-shadow: 0 0 16px rgba(245, 158, 11, 0.6); }
+
+    .btn-service { border: 1px solid #22c55e; color: #22c55e; }
+    .btn-service:hover { background: #22c55e; color: #070b19; box-shadow: 0 0 16px rgba(34, 197, 94, 0.6); }
+
+    .btn-auto { 
+      border: 1px solid #ffffff; 
+      color: #ffffff; 
+      background: linear-gradient(135deg, rgba(0, 243, 255, 0.2), rgba(168, 85, 247, 0.2));
+    }
+    .btn-auto:hover { 
+      background: #ffffff; 
+      color: #070b19; 
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.8); 
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Real-time Telemetry Dashboard -->
+  <div class="telemetry-bar">
+    <div class="telemetry-item">
+      <span class="telemetry-label">PIPELINE STATUS</span>
+      <span class="telemetry-value" id="val-status">AUTOMATED</span>
+    </div>
+    <div class="telemetry-item">
+      <span class="telemetry-label">INBOUND LEADS</span>
+      <span class="telemetry-value" id="val-leads" style="color:#00f3ff;">14</span>
+    </div>
+    <div class="telemetry-item">
+      <span class="telemetry-label">ATTACHED PRODUCTS</span>
+      <span class="telemetry-value" id="val-products" style="color:#a855f7;">$343,000</span>
+    </div>
+    <div class="telemetry-item">
+      <span class="telemetry-label">PAID INVOICES</span>
+      <span class="telemetry-value" id="val-paid" style="color:#f59e0b;">100%</span>
+    </div>
+    <div class="telemetry-item">
+      <span class="telemetry-label">CSAT HEALTH</span>
+      <span class="telemetry-value" id="val-csat" style="color:#22c55e;">98.6%</span>
+    </div>
+  </div>
+
+  <!-- SVG Animation Container -->
+  <div class="canvas-wrapper" id="svg-host"></div>
+
+  <!-- Action Simulation Controls -->
+  <div class="controls-panel">
+    <button class="btn-stage btn-lead" onclick="triggerStage1()">📥 1. Ingest Inbound Lead</button>
+    <button class="btn-stage btn-product" onclick="triggerStage2()">📦 2. Attach Product Suite</button>
+    <button class="btn-stage btn-invoice" onclick="triggerStage3()">💳 3. Process Paid Invoice</button>
+    <button class="btn-stage btn-service" onclick="triggerStage4()">🛠️ 4. Trigger After-Service</button>
+    <button class="btn-stage btn-auto" onclick="runFullAutomation()">⚡ Run Full Automation Loop</button>
+  </div>
+
+  <script>
+    let svgDoc = null;
+
+    // Load master SVG artwork
+    async function loadSVG() {
+      try {
+        const response = await fetch('crm_automation_pipeline.svg');
+        const svgText = await response.text();
+        const host = document.getElementById('svg-host');
+        host.innerHTML = svgText;
+        svgDoc = host.querySelector('svg');
+        svgDoc.setAttribute('id', 'crm-canvas');
+        console.log("CRM Pipeline SVG loaded successfully.");
+      } catch (err) {
+        console.error("Failed to load SVG:", err);
+      }
+    }
+
+    // Interactive Stage Triggers
+    function triggerStage1() {
+      if (!svgDoc) return;
+      const leadNode = svgDoc.querySelector('#layer-node-lead');
+      const leadBadge = svgDoc.querySelector('#badge-lead');
+      const leadsVal = document.getElementById('val-leads');
+
+      leadsVal.textContent = parseInt(leadsVal.textContent) + 1;
+
+      gsap.timeline()
+        .to(leadNode, { scale: 1.05, duration: 0.2, yoyo: true, repeat: 1, ease: "power2.out", transformOrigin: "center" })
+        .to(leadBadge, { fill: "#ffffff", r: 8, duration: 0.3, yoyo: true, repeat: 1 }, 0)
+        .to('#conduit-1-2', { stroke: "#00f3ff", opacity: 1, strokeWidth: 5, duration: 0.6 }, 0.2)
+        .to('#conduit-1-2', { strokeWidth: 3, opacity: 0.8, duration: 0.4 });
+    }
+
+    function triggerStage2() {
+      if (!svgDoc) return;
+      const productNode = svgDoc.querySelector('#layer-node-product');
+      const productBadge = svgDoc.querySelector('#badge-product');
+
+      gsap.timeline()
+        .to(productNode, { scale: 1.05, duration: 0.2, yoyo: true, repeat: 1, ease: "power2.out", transformOrigin: "center" })
+        .to(productBadge, { stroke: "#ffffff", strokeWidth: 2, duration: 0.3, yoyo: true, repeat: 1 }, 0)
+        .to('#conduit-2-3', { stroke: "#a855f7", opacity: 1, strokeWidth: 5, duration: 0.6 }, 0.2)
+        .to('#conduit-2-3', { strokeWidth: 3, opacity: 0.8, duration: 0.4 });
+    }
+
+    function triggerStage3() {
+      if (!svgDoc) return;
+      const invoiceNode = svgDoc.querySelector('#layer-node-invoice');
+      const invoiceBadge = svgDoc.querySelector('#badge-invoice');
+
+      gsap.timeline()
+        .to(invoiceNode, { scale: 1.05, duration: 0.2, yoyo: true, repeat: 1, ease: "power2.out", transformOrigin: "center" })
+        .to(invoiceBadge, { fill: "#ffffff", r: 9, duration: 0.3, yoyo: true, repeat: 1 }, 0)
+        .to('#conduit-3-4', { stroke: "#f59e0b", opacity: 1, strokeWidth: 5, duration: 0.6 }, 0.2)
+        .to('#conduit-3-4', { strokeWidth: 3, opacity: 0.8, duration: 0.4 });
+    }
+
+    function triggerStage4() {
+      if (!svgDoc) return;
+      const serviceNode = svgDoc.querySelector('#layer-node-service');
+      const serviceBadge = svgDoc.querySelector('#badge-service');
+
+      gsap.timeline()
+        .to(serviceNode, { scale: 1.05, duration: 0.2, yoyo: true, repeat: 1, ease: "power2.out", transformOrigin: "center" })
+        .to(serviceBadge, { fill: "#ffffff", r: 8, duration: 0.3, yoyo: true, repeat: 1 }, 0)
+        .to('#conduit-loop', { stroke: "#00ff88", opacity: 1, strokeWidth: 4, duration: 0.8 }, 0.2)
+        .to('#conduit-loop', { strokeWidth: 2, opacity: 0.5, duration: 0.4 });
+    }
+
+    function runFullAutomation() {
+      document.getElementById('val-status').textContent = "RUNNING_LOOP";
+      gsap.timeline({
+        onComplete: () => {
+          document.getElementById('val-status').textContent = "AUTOMATED";
+        }
+      })
+      .add(() => triggerStage1(), 0)
+      .add(() => triggerStage2(), 0.7)
+      .add(() => triggerStage3(), 1.4)
+      .add(() => triggerStage4(), 2.1);
+    }
+
+    window.addEventListener('DOMContentLoaded', loadSVG);
+  </script>
+</body>
+</html>

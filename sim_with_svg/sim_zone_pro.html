@@ -8,7 +8,7 @@
     <style>
         body {
             margin: 0;
-            background-color: #1a1a1a;
+            background-color: #030a16;
             color: white;
             font-family: monospace;
             display: flex;
@@ -19,27 +19,37 @@
         }
         #controls {
             padding: 15px;
-            background: #333;
+            background: #08162d;
             width: 100%;
             display: flex;
             justify-content: center;
             gap: 15px;
             z-index: 10;
+            border-bottom: 1px solid #00d2ff;
         }
         button {
             padding: 10px 20px;
             cursor: pointer;
-            background: #555;
-            color: white;
-            border: 1px solid #777;
+            background: rgba(4, 20, 44, 0.85);
+            color: #00d2ff;
+            border: 1px solid #00d2ff;
             font-family: monospace;
             text-transform: uppercase;
+            border-radius: 4px;
+            transition: all 0.2s ease;
         }
-        button:hover { background: #666; }
+        button:hover { 
+            background: #00d2ff; 
+            color: #04142c;
+            box-shadow: 0 0 12px rgba(0, 210, 255, 0.6);
+        }
         #svg-container {
             width: 90vw;
             height: 80vh;
             margin-top: 20px;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            overflow: hidden;
         }
         svg {
             width: 100%;
@@ -58,18 +68,41 @@
 
     <div id="svg-container">
         <svg viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <filter id="bloom" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="10" result="coloredBlur"/>
+                    <feMerge>
+                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                </filter>
+            </defs>
+
             <rect width="1000" height="700" fill="#0099ff" />
             
+            <!-- Conduits -->
+            <g stroke="#ffffff" stroke-dasharray="6 6" opacity="0.4" stroke-width="1.5">
+                <line x1="500" y1="350" x2="160" y2="370" />
+                <line x1="500" y1="350" x2="760" y2="370" />
+                <line x1="500" y1="350" x2="875" y2="105" />
+                <line x1="500" y1="350" x2="875" y2="595" />
+            </g>
+
+            <!-- HUD Box -->
             <rect id="hud-box" x="50" y="30" width="200" height="80" fill="none" stroke="#000000" stroke-width="3" />
             
+            <!-- Capacitor Unit -->
             <rect id="capacitor" x="800" y="30" width="150" height="150" fill="#ffcc00" />
             
+            <!-- Coolant Unit -->
             <rect id="cooler-bg" x="800" y="520" width="150" height="150" fill="#556b2f" />
             <rect id="cooler-level" x="800" y="520" width="150" height="150" fill="#88aa00" />
             
+            <!-- Core Housing & Star -->
             <rect x="425" y="275" width="150" height="150" rx="15" fill="#ffcc00" />
             <path id="generator-core" d="M500,285 L525,325 L570,320 L545,360 L575,395 L525,385 L490,420 L475,375 L430,370 L460,335 L440,295 L485,310 Z" fill="#998888" stroke="#ffffff" stroke-width="2"/>
             
+            <!-- Pillars -->
             <g class="pillar" transform="translate(130, 140)">
                 <rect x="0" y="0" width="60" height="460" fill="none" stroke="#ffffff" stroke-width="2" />
                 <path d="M0,40 L30,60 L60,40" fill="none" stroke="#ffffff" stroke-width="2" />
@@ -97,41 +130,22 @@
             const svg = document.querySelector('svg');
             const svgNS = "http://www.w3.org/2000/svg";
 
-            const defs = document.createElementNS(svgNS, 'defs');
-            const filter = document.createElementNS(svgNS, 'filter');
-            filter.setAttribute('id', 'bloom');
-            const feGaussianBlur = document.createElementNS(svgNS, 'feGaussianBlur');
-            feGaussianBlur.setAttribute('stdDeviation', '15');
-            feGaussianBlur.setAttribute('result', 'coloredBlur');
-            const feMerge = document.createElementNS(svgNS, 'feMerge');
-            const feMergeNode1 = document.createElementNS(svgNS, 'feMergeNode');
-            feMergeNode1.setAttribute('in', 'coloredBlur');
-            const feMergeNode2 = document.createElementNS(svgNS, 'feMergeNode');
-            feMergeNode2.setAttribute('in', 'SourceGraphic');
-            
-            feMerge.appendChild(feMergeNode1);
-            feMerge.appendChild(feMergeNode2);
-            filter.appendChild(feGaussianBlur);
-            filter.appendChild(feMerge);
-            defs.appendChild(filter);
-            svg.prepend(defs);
-
             const hudBox = document.getElementById('hud-box');
             const textLine1 = document.createElementNS(svgNS, 'text');
             const textLine2 = document.createElementNS(svgNS, 'text');
             
-            textLine1.setAttribute('x', '60');
+            textLine1.setAttribute('x', '65');
             textLine1.setAttribute('y', '60');
             textLine1.setAttribute('fill', 'white');
             textLine1.setAttribute('font-family', 'monospace');
-            textLine1.setAttribute('font-size', '18px');
+            textLine1.setAttribute('font-size', '16px');
             textLine1.textContent = "STATUS: STANDBY";
 
-            textLine2.setAttribute('x', '60');
+            textLine2.setAttribute('x', '65');
             textLine2.setAttribute('y', '90');
-            textLine2.setAttribute('fill', 'white');
+            textLine2.setAttribute('fill', '#00ffcc');
             textLine2.setAttribute('font-family', 'monospace');
-            textLine2.setAttribute('font-size', '18px');
+            textLine2.setAttribute('font-size', '16px');
             textLine2.textContent = "OUTPUT: 0%";
 
             svg.appendChild(textLine1);
@@ -150,7 +164,6 @@
             gsap.set(coolerLevel, { transformOrigin: "bottom center" });
 
             function createPillarAnimation(pillarElement) {
-                console.log("Building pillar sequence...");
                 const nodes = pillarElement.querySelectorAll('.node');
                 
                 nodes.forEach(node => {
@@ -183,7 +196,7 @@
 
             masterTimeline = gsap.timeline({ paused: true, repeat: -1 })
                 .to(generatorCore, { rotation: 360, duration: 4, ease: "none" })
-                .to(capacitor, { scale: 1.1, duration: 2, yoyo: true, ease: "power1.inOut" }, 0)
+                .to(capacitor, { scale: 1.08, duration: 2, yoyo: true, ease: "power1.inOut" }, 0)
                 .to(coolerLevel, { scaleY: 0.2, duration: 4, yoyo: true, ease: "power1.inOut" }, 0);
 
             document.getElementById('btnStart').addEventListener('click', () => {

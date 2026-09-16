@@ -25,7 +25,7 @@
       width: 95vw;
       max-width: 1100px;
       aspect-ratio: 1000 / 707;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
       border-radius: 8px;
       overflow: hidden;
     }
@@ -130,18 +130,20 @@
       <rect width="1000" height="707" fill="#008ce3" id="bg-field" />
 
       <!-- Energy Field Lines / Conduits -->
-      <g id="circuit-traces" stroke="#ffffff" stroke-dasharray="6 6" opacity="0.25" stroke-width="1.5">
-        <line x1="500" y1="353" x2="145" y2="175" />
-        <line x1="500" y1="353" x2="145" y2="353" />
-        <line x1="500" y1="353" x2="145" y2="532" />
-        <line x1="500" y1="353" x2="785" y2="175" />
-        <line x1="500" y1="353" x2="785" y2="353" />
-        <line x1="500" y1="353" x2="785" y2="532" />
+      <g id="circuit-traces" stroke="#ffffff" stroke-dasharray="6 6" opacity="0.4" stroke-width="1.5">
+        <line class="conduit-line" x1="500" y1="353" x2="145" y2="175" />
+        <line class="conduit-line" x1="500" y1="353" x2="145" y2="353" />
+        <line class="conduit-line" x1="500" y1="353" x2="145" y2="532" />
+        <line class="conduit-line" x1="500" y1="353" x2="785" y2="175" />
+        <line class="conduit-line" x1="500" y1="353" x2="785" y2="353" />
+        <line class="conduit-line" x1="500" y1="353" x2="785" y2="532" />
+        <line class="conduit-line" x1="500" y1="353" x2="915" y2="86" />
+        <line class="conduit-line" x1="500" y1="353" x2="906" y2="618" />
       </g>
 
       <!-- SYSTEM 1: Top-Left Telemetry Console Frame -->
       <g id="system-telemetry">
-        <rect x="32" y="21" width="198" height="77" fill="none" stroke="#000000" stroke-width="3" />
+        <rect x="32" y="21" width="198" height="77" fill="none" stroke="#000000" stroke-width="3" id="hud-border" />
         <line x1="32" y1="75" x2="230" y2="75" stroke="#000000" stroke-width="1" stroke-dasharray="3 3" />
       </g>
 
@@ -251,6 +253,7 @@
     const coreValText = document.getElementById('core-val');
     const capValText = document.getElementById('cap-val');
     const pulseContainer = document.getElementById('pulse-container');
+    const conduits = document.querySelectorAll('.conduit-line');
 
     let mainMasterTimeline;
 
@@ -289,6 +292,7 @@
         .set(sysModeText, { textContent: "CORE_INDUCTION" })
         .to(spark, { opacity: 1, scale: 2.2, duration: 0.8, ease: "power2.out" })
         .to('#gen-housing', { scale: 1.04, duration: 0.8, yoyo: true, repeat: 1, ease: "sine.inOut" }, 0)
+        .to(conduits, { stroke: "#00ffff", opacity: 0.9, duration: 0.6, stagger: 0.08 }, 0)
         .call(spawnWavefrontPackets, null, 0.4)
 
         // Phase 2: Lateral Transmission & Pillar Emitters Stagger
@@ -315,6 +319,7 @@
         // Phase 4: Cool-down & Dissipation
         .set(sysModeText, { textContent: "BUS_STABILIZING" }, "+=0.3")
         .to(lightSpreads, { opacity: 0.12, duration: 1.2, ease: "power2.in" })
+        .to(conduits, { stroke: "#ffffff", opacity: 0.4, duration: 1.0 })
         .to(emitters, {
           fill: "#cfba73",
           filter: "none",
@@ -332,8 +337,8 @@
         ring.setAttribute("cy", "353");
         ring.setAttribute("r", "15");
         ring.setAttribute("fill", "none");
-        ring.setAttribute("stroke", "#ffffff");
-        ring.setAttribute("stroke-width", "2");
+        ring.setAttribute("stroke", "#00ffff");
+        ring.setAttribute("stroke-width", "2.5");
         pulseContainer.appendChild(ring);
 
         gsap.to(ring, {
