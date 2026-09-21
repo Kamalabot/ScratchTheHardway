@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Visual Architecture Studio // File Packaging &amp; Database Transit</title>
+    <!-- Google Fonts: Outfit & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css">
+  </head>
+  <body>
+    <!-- Background Grid & Ambient Sci-Fi Glow -->
+    <div class="bg-grid"></div>
+    <div class="bg-radial-glow"></div>
+    <div class="scanline"></div>
+
+    <!-- UI Overlay Layer -->
+    <div id="ui-layer">
+        <!-- Top Navigation & Module Switcher -->
+        <header id="top-bar">
+            <div class="brand">
+                <div class="pulse-indicator"></div>
+                <div class="brand-text">
+                    <span class="system-tag">ARCHITECTURE STUDIO // HIGH-DPI ENGINE</span>
+                    <h2>DATA ARCHITECTURE VISUALIZER</h2>
+                </div>
+            </div>
+
+            <!-- Module Switcher (File Packaging vs Database & Transit) -->
+            <div class="module-selector">
+                <button id="mod-packaging" class="module-btn active" data-mod="packaging">
+                    <span class="mod-icon">📦</span>
+                    <span>1. FILE PACKAGING</span>
+                </button>
+                <button id="mod-database" class="module-btn" data-mod="database">
+                    <span class="mod-icon">🗄️</span>
+                    <span>2. DATABASE &amp; TRANSIT</span>
+                </button>
+            </div>
+
+            <!-- Dynamic Stage Tabs (Updated per Module) -->
+            <nav class="stage-nav" id="stage-tabs"></nav>
+
+            <div class="top-actions">
+                <button id="btn-sound" class="icon-btn" title="Toggle Sound FX">
+                    <span class="sound-icon">🔊</span>
+                    <span class="sound-label">AUDIO ON</span>
+                </button>
+            </div>
+        </header>
+        
+        <!-- Left Pedagogical & Code Panel -->
+        <aside id="code-panel">
+            <div class="panel-header-row">
+                <span class="badge-stage" id="stage-badge">STAGE 01</span>
+                <span class="badge-status" id="stage-status">LIVE // INTERACTIVE</span>
+            </div>
+
+            <h1 id="stage-title">Structured Data (JSON)</h1>
+            <p id="stage-subtitle">Serializing volatile in-memory heap dictionaries into persistent UTF-8 text streams.</p>
+
+            <!-- Dynamic Live Architecture Stats -->
+            <div class="stats-grid" id="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-label" id="stat-label-1">PACKET SIZE</span>
+                    <span class="stat-value" id="stat-val-1">142 B</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label" id="stat-label-2">ENCODING</span>
+                    <span class="stat-value" id="stat-val-2">UTF-8 TEXT</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label" id="stat-label-3">CONTAINER</span>
+                    <span class="stat-value" id="stat-val-3">KEY-VALUE</span>
+                </div>
+            </div>
+
+            <!-- Code Snippet with Live Highlighting -->
+            <div class="code-container">
+                <div class="code-header">
+                    <span class="code-dot red"></span>
+                    <span class="code-dot yellow"></span>
+                    <span class="code-dot green"></span>
+                    <span class="code-file-title" id="code-file-title">serialize_json.py</span>
+                </div>
+                <pre><code id="code-block"></code></pre>
+            </div>
+
+            <!-- Key Architectural Takeaway -->
+            <div class="takeaway-box">
+                <div class="takeaway-badge">ARCHITECTURE PRINCIPLE</div>
+                <p id="takeaway-text">Loading...</p>
+            </div>
+
+            <!-- Interactive Stage Tip -->
+            <div class="interaction-tip">
+                <span class="tip-icon">💡</span>
+                <span id="tip-text">Click the canvas or use the Step Action button to trigger the pipeline animation.</span>
+            </div>
+        </aside>
+        
+        <!-- Bottom Master Timeline Controls -->
+        <footer id="bottom-bar">
+            <div class="nav-controls">
+                <button id="btn-prev" class="nav-btn">&larr; PREV</button>
+                <button id="btn-next" class="nav-btn">NEXT &rarr;</button>
+            </div>
+
+            <!-- GSAP Timeline Scrubber / Progress -->
+            <div class="timeline-bar-wrapper">
+                <div class="timeline-track" id="timeline-track">
+                    <div class="timeline-progress" id="timeline-progress"></div>
+                </div>
+                <div class="timeline-meta">
+                    <span id="timeline-step-name">PHASE 1: SERIALIZATION PIPELINE</span>
+                    <span id="timeline-time">00.00s / 00.00s</span>
+                </div>
+            </div>
+
+            <!-- Action Controls -->
+            <div class="action-controls">
+                <div class="speed-group">
+                    <button class="speed-btn" data-speed="0.5">0.5x</button>
+                    <button class="speed-btn active" data-speed="1">1x</button>
+                    <button class="speed-btn" data-speed="2">2x</button>
+                </div>
+                <button id="btn-replay" class="ctrl-btn" title="Replay Timeline">↺ REPLAY</button>
+                <button id="btn-play-pause" class="ctrl-btn primary">❚❚ PAUSE</button>
+                <button id="btn-action" class="action-btn">TRIGGER STEP &gt;&gt;</button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Phaser Canvas Container -->
+    <div id="game-container"></div>
+
+    <script type="module" src="/main.js"></script>
+  </body>
+</html>
