@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Box Inspector // Anomaly Walker - Phaser 3</title>
+  <script src="phaser.min.js"></script>
+  <script>
+    if (typeof Phaser === 'undefined') {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/phaser@3.80.0/dist/phaser.min.js"><\/script>');
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base: #0a0e17;
+      --bg-surface: #111827;
+      --bg-card: rgba(17, 24, 39, 0.85);
+      --border-glow: rgba(56, 189, 248, 0.25);
+      --accent-cyan: #38bdf8;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(56, 189, 248, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(129, 140, 248, 0.08) 0%, transparent 40%),
+        linear-gradient(180deg, #070a10 0%, #0c121e 100%);
+      color: var(--text-main);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 16px 20px;
+      overflow-x: hidden;
+    }
+
+    /* Container */
+    .app-wrapper {
+      width: 100%;
+      max-width: 1060px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 12px 20px;
+      background: var(--bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(16px);
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, #0ea5e9, #6366f1);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 0 16px rgba(14, 165, 233, 0.5);
+    }
+
+    .brand-text h1 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #38bdf8 0%, #a855f7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.2;
+    }
+
+    .brand-text p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Top Stats Bar */
+    .stats-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .stat-chip {
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 6px 14px;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      min-width: 80px;
+    }
+
+    .stat-chip .stat-label {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .stat-chip .stat-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--accent-cyan);
+    }
+
+    .stat-chip.streak .stat-value {
+      color: var(--accent-amber);
+    }
+
+    .stat-chip.lives .stat-value {
+      color: var(--accent-rose);
+      letter-spacing: 2px;
+    }
+
+    /* Game Stage Frame */
+    .game-frame {
+      position: relative;
+      width: 100%;
+      background: #060910;
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 
+        0 10px 30px rgba(0, 0, 0, 0.7),
+        0 0 40px rgba(14, 165, 233, 0.08);
+      aspect-ratio: 16 / 9;
+      max-height: 540px;
+    }
+
+    #phaser-canvas-container {
+      width: 100%;
+      height: 100%;
+    }
+
+    #phaser-canvas-container canvas {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+    }
+
+    /* Diagnostics HUD Overlay */
+    .diagnostic-panel {
+      position: absolute;
+      top: 14px;
+      left: 16px;
+      background: rgba(6, 11, 25, 0.85);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      backdrop-filter: blur(10px);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .diag-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .diag-key { color: var(--text-muted); }
+    .diag-val { color: var(--accent-cyan); font-weight: 600; }
+    .diag-val.anomaly-alert { color: var(--accent-rose); animation: pulseAlert 0.8s infinite alternate; }
+
+    @keyframes pulseAlert {
+      from { opacity: 0.7; }
+      to { opacity: 1; text-shadow: 0 0 8px rgba(244, 63, 94, 0.8); }
+    }
+
+    /* Overlay Banner for Events */
+    .event-banner {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(10, 15, 28, 0.95);
+      border: 2px solid var(--accent-cyan);
+      box-shadow: 0 0 35px rgba(56, 189, 248, 0.4);
+      backdrop-filter: blur(14px);
+      padding: 24px 36px;
+      border-radius: 16px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 50;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .event-banner.visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .event-banner h2 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .event-banner p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      max-width: 380px;
+    }
+
+    .btn-restart {
+      background: linear-gradient(135deg, #0ea5e9, #6366f1);
+      border: none;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.95rem;
+      padding: 10px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      align-self: center;
+      box-shadow: 0 4px 14px rgba(14, 165, 233, 0.4);
+      transition: transform 0.15s ease, filter 0.15s ease;
+    }
+
+    .btn-restart:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.15);
+    }
+
+    /* Controls Tray */
+    .controls-tray {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      background: var(--bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 12px 18px;
+      border-radius: 12px;
+      backdrop-filter: blur(16px);
+    }
+
+    .action-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Flag Button (The Main Action) */
+    .btn-flag {
+      background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-weight: 800;
+      font-size: 1.05rem;
+      padding: 12px 26px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 0 20px rgba(244, 63, 94, 0.45);
+      transition: all 0.15s ease;
+    }
+
+    .btn-flag:hover {
+      transform: scale(1.03);
+      box-shadow: 0 0 28px rgba(244, 63, 94, 0.7);
+    }
+
+    .btn-flag:active {
+      transform: scale(0.97);
+    }
+
+    .btn-flag kbd {
+      background: rgba(0, 0, 0, 0.25);
+      padding: 3px 7px;
+      border-radius: 5px;
+      font-size: 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    /* Speed Toggles */
+    .speed-group {
+      display: flex;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 3px;
+      gap: 2px;
+    }
+
+    .btn-speed {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-speed:hover {
+      color: var(--text-main);
+    }
+
+    .btn-speed.active {
+      background: rgba(56, 189, 248, 0.2);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+    }
+
+    /* Auxiliary buttons */
+    .btn-icon {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-icon:hover {
+      color: #fff;
+      background: rgba(30, 41, 59, 0.9);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Instruction Guide Footer */
+    .instructions-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      padding: 14px 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .rule-box {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .rule-box .rule-num {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent-cyan);
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 0.75rem;
+    }
+
+    .rule-box p strong {
+      color: var(--text-main);
+    }
+
+    @media (max-width: 768px) {
+      header { flex-direction: column; align-items: stretch; }
+      .controls-tray { flex-direction: column; align-items: stretch; }
+      .action-group { justify-content: center; }
+      .speed-group { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-wrapper">
+  <!-- Header Bar -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon">📦</div>
+      <div class="brand-text">
+        <h1>BOX INSPECTOR</h1>
+        <p>CONVEYOR ANOMALY VERIFICATION PROTOCOL // PHASER 3</p>
+      </div>
+    </div>
+
+    <!-- Live Stats -->
+    <div class="stats-bar">
+      <div class="stat-chip">
+        <span class="stat-label">Round</span>
+        <span class="stat-value" id="hud-round">1</span>
+      </div>
+      <div class="stat-chip">
+        <span class="stat-label">Score</span>
+        <span class="stat-value" id="hud-score">0</span>
+      </div>
+      <div class="stat-chip streak">
+        <span class="stat-label">Streak</span>
+        <span class="stat-value" id="hud-streak">0x</span>
+      </div>
+      <div class="stat-chip lives">
+        <span class="stat-label">Shields</span>
+        <span class="stat-value" id="hud-shields">❤️❤️❤️</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Interactive Phaser Game Frame -->
+  <div class="game-frame" id="game-frame">
+    <div id="phaser-canvas-container"></div>
+
+    <!-- Live Scanner Diagnostic Overlay -->
+    <div class="diagnostic-panel" id="diag-panel">
+      <div class="diag-row">
+        <span class="diag-key">SCANNER SENSOR:</span>
+        <span class="diag-val" id="diag-status">ONLINE</span>
+      </div>
+      <div class="diag-row">
+        <span class="diag-key">STANDARD SPEC:</span>
+        <span class="diag-val" id="diag-spec">80 x 85 px</span>
+      </div>
+      <div class="diag-row">
+        <span class="diag-key">UNDER SCANNER:</span>
+        <span class="diag-val" id="diag-active">BOX #1</span>
+      </div>
+      <div class="diag-row">
+        <span class="diag-key">CURRENT DIMENSIONS:</span>
+        <span class="diag-val" id="diag-dims">80 x 85 px</span>
+      </div>
+      <div class="diag-row">
+        <span class="diag-key">VARIANCE:</span>
+        <span class="diag-val" id="diag-variance">+0.0% [NOMINAL]</span>
+      </div>
+    </div>
+
+    <!-- Modal / Banner for Round Clears and Game Over -->
+    <div class="event-banner" id="event-banner">
+      <h2 id="banner-title">GAME OVER</h2>
+      <p id="banner-desc">You missed defects or had too many false alarms. Final Score: 0</p>
+      <button class="btn-restart" id="btn-restart-modal">RESTART RUN</button>
+    </div>
+  </div>
+
+  <!-- Bottom Controls Tray -->
+  <div class="controls-tray">
+    <div class="action-group">
+      <button class="btn-flag" id="btn-flag-action" title="Press SPACE or click when bot is over the out-of-size box">
+        <span>🚨 FLAG ANOMALY</span>
+        <kbd>SPACE</kbd>
+      </button>
+    </div>
+
+    <!-- Speed Adjustment -->
+    <div class="action-group">
+      <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">SPEED:</span>
+      <div class="speed-group">
+        <button class="btn-speed" data-speed="0.6">0.6x</button>
+        <button class="btn-speed active" data-speed="1.0">1.0x</button>
+        <button class="btn-speed" data-speed="1.5">1.5x</button>
+        <button class="btn-speed" data-speed="2.0">2.0x</button>
+      </div>
+    </div>
+
+    <!-- System Controls -->
+    <div class="action-group">
+      <button class="btn-icon" id="btn-pause-toggle">
+        <span id="pause-icon">⏸️</span>
+        <span id="pause-label">Pause</span>
+      </button>
+      <button class="btn-icon" id="btn-sound-toggle">
+        <span id="sound-icon">🔊</span>
+        <span id="sound-label">Audio On</span>
+      </button>
+      <button class="btn-icon" id="btn-help-toggle" title="Keyboard Shortcuts">
+        <span>⌨️ Guide</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Instruction Footer -->
+  <div class="instructions-card">
+    <div class="rule-box">
+      <div class="rule-num">1</div>
+      <p><strong>Observe the Row:</strong> Colorful boxes of standardized sizes scroll along the conveyor. Exactly one box is <strong>out of size</strong> (taller, shorter, or wider)!</p>
+    </div>
+    <div class="rule-box">
+      <div class="rule-num">2</div>
+      <p><strong>Time Your Flag:</strong> As the automated Inspector Bot walks over the anomalous box, press <strong>SPACE</strong> or click <strong>FLAG ANOMALY</strong> (or click the box directly).</p>
+    </div>
+    <div class="rule-box">
+      <div class="rule-num">3</div>
+      <p><strong>Maintain Quality:</strong> False alarms and missed anomalies deplete shields. Build consecutive streaks to multiply points across higher rounds!</p>
+    </div>
+  </div>
+</div>
+
+<script>
+/**
+ * =========================================================================
+ * WEB AUDIO SYNTHESIZER (Native, Zero External Asset Dependencies)
+ * =========================================================================
+ */
+class SoundEngine {
+  constructor() {
+    this.ctx = null;
+    this.enabled = true;
+  }
+
+  init() {
+    if (!this.ctx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      this.ctx = new AudioContext();
+    }
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+  }
+
+  toggle() {
+    this.enabled = !this.enabled;
+    return this.enabled;
+  }
+
+  playStep() {
+    if (!this.enabled) return;
+    this.init();
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(320, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(120, this.ctx.currentTime + 0.04);
+      gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.04);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.04);
+    } catch(e) {}
+  }
+
+  playScan() {
+    if (!this.enabled) return;
+    this.init();
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+      osc.frequency.linearRampToValueAtTime(900, this.ctx.currentTime + 0.06);
+      gain.gain.setValueAtTime(0.04, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.06);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.06);
+    } catch(e) {}
+  }
+
+  playSuccess() {
+    if (!this.enabled) return;
+    this.init();
+    try {
+      const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+      notes.forEach((freq, idx) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.07);
+        gain.gain.setValueAtTime(0.18, this.ctx.currentTime + idx * 0.07);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.07 + 0.2);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(this.ctx.currentTime + idx * 0.07);
+        osc.stop(this.ctx.currentTime + idx * 0.07 + 0.2);
+      });
+    } catch(e) {}
+  }
+
+  playBuzzer() {
+    if (!this.enabled) return;
+    this.init();
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(140, this.ctx.currentTime);
+      osc.frequency.setValueAtTime(110, this.ctx.currentTime + 0.08);
+      gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.22);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.22);
+    } catch(e) {}
+  }
+
+  playMissSiren() {
+    if (!this.enabled) return;
+    this.init();
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(440, this.ctx.currentTime);
+      osc.frequency.linearRampToValueAtTime(220, this.ctx.currentTime + 0.25);
+      gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.25);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.25);
+    } catch(e) {}
+  }
+
+  playRoundClear() {
+    if (!this.enabled) return;
+    this.init();
+    try {
+      const notes = [440, 554.37, 659.25, 880];
+      notes.forEach((freq, idx) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.09);
+        gain.gain.setValueAtTime(0.15, this.ctx.currentTime + idx * 0.09);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.09 + 0.3);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(this.ctx.currentTime + idx * 0.09);
+        osc.stop(this.ctx.currentTime + idx * 0.09 + 0.3);
+      });
+    } catch(e) {}
+  }
+}
+
+const audio = new SoundEngine();
+
+/**
+ * =========================================================================
+ * PHASER 3 GAME ARCHITECTURE & SCENE DEFINITIONS
+ * =========================================================================
+ */
+class MainGameScene extends Phaser.Scene {
+  constructor() {
+    super('MainGameScene');
+  }
+
+  init() {
+    // Game state
+    this.score = 0;
+    this.streak = 0;
+    this.round = 1;
+    this.maxShields = 3;
+    this.shields = 3;
+    this.speedMultiplier = 1.0;
+    this.isPaused = false;
+    this.isGameOver = false;
+
+    // Conveyor specs
+    this.standardWidth = 80;
+    this.standardHeight = 85;
+    this.conveyorY = 380;
+    this.boxSpacing = 16;
+    this.boxesCount = 8;
+
+    // Tracking
+    this.boxes = [];
+    this.anomalousIndex = -1;
+    this.anomalousType = 'height'; // 'height' or 'width'
+    this.anomalousRatio = 1.0;
+    this.isAnomalyFlagged = false;
+    this.activeBoxIndex = -1;
+
+    // Player bot
+    this.playerX = 60;
+    this.playerY = 0; // calculated dynamically above boxes
+    this.playerSpeed = 120; // base px per second
+    this.isWalking = true;
+    this.walkCycle = 0;
+  }
+
+  create() {
+    const width = this.scale.width;
+    const height = this.scale.height;
+
+    // Background layers
+    this.createAtmosphere(width, height);
+
+    // Conveyor track
+    this.createConveyorTrack(width, height);
+
+    // Particle texture generation
+    this.createParticleTextures();
+
+    // Inspector Bot
+    this.createPlayerBot();
+
+    // Setup first line of boxes
+    this.generateBoxLine();
+
+    // Input bindings
+    this.setupInputHandlers();
+
+    // Update initial DOM HUD
+    this.updateHUD();
+  }
+
+  /**
+   * Procedural Starfield & High-Tech Factory Runway
+   */
+  createAtmosphere(width, height) {
+    this.bgGraphics = this.add.graphics();
+    
+    // Grid floor lines
+    this.bgGraphics.lineStyle(1, 0x1e293b, 0.4);
+    for (let x = 0; x < width; x += 40) {
+      this.bgGraphics.lineBetween(x, 0, x, height);
+    }
+    for (let y = 0; y < height; y += 40) {
+      this.bgGraphics.lineBetween(0, y, width, y);
+    }
+
+    // Overhead suspension rails
+    this.bgGraphics.lineStyle(3, 0x0ea5e9, 0.25);
+    this.bgGraphics.lineBetween(0, 160, width, 160);
+    this.bgGraphics.lineStyle(1, 0x38bdf8, 0.5);
+    this.bgGraphics.lineBetween(0, 164, width, 164);
+
+    // Floating dust/energy motes
+    this.ambientMotes = [];
+    for (let i = 0; i < 24; i++) {
+      const mote = this.add.circle(
+        Phaser.Math.Between(0, width),
+        Phaser.Math.Between(40, height - 80),
+        Phaser.Math.Between(1, 2.5),
+        0x38bdf8,
+        Phaser.Math.FloatBetween(0.15, 0.4)
+      );
+      this.ambientMotes.push({
+        obj: mote,
+        speed: Phaser.Math.FloatBetween(0.2, 0.7),
+        drift: Phaser.Math.FloatBetween(-0.2, 0.2)
+      });
+    }
+  }
+
+  /**
+   * Conveyor Belt Runway
+   */
+  createConveyorTrack(width, height) {
+    this.trackGraphics = this.add.graphics();
+    const trackY = this.conveyorY + 5;
+
+    // Lower shadows
+    this.trackGraphics.fillStyle(0x020617, 0.95);
+    this.trackGraphics.fillRect(0, trackY, width, 90);
+
+    // Glowing guide rails
+    this.trackGraphics.lineStyle(4, 0x1e293b, 1);
+    this.trackGraphics.lineBetween(0, trackY, width, trackY);
+
+    this.trackGraphics.lineStyle(2, 0x0284c7, 0.8);
+    this.trackGraphics.lineBetween(0, trackY + 2, width, trackY + 2);
+
+    // Rollers
+    this.trackGraphics.fillStyle(0x334155, 0.6);
+    for (let x = 10; x < width; x += 30) {
+      this.trackGraphics.fillCircle(x, trackY + 16, 4);
+    }
+  }
+
+  /**
+   * Procedural Textures for Particles
+   */
+  createParticleTextures() {
+    // Sparkle star
+    const sparkleG = this.make.graphics({ x: 0, y: 0, add: false });
+    sparkleG.fillStyle(0xfeca57, 1);
+    sparkleG.fillCircle(4, 4, 4);
+    sparkleG.generateTexture('sparkle_star', 8, 8);
+
+    // Error red spark
+    const errorG = this.make.graphics({ x: 0, y: 0, add: false });
+    errorG.fillStyle(0xf43f5e, 1);
+    errorG.fillRect(0, 0, 6, 6);
+    errorG.generateTexture('error_spark', 6, 6);
+
+    // Scanner beam particle
+    const beamG = this.make.graphics({ x: 0, y: 0, add: false });
+    beamG.fillStyle(0x38bdf8, 0.9);
+    beamG.fillCircle(3, 3, 3);
+    beamG.generateTexture('scan_particle', 6, 6);
+  }
+
+  /**
+   * Sleek Bipedal Inspector Bot
+   */
+  createPlayerBot() {
+    this.botContainer = this.add.container(60, 220);
+    this.botContainer.setDepth(100);
+
+    // Downward Scanner Light Cone
+    this.scannerBeam = this.add.graphics();
+    this.botContainer.add(this.scannerBeam);
+
+    // Robot Legs
+    this.legLeft = this.add.rectangle(-8, 38, 6, 26, 0x475569);
+    this.legRight = this.add.rectangle(8, 38, 6, 26, 0x334155);
+    this.footLeft = this.add.rectangle(-8, 52, 10, 5, 0x0284c7);
+    this.footRight = this.add.rectangle(8, 52, 10, 5, 0x0284c7);
+
+    // Robot Torso
+    this.botTorso = this.add.rectangle(0, 16, 28, 30, 0x1e293b);
+    this.botTorsoTrim = this.add.rectangle(0, 16, 24, 26, 0x0f172a);
+    this.botCoreLight = this.add.circle(0, 16, 5, 0x38bdf8);
+
+    // Robot Head
+    this.botHead = this.add.rectangle(0, -10, 24, 18, 0x1e293b);
+    this.botVisor = this.add.rectangle(0, -10, 18, 6, 0x38bdf8);
+
+    // Antenna
+    this.antennaStem = this.add.line(0, 0, 0, -19, 0, -28, 0x64748b).setOrigin(0,0);
+    this.antennaOrb = this.add.circle(0, -29, 3.5, 0x10b981);
+
+    // Assembly
+    this.botContainer.add([
+      this.legLeft, this.legRight,
+      this.footLeft, this.footRight,
+      this.botTorso, this.botTorsoTrim, this.botCoreLight,
+      this.botHead, this.botVisor,
+      this.antennaStem, this.antennaOrb
+    ]);
+
+    // Scanner Particle Emitter
+    this.scanParticles = this.add.particles(0, 0, 'scan_particle', {
+      speed: { min: 40, max: 100 },
+      angle: { min: 70, max: 110 },
+      scale: { start: 0.8, end: 0 },
+      alpha: { start: 0.8, end: 0 },
+      lifespan: 350,
+      frequency: 60,
+      blendMode: 'ADD'
+    });
+    this.scanParticles.startFollow(this.botContainer);
+    this.scanParticles.setDepth(95);
+
+    this.drawScannerCone(0x38bdf8, 0.2);
+  }
+
+  drawScannerCone(colorHex, alphaVal) {
+    this.scannerBeam.clear();
+    this.scannerBeam.fillStyle(colorHex, alphaVal);
+    // Draw triangular light cone shooting downwards
+    this.scannerBeam.beginPath();
+    this.scannerBeam.moveTo(0, 30);
+    this.scannerBeam.lineTo(-45, 180);
+    this.scannerBeam.lineTo(45, 180);
+    this.scannerBeam.closePath();
+    this.scannerBeam.fillPath();
+
+    // Edge laser lines
+    this.scannerBeam.lineStyle(1.5, colorHex, alphaVal * 2.2);
+    this.scannerBeam.lineBetween(0, 30, -45, 180);
+    this.scannerBeam.lineBetween(0, 30, 45, 180);
+  }
+
+  /**
+   * Generate a Line of Colorful Boxes with 1 Anomaly
+   */
+  generateBoxLine() {
+    // Clear previous boxes
+    this.boxes.forEach(b => b.container.destroy());
+    this.boxes = [];
+    this.isAnomalyFlagged = false;
+    this.activeBoxIndex = -1;
+
+    // Palettes
+    const vibrantColors = [
+      { name: 'Coral Rose', fill: 0xff4757, stroke: 0xff6b81 },
+      { name: 'Cyber Cyan', fill: 0x00d2d3, stroke: 0x48dbfb },
+      { name: 'Amber Gold', fill: 0xff9f43, stroke: 0xfeca57 },
+      { name: 'Emerald Jade', fill: 0x10b981, stroke: 0x34d399 },
+      { name: 'Royal Violet', fill: 0x8854d0, stroke: 0xa55eea },
+      { name: 'Electric Azure', fill: 0x2e86de, stroke: 0x54a0ff },
+      { name: 'Neon Lime', fill: 0x1dd1a1, stroke: 0x10ac84 },
+      { name: 'Magenta Pulse', fill: 0xee5253, stroke: 0xff7675 }
+    ];
+
+    // Pick anomaly index (between 1 and boxesCount - 2 so player has time to react)
+    this.anomalousIndex = Phaser.Math.Between(1, this.boxesCount - 2);
+
+    // Determine anomaly discrepancy based on current round
+    // Early rounds: obvious difference (+40% to +60% or -35%)
+    // Later rounds: subtle difference (+15% or -15%)
+    const isObvious = this.round <= 3;
+    const isModerate = this.round > 3 && this.round <= 6;
+    
+    let varianceMagnitude;
+    if (isObvious) {
+      varianceMagnitude = Phaser.Math.RND.pick([0.5, -0.38]); // +50% or -38%
+    } else if (isModerate) {
+      varianceMagnitude = Phaser.Math.RND.pick([0.3, -0.25]); // +30% or -25%
+    } else {
+      varianceMagnitude = Phaser.Math.RND.pick([0.16, -0.16]); // +16% or -16% subtle!
+    }
+
+    // Determine anomaly attribute: height or width
+    this.anomalousType = Phaser.Math.RND.pick(['height', 'height', 'width']); // biased towards height
+    this.anomalousRatio = 1 + varianceMagnitude;
+
+    // Start position along runway
+    const totalLineWidth = (this.boxesCount * this.standardWidth) + ((this.boxesCount - 1) * this.boxSpacing);
+    const startX = Math.max(90, (this.scale.width - totalLineWidth) / 2);
+
+    for (let i = 0; i < this.boxesCount; i++) {
+      let bWidth = this.standardWidth;
+      let bHeight = this.standardHeight;
+      const isAnomaly = (i === this.anomalousIndex);
+
+      if (isAnomaly) {
+        if (this.anomalousType === 'height') {
+          bHeight = Math.round(this.standardHeight * this.anomalousRatio);
+        } else {
+          bWidth = Math.round(this.standardWidth * this.anomalousRatio);
+        }
+      }
+
+      const xPos = startX + i * (this.standardWidth + this.boxSpacing) + (this.standardWidth / 2);
+      const yPos = this.conveyorY - (bHeight / 2);
+
+      const color = vibrantColors[i % vibrantColors.length];
+
+      // Create Container for each box
+      const container = this.add.container(xPos, yPos);
+
+      // Box Graphics
+      const boxGraphic = this.add.graphics();
+      this.drawBoxGraphic(boxGraphic, bWidth, bHeight, color.fill, color.stroke);
+      container.add(boxGraphic);
+
+      // Barcode / Spec Tag on box
+      const tagText = this.add.text(0, bHeight * 0.22, `#QC-${100 + i}`, {
+        fontFamily: 'JetBrains Mono, monospace',
+        fontSize: '10px',
+        color: '#ffffff',
+        fontStyle: 'bold'
+      }).setOrigin(0.5);
+      container.add(tagText);
+
+      // Hit area for direct click
+      container.setSize(bWidth, bHeight);
+      container.setInteractive({ useHandCursor: true });
+      container.on('pointerdown', () => {
+        this.onBoxClicked(i);
+      });
+
+      // Hover glow
+      container.on('pointerover', () => {
+        this.tweens.add({
+          targets: container,
+          y: yPos - 6,
+          duration: 120,
+          ease: 'Quad.out'
+        });
+      });
+
+      container.on('pointerout', () => {
+        this.tweens.add({
+          targets: container,
+          y: yPos,
+          duration: 120,
+          ease: 'Quad.out'
+        });
+      });
+
+      this.boxes.push({
+        index: i,
+        container: container,
+        graphic: boxGraphic,
+        x: xPos,
+        y: yPos,
+        width: bWidth,
+        height: bHeight,
+        color: color,
+        isAnomaly: isAnomaly,
+        flagged: false,
+        verified: false
+      });
+    }
+
+    // Reset bot position to left runway
+    this.playerX = startX - 80;
+    this.botContainer.x = this.playerX;
+    this.updateBotVerticalBaseline();
+    this.isWalking = true;
+    this.botCoreLight.setFillStyle(0x38bdf8);
+    this.drawScannerCone(0x38bdf8, 0.22);
+  }
+
+  /**
+   * Draw Modern Beveled Box Graphic with Depth Highlights
+   */
+  drawBoxGraphic(graphics, width, height, fillColor, strokeColor) {
+    graphics.clear();
+
+    const radius = 8;
+    const halfW = width / 2;
+    const halfH = height / 2;
+
+    // Drop shadow
+    graphics.fillStyle(0x000000, 0.4);
+    graphics.fillRoundedRect(-halfW + 3, -halfH + 5, width, height, radius);
+
+    // Base Box
+    graphics.fillStyle(fillColor, 0.95);
+    graphics.fillRoundedRect(-halfW, -halfH, width, height, radius);
+
+    // Bevel Top Highlight
+    graphics.fillStyle(0xffffff, 0.25);
+    graphics.fillRoundedRect(-halfW + 2, -halfH + 2, width - 4, (height / 3), { tl: radius - 2, tr: radius - 2, bl: 0, br: 0 });
+
+    // Inner Border
+    graphics.lineStyle(2, strokeColor, 0.9);
+    graphics.strokeRoundedRect(-halfW, -halfH, width, height, radius);
+
+    // Industrial Rivets
+    graphics.fillStyle(0xffffff, 0.6);
+    graphics.fillCircle(-halfW + 7, -halfH + 7, 2);
+    graphics.fillCircle(halfW - 7, -halfH + 7, 2);
+    graphics.fillCircle(-halfW + 7, halfH - 7, 2);
+    graphics.fillCircle(halfW - 7, halfH - 7, 2);
+  }
+
+  /**
+   * Set Bot Y position based on current box underfoot
+   */
+  updateBotVerticalBaseline() {
+    let topSurfaceY = this.conveyorY - this.standardHeight;
+
+    if (this.activeBoxIndex >= 0 && this.activeBoxIndex < this.boxes.length) {
+      const currentBox = this.boxes[this.activeBoxIndex];
+      topSurfaceY = this.conveyorY - currentBox.height;
+    }
+
+    // Target bot Y so feet rest cleanly on top of box
+    const targetY = topSurfaceY - 56;
+    this.botContainer.y = Phaser.Math.Linear(this.botContainer.y, targetY, 0.2);
+  }
+
+  /**
+   * Input Setup
+   */
+  setupInputHandlers() {
+    // Keyboard Spacebar
+    this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    this.spaceKey.on('down', () => {
+      this.flagCurrentBox();
+    });
+
+    // Pause key (P)
+    const pKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P);
+    pKey.on('down', () => {
+      this.togglePause();
+    });
+
+    // Mute key (M)
+    const mKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.M);
+    mKey.on('down', () => {
+      this.toggleMute();
+    });
+
+    // Restart key (R)
+    const rKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+    rKey.on('down', () => {
+      this.restartGame();
+    });
+
+    // Speed Adjustments via Arrow Keys
+    const upKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
+    const downKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
+    upKey.on('down', () => this.setSpeedMultiplier(Math.min(2.0, this.speedMultiplier + 0.5)));
+    downKey.on('down', () => this.setSpeedMultiplier(Math.max(0.6, this.speedMultiplier - 0.4)));
+  }
+
+  /**
+   * Main Action: Flagging Box Anomaly
+   */
+  flagCurrentBox() {
+    if (this.isGameOver || this.isPaused) return;
+
+    if (this.activeBoxIndex === -1) {
+      // Not over any box yet
+      return;
+    }
+
+    const box = this.boxes[this.activeBoxIndex];
+    if (box.flagged) return; // Already inspected
+
+    this.processInspection(box);
+  }
+
+  onBoxClicked(boxIndex) {
+    if (this.isGameOver || this.isPaused) return;
+    const box = this.boxes[boxIndex];
+    if (box.flagged) return;
+
+    this.processInspection(box);
+  }
+
+  processInspection(box) {
+    box.flagged = true;
+
+    if (box.isAnomaly) {
+      // SUCCESS: Anomaly correctly identified!
+      this.isAnomalyFlagged = true;
+      box.verified = true;
+      this.streak++;
+      const streakBonus = Math.floor(this.streak * 25);
+      const points = 150 + streakBonus;
+      this.score += points;
+
+      // Audio Triumph
+      audio.playSuccess();
+
+      // Golden Holographic Stamp
+      this.createVerificationStamp(box, true, `DEFECT VERIFIED! +${points}`);
+
+      // Particle explosion
+      this.triggerSparkleBurst(box.x, box.y, 0xfeca57);
+
+      // Bot Cheer Glow
+      this.botCoreLight.setFillStyle(0x10b981);
+      this.drawScannerCone(0x10b981, 0.35);
+
+      // Scanner Status
+      this.updateDiagnosticHUD(box, true);
+
+    } else {
+      // FALSE ALARM: Standard box mistakenly flagged
+      this.streak = 0;
+      this.score = Math.max(0, this.score - 50);
+      this.shields--;
+
+      // Audio Buzzer
+      audio.playBuzzer();
+
+      // Camera Shake
+      this.cameras.main.shake(180, 0.008);
+
+      // Red Error Stamp
+      this.createVerificationStamp(box, false, `FALSE ALARM! -50`);
+
+      // Error Particle Burst
+      this.triggerSparkleBurst(box.x, box.y, 0xf43f5e);
+
+      // Bot alert state
+      this.botCoreLight.setFillStyle(0xf43f5e);
+      this.drawScannerCone(0xf43f5e, 0.4);
+
+      if (this.shields <= 0) {
+        this.triggerGameOver('Exhausted all shields from false inspection alarms.');
+      }
+    }
+
+    this.updateHUD();
+  }
+
+  /**
+   * Missed Anomaly Check: If player walks past anomaly without flagging
+   */
+  handleMissedAnomaly(box) {
+    if (box.isAnomaly && !box.flagged) {
+      box.flagged = true;
+      this.streak = 0;
+      this.shields--;
+
+      audio.playMissSiren();
+      this.cameras.main.shake(250, 0.012);
+
+      // Stamp showing missed anomaly
+      this.createVerificationStamp(box, false, `MISSED DEFECT!`);
+
+      // Red flash on box
+      this.drawBoxGraphic(box.graphic, box.width, box.height, 0xf43f5e, 0xff7675);
+
+      this.botCoreLight.setFillStyle(0xf43f5e);
+      this.drawScannerCone(0xf43f5e, 0.45);
+
+      this.updateHUD();
+
+      if (this.shields <= 0) {
+        this.triggerGameOver('An out-of-size box escaped inspection past the line!');
+      }
+    }
+  }
+
+  /**
+   * Holographic Stamp Badge on Box
+   */
+  createVerificationStamp(box, isSuccess, message) {
+    const colorHex = isSuccess ? '#10b981' : '#f43f5e';
+    const stampText = this.add.text(box.x, box.y - (box.height / 2) - 18, message, {
+      fontFamily: 'JetBrains Mono, monospace',
+      fontSize: '12px',
+      fontStyle: 'bold',
+      color: colorHex,
+      backgroundColor: '#0a0f1d',
+      padding: { x: 8, y: 4 }
+    }).setOrigin(0.5).setDepth(110);
+
+    // Floating animation
+    this.tweens.add({
+      targets: stampText,
+      y: stampText.y - 25,
+      alpha: { from: 1, to: 0 },
+      duration: 1400,
+      ease: 'Quad.out',
+      onComplete: () => stampText.destroy()
+    });
+  }
+
+  /**
+   * Particle Fireworks
+   */
+  triggerSparkleBurst(x, y, colorHex) {
+    const emitter = this.add.particles(x, y, colorHex === 0xf43f5e ? 'error_spark' : 'sparkle_star', {
+      speed: { min: 80, max: 220 },
+      angle: { min: 0, max: 360 },
+      scale: { start: 1.2, end: 0 },
+      alpha: { start: 1, end: 0 },
+      lifespan: 600,
+      gravityY: 180,
+      quantity: 20
+    });
+    this.time.delayedCall(700, () => emitter.destroy());
+  }
+
+  /**
+   * Round Clear & Next Conveyor Section
+   */
+  completeRound() {
+    this.isWalking = false;
+    audio.playRoundClear();
+
+    // Bonus for clear
+    this.score += 200;
+    this.round++;
+    this.updateHUD();
+
+    // Show quick celebratory message
+    const clearText = this.add.text(this.scale.width / 2, 220, `ROUND ${this.round - 1} CLEARED!`, {
+      fontFamily: 'Inter, sans-serif',
+      fontSize: '28px',
+      fontWeight: '800',
+      color: '#38bdf8',
+      stroke: '#0369a1',
+      strokeThickness: 5
+    }).setOrigin(0.5).setDepth(200);
+
+    this.tweens.add({
+      targets: clearText,
+      scale: { from: 0.7, to: 1.1 },
+      alpha: { from: 1, to: 0 },
+      duration: 1200,
+      ease: 'Back.out',
+      onComplete: () => {
+        clearText.destroy();
+        this.generateBoxLine();
+      }
+    });
+  }
+
+  /**
+   * Game Over
+   */
+  triggerGameOver(reason) {
+    this.isGameOver = true;
+    this.isWalking = false;
+
+    const banner = document.getElementById('event-banner');
+    const title = document.getElementById('banner-title');
+    const desc = document.getElementById('banner-desc');
+
+    title.textContent = 'LINE HALTED // GAME OVER';
+    title.style.color = '#f43f5e';
+    desc.textContent = `${reason} | Final Score: ${this.score.toLocaleString()} (Reached Round ${this.round})`;
+    banner.classList.add('visible');
+  }
+
+  restartGame() {
+    document.getElementById('event-banner').classList.remove('visible');
+    this.init();
+    this.generateBoxLine();
+    this.updateHUD();
+  }
+
+  togglePause() {
+    this.isPaused = !this.isPaused;
+    const label = document.getElementById('pause-label');
+    const icon = document.getElementById('pause-icon');
+    if (this.isPaused) {
+      label.textContent = 'Resume';
+      icon.textContent = '▶️';
+    } else {
+      label.textContent = 'Pause';
+      icon.textContent = '⏸️';
+    }
+  }
+
+  toggleMute() {
+    const isAudioOn = audio.toggle();
+    const label = document.getElementById('sound-label');
+    const icon = document.getElementById('sound-icon');
+    label.textContent = isAudioOn ? 'Audio On' : 'Muted';
+    icon.textContent = isAudioOn ? '🔊' : '🔇';
+  }
+
+  setSpeedMultiplier(speed) {
+    this.speedMultiplier = speed;
+    document.querySelectorAll('.btn-speed').forEach(btn => {
+      if (parseFloat(btn.dataset.speed) === speed) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+  }
+
+  /**
+   * Update HUD Elements in DOM
+   */
+  updateHUD() {
+    document.getElementById('hud-round').textContent = this.round;
+    document.getElementById('hud-score').textContent = this.score.toLocaleString();
+    document.getElementById('hud-streak').textContent = `${this.streak}x 🔥`;
+
+    let shieldIcons = '';
+    for (let i = 0; i < this.maxShields; i++) {
+      shieldIcons += (i < this.shields) ? '❤️' : '🖤';
+    }
+    document.getElementById('hud-shields').textContent = shieldIcons;
+  }
+
+  updateDiagnosticHUD(box, isAnomalyFlagged) {
+    const diagActive = document.getElementById('diag-active');
+    const diagDims = document.getElementById('diag-dims');
+    const diagVariance = document.getElementById('diag-variance');
+
+    if (!box) {
+      diagActive.textContent = 'NONE (TRANSIT)';
+      diagDims.textContent = '-- x -- px';
+      diagVariance.textContent = '0.0% [NOMINAL]';
+      diagVariance.className = 'diag-val';
+      return;
+    }
+
+    diagActive.textContent = `BOX #${box.index + 1} (${box.color.name})`;
+    diagDims.textContent = `${box.width} x ${box.height} px`;
+
+    // Calculate variance percentage
+    const heightDiff = ((box.height - this.standardHeight) / this.standardHeight) * 100;
+    const widthDiff = ((box.width - this.standardWidth) / this.standardWidth) * 100;
+    const primaryDiff = Math.abs(heightDiff) > Math.abs(widthDiff) ? heightDiff : widthDiff;
+
+    if (Math.abs(primaryDiff) > 1) {
+      const sign = primaryDiff > 0 ? '+' : '';
+      diagVariance.textContent = `${sign}${primaryDiff.toFixed(1)}% [${box.isAnomaly ? 'DEFECT DETECTED' : 'VARIANCE'}]`;
+      diagVariance.className = 'diag-val anomaly-alert';
+    } else {
+      diagVariance.textContent = '+0.0% [NOMINAL SPEC]';
+      diagVariance.className = 'diag-val';
+    }
+  }
+
+  /**
+   * Main Phaser Update Loop (60 FPS)
+   */
+  update(time, delta) {
+    if (this.isPaused || this.isGameOver) return;
+
+    // Ambient floating motes
+    this.ambientMotes.forEach(m => {
+      m.obj.x -= m.speed;
+      m.obj.y += m.drift;
+      if (m.obj.x < -10) m.obj.x = this.scale.width + 10;
+    });
+
+    if (this.isWalking) {
+      // Move bot forward
+      const moveDelta = (this.playerSpeed * this.speedMultiplier * (delta / 1000));
+      this.playerX += moveDelta;
+      this.botContainer.x = this.playerX;
+
+      // Leg Walking Animation (Sine Cycle)
+      this.walkCycle += (delta * 0.015 * this.speedMultiplier);
+      const legAngle = Math.sin(this.walkCycle) * 16;
+      this.legLeft.y = 38 + Math.sin(this.walkCycle) * 4;
+      this.legRight.y = 38 - Math.sin(this.walkCycle) * 4;
+      this.footLeft.y = 52 + Math.sin(this.walkCycle) * 4;
+      this.footRight.y = 52 - Math.sin(this.walkCycle) * 4;
+      this.botTorso.y = 16 + Math.abs(Math.cos(this.walkCycle)) * 2;
+      this.botHead.y = -10 + Math.abs(Math.cos(this.walkCycle)) * 2;
+
+      // Check which box the bot is currently stepping on
+      let foundIndex = -1;
+      for (let i = 0; i < this.boxes.length; i++) {
+        const box = this.boxes[i];
+        const halfW = box.width / 2;
+        if (this.playerX >= box.x - halfW && this.playerX <= box.x + halfW) {
+          foundIndex = i;
+          break;
+        }
+      }
+
+      // Step transition logic
+      if (foundIndex !== this.activeBoxIndex) {
+        // Just stepped off a box: check if we left an unflagged anomaly behind!
+        if (this.activeBoxIndex !== -1) {
+          const prevBox = this.boxes[this.activeBoxIndex];
+          if (this.playerX > prevBox.x + (prevBox.width / 2)) {
+            this.handleMissedAnomaly(prevBox);
+          }
+        }
+
+        this.activeBoxIndex = foundIndex;
+
+        if (this.activeBoxIndex !== -1) {
+          // Footstep audio click
+          audio.playStep();
+          audio.playScan();
+
+          const activeBox = this.boxes[this.activeBoxIndex];
+          this.updateDiagnosticHUD(activeBox);
+        } else {
+          this.updateDiagnosticHUD(null);
+        }
+      }
+
+      // Adjust bot height smoothly to current surface
+      this.updateBotVerticalBaseline();
+
+      // Check if bot walked completely across the line to finish the conveyor section
+      const lastBox = this.boxes[this.boxes.length - 1];
+      if (this.playerX > lastBox.x + lastBox.width + 60) {
+        this.completeRound();
+      }
+    }
+  }
+}
+
+/**
+ * =========================================================================
+ * PHASER GAME LAUNCHER & CONFIGURATION
+ * =========================================================================
+ */
+const phaserConfig = {
+  type: Phaser.AUTO,
+  parent: 'phaser-canvas-container',
+  width: 960,
+  height: 540,
+  backgroundColor: '#060910',
+  scale: {
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH
+  },
+  physics: {
+    default: 'arcade',
+    arcade: { debug: false }
+  },
+  scene: [MainGameScene]
+};
+
+let gameInstance = null;
+
+window.addEventListener('DOMContentLoaded', () => {
+  gameInstance = new Phaser.Game(phaserConfig);
+
+  // Bind DOM Action Controls
+  const flagBtn = document.getElementById('btn-flag-action');
+  flagBtn.addEventListener('click', () => {
+    const scene = gameInstance.scene.getScene('MainGameScene');
+    if (scene) scene.flagCurrentBox();
+  });
+
+  // Speed Buttons
+  document.querySelectorAll('.btn-speed').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const spd = parseFloat(e.target.dataset.speed);
+      const scene = gameInstance.scene.getScene('MainGameScene');
+      if (scene) scene.setSpeedMultiplier(spd);
+    });
+  });
+
+  // Pause Button
+  document.getElementById('btn-pause-toggle').addEventListener('click', () => {
+    const scene = gameInstance.scene.getScene('MainGameScene');
+    if (scene) scene.togglePause();
+  });
+
+  // Sound Button
+  document.getElementById('btn-sound-toggle').addEventListener('click', () => {
+    const scene = gameInstance.scene.getScene('MainGameScene');
+    if (scene) scene.toggleMute();
+  });
+
+  // Help Button
+  document.getElementById('btn-help-toggle').addEventListener('click', () => {
+    alert('Controls Guide:\n\n• SPACEBAR or [FLAG ANOMALY] button: Flag the box currently under the inspector bot.\n• Direct Click on any box: Immediate manual inspection.\n• P: Pause / Resume.\n• M: Mute / Unmute audio.\n• R: Restart game run.\n• UP / DOWN Arrows: Adjust walking speed.');
+  });
+
+  // Restart Modal Button
+  document.getElementById('btn-restart-modal').addEventListener('click', () => {
+    const scene = gameInstance.scene.getScene('MainGameScene');
+    if (scene) scene.restartGame();
+  });
+});
+</script>
+</body>
+</html>
