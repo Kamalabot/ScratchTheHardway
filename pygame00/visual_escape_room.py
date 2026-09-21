@@ -81,7 +81,7 @@ class Room:
 
 # --- Screen Setup ---
 screen = turtle.Screen()
-screen.title("Visual Escape Room - 6th Grade Concepts")
+screen.title("Visual Escape Room - Core Programming Concepts")
 screen.setup(width=600, height=600)
 screen.bgcolor("#1e1e1e")
 screen.tracer(0) # Turn off automatic animation for instant drawing

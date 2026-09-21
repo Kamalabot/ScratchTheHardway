@@ -15,7 +15,7 @@ t.shape("turtle")
 t.pensize(3)
 t.speed(4)
 
-# To help 6th graders see the progression, we will ask for input between steps.
+# To help learners see the progression, we will ask for input between steps.
 def wait_for_user():
     turtle.textinput("Next Step", "Press Enter/OK to proceed!")
 
