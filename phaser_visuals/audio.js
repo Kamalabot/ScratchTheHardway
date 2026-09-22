@@ -172,6 +172,25 @@ class SoundFX {
 
         noise.start();
     }
+
+    clank() {
+        if (this.muted) return;
+        this.playTone(180, 'square', 0.08, 0.3);
+        setTimeout(() => this.playTone(90, 'sawtooth', 0.12, 0.25), 20);
+    }
+
+    gearCrunch() {
+        if (this.muted) return;
+        this.playTone(320, 'sawtooth', 0.06, 0.2);
+        setTimeout(() => this.playTone(280, 'triangle', 0.05, 0.25), 40);
+        setTimeout(() => this.playTone(360, 'sawtooth', 0.06, 0.2), 80);
+    }
+
+    typewriterStamp() {
+        if (this.muted) return;
+        this.playTone(720, 'square', 0.02, 0.2);
+        setTimeout(() => this.playTone(220, 'triangle', 0.04, 0.15), 10);
+    }
 }
 
 export const sfx = new SoundFX();

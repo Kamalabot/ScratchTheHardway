@@ -197,6 +197,12 @@ header, aside, footer {
   box-shadow: 0 0 14px rgba(0, 240, 255, 0.4);
 }
 
+#mod-automation.active {
+  color: #07090e;
+  background: linear-gradient(135deg, #ffaa00, #ffd600);
+  box-shadow: 0 0 14px rgba(255, 170, 0, 0.45);
+}
+
 /* STAGE TABS */
 .stage-nav {
   display: flex;

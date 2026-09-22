@@ -1,6 +1,13 @@
 import Phaser from 'phaser';
 import gsap from 'gsap';
 import { sfx } from './audio.js';
+import {
+    SceneInputDepot,
+    SceneMemoryALU,
+    SceneDiskPersistence,
+    SceneTemplateEngine,
+    SceneBrowserDOM
+} from './automation_scenes.js';
 
 // ============================================================================
 // MODULE 1: FILE PACKAGING & FORMATS DATA
@@ -206,6 +213,106 @@ email_service.send_template(<span class="token-string">"welcome.html"</span>, us
 saas_billing.create_customer(user.id, plan=<span class="token-string">"Enterprise"</span>)`,
         takeaway: "The user should never wait for third-party APIs like Stripe or SendGrid to reply. The API enqueues a background message and returns immediately, while async workers handle emails and billing.",
         tip: "Observe the event worker queue firing transactional emails and SaaS billing webhooks in parallel!"
+    }
+];
+
+// ============================================================================
+// MODULE 3: SCRIPT AUTOMATION & DATA LABORS
+// ============================================================================
+const AUTOMATION_STAGES = [
+    {
+        badge: "STAGE 01 // DATA INGRESS & CASTING",
+        title: "Input Stream & Type Casting",
+        subtitle: "How raw keyboard character streams are measured, parsed, and stamped into typed binary tokens.",
+        stats: { s1: "3 TOKENS", s2: "ASCII / IEEE-754", s3: "TYPE FOUNDRY" },
+        fileTitle: "input_ingress.py",
+        code: `<span class="token-comment"># 1. Ingest raw character streams from STDIN</span>
+raw_name = input(<span class="token-string">"Enter customer name: "</span>)   <span class="token-comment"># "Elena"</span>
+price_str = input(<span class="token-string">"Enter item price: "</span>)      <span class="token-comment"># "850.00"</span>
+qty_str = input(<span class="token-string">"Enter item quantity: "</span>)     <span class="token-comment"># "3"</span>
+
+<span class="token-comment"># 2. Type Foundry: Parse &amp; Cast raw strings</span>
+customer_name = str(raw_name)         <span class="token-comment"># UTF-8 text crate</span>
+unit_price = float(price_str)         <span class="token-comment"># IEEE-754 64-bit float</span>
+quantity = int(qty_str)               <span class="token-comment"># 32-bit integer ingot</span>`,
+        takeaway: "User input arrives as raw, untyped ASCII/UTF-8 character bytes. The interpreter must parse and smelt text into strict binary representations (integers, floats) before any arithmetic can execute.",
+        tip: "Watch the vibrating conveyor carry loose text blocks into the hydraulic type foundry press!"
+    },
+    {
+        badge: "STAGE 02 // MEMORY MATRIX & ALU FORGE",
+        title: "Variable Slots & ALU Arithmetic",
+        subtitle: "Allocating physical RAM address lockers and grinding mechanical arithmetic gears to calculate totals.",
+        stats: { s1: "4 REGISTERS", s2: "0x7FFE_4A00", s3: "ALU CLOCKWORK" },
+        fileTitle: "memory_alu.py",
+        code: `<span class="token-comment"># 1. Reserve addressed slots in RAM bank</span>
+customer = <span class="token-string">"Elena"</span>        <span class="token-comment"># Lockbox at 0x7FFE_4A00</span>
+price = <span class="token-num">850.00</span>           <span class="token-comment"># Lockbox at 0x7FFE_4A18</span>
+qty = <span class="token-num">3</span>                  <span class="token-comment"># Lockbox at 0x7FFE_4A20</span>
+
+<span class="token-comment"># 2. ALU Core physically calculates product</span>
+<span class="token-comment"># Multiplication cascades through logic gates</span>
+total = price * qty      <span class="token-comment"># 850.00 * 3 = 2550.00</span>
+order_id = <span class="token-string">"ORD-9021"</span>    <span class="token-comment"># Allocated in 12ns</span>`,
+        takeaway: "Variables are physical memory lockers in silicon. Arithmetic (price * qty) isn't abstract thought—it physically cycles hardware ALU multiplier circuits to forge new values and deposit them into target address lockers.",
+        tip: "Observe the ALU brass gears meshing together with electric sparks to forge the final order total!"
+    },
+    {
+        badge: "STAGE 03 // DISK SCRIBE & PERSISTENCE",
+        title: "File Archival & Carriage Scribe",
+        subtitle: "Overcoming storage friction: acquiring OS locks, unspooling CSV ledger tape, and burning magnetic platters.",
+        stats: { s1: "54 B / ROW", s2: "FLOCK / FSYNC", s3: "NVMe PERSIST" },
+        fileTitle: "ledger_append.py",
+        code: `<span class="token-comment"># 1. Acquire OS file lock &amp; open write buffer</span>
+<span class="token-keyword">with</span> open(<span class="token-string">"orders.csv"</span>, <span class="token-string">"a"</span>, encoding=<span class="token-string">"utf-8"</span>) <span class="token-keyword">as</span> f:
+    <span class="token-comment"># 2. Format row with comma delimiters</span>
+    row = f<span class="token-string">"{order_id},{customer},{item},{qty},{total}\\n"</span>
+    
+    <span class="token-comment"># 3. Mechanical carriage scribe writes row</span>
+    f.write(row)
+    
+    <span class="token-comment"># 4. Atomic disk commit flush</span>
+    f.flush() <span class="token-comment"># Commits volatile RAM to non-volatile disk</span>`,
+        takeaway: "RAM memory is volatile and vanishes when power cuts. Storing to disk requires overcoming physical friction: file locking (flock), carriage buffer formatting with delimiters, and committing sectors to NVMe/magnetic platters.",
+        tip: "Watch the typewriter carriage scribe step character-by-character along the ledger tape, followed by the laser platter burn!"
+    },
+    {
+        badge: "STAGE 04 // TEMPLATE WEAVING LOOM",
+        title: "Blueprint Stencil & Variable Interpolation",
+        subtitle: "How template engines (Jinja2/Django) act as industrial hot-typesetting looms to assemble HTML documents.",
+        stats: { s1: "1.2 KB", s2: "JINJA2 / SSR", s3: "THERMAL WELD" },
+        fileTitle: "render_template.py",
+        code: `<span class="token-keyword">from</span> jinja2 <span class="token-keyword">import</span> Template
+<span class="token-keyword">with</span> open(<span class="token-string">"invoice_receipt.html"</span>) <span class="token-keyword">as</span> f:
+    template = Template(f.read())
+
+<span class="token-comment"># Robotic pick-and-place: inject RAM variables</span>
+rendered_html = template.render(
+    customer=customer,     <span class="token-comment"># -&gt; &lt;div&gt;Elena&lt;/div&gt;</span>
+    item=<span class="token-string">"Quantum Sensor"</span>,  <span class="token-comment"># -&gt; &lt;span&gt;Sensor&lt;/span&gt;</span>
+    total=f<span class="token-string">"$\\{total:,.2f\\}"</span> <span class="token-comment"># -&gt; &lt;b&gt;$2,550.00&lt;/b&gt;</span>
+)`,
+        takeaway: "Web pages are not static files. Template engines act like hot-typesetting printing presses, pulling dynamic variable ingots from RAM and stamping them into hollow blueprint sockets ({{ var }}), then thermally welding them into clean HTML.",
+        tip: "Watch the overhead robotic gantry arm pick values from RAM, snap them into the blueprint stencil, and sweep the thermal fusion bar!"
+    },
+    {
+        badge: "STAGE 05 // WIRE EXPRESS & DOM PAINTER",
+        title: "Network Transit & DOM Shelf Chassis",
+        subtitle: "Shooting data capsules across fiber pipes and unfolding hierarchical DOM shelves inside the client browser.",
+        stats: { s1: "200 OK", s2: "HTTP/2 CONDUIT", s3: "DOM TREE" },
+        fileTitle: "browser_render.js",
+        code: `<span class="token-comment">// 1. Dispatched across network fiber conduit</span>
+fetch(<span class="token-string">"/order/9021"</span>)
+  .then(res =&gt; res.text())
+  .then(html =&gt; {
+      <span class="token-comment">// 2. Browser parses DOM tree &amp; expands shelves</span>
+      <span class="token-keyword">const</span> app = document.getElementById(<span class="token-string">"viewport"</span>);
+      app.innerHTML = html;
+      
+      <span class="token-comment">// 3. Layout reflow, CSS styling &amp; verification stamp</span>
+      app.classList.add(<span class="token-string">"paid-verified"</span>);
+  });`,
+        takeaway: "The browser doesn't just display text; it constructs an expandable chassis of Document Object Model (DOM) shelves. Arriving network packets unpack structured tags (<header>, <table>, <tr>, <td>) and calculate pixel layouts in real time.",
+        tip: "Watch the data capsule shoot through the fiber pneumatic conduit, unfolding the browser DOM shelves in cascade!"
     }
 ];
 
@@ -748,7 +855,8 @@ class SceneAsyncServices extends Phaser.Scene {
 // ============================================================================
 const allScenes = [
     SceneJSON, SceneBinary, ScenePDF, SceneZIP, ScenePLC,
-    SceneIngestTransit, SceneDatabaseTables, SceneCacheLayer, SceneAPIQueryTransit, SceneAsyncServices
+    SceneIngestTransit, SceneDatabaseTables, SceneCacheLayer, SceneAPIQueryTransit, SceneAsyncServices,
+    SceneInputDepot, SceneMemoryALU, SceneDiskPersistence, SceneTemplateEngine, SceneBrowserDOM
 ];
 
 const MODULES = {
@@ -763,6 +871,12 @@ const MODULES = {
         scenes: ['SceneIngestTransit', 'SceneDatabaseTables', 'SceneCacheLayer', 'SceneAPIQueryTransit', 'SceneAsyncServices'],
         tabNames: ["01 INGESTION", "02 DB TABLES", "03 CACHE RAM", "04 API TRANSIT", "05 ASYNC SAAS"],
         data: DATABASE_STAGES
+    },
+    automation: {
+        name: "SCRIPT AUTOMATION & DATA LABORS",
+        scenes: ['SceneInputDepot', 'SceneMemoryALU', 'SceneDiskPersistence', 'SceneTemplateEngine', 'SceneBrowserDOM'],
+        tabNames: ["01 INPUT/TYPES", "02 MEMORY/ALU", "03 DISK SCRIBE", "04 TEMPLATE LOOM", "05 BROWSER DOM"],
+        data: AUTOMATION_STAGES
     }
 };
 
@@ -795,6 +909,7 @@ let isPlaying = true;
 // DOM Elements
 const modPackagingBtn = document.getElementById('mod-packaging');
 const modDatabaseBtn = document.getElementById('mod-database');
+const modAutomationBtn = document.getElementById('mod-automation');
 const stageNav = document.getElementById('stage-tabs');
 const btnPrev = document.getElementById('btn-prev');
 const btnNext = document.getElementById('btn-next');
@@ -815,6 +930,7 @@ function updateScrubberUI() {
     const totalTime = window.currentTL.duration().toFixed(2);
     timelineTime.innerText = `${curTime}s / ${totalTime}s`;
 }
+window.updateStudioScrubber = updateScrubberUI;
 
 timelineTrack.addEventListener('click', (e) => {
     if (!window.currentTL) return;
@@ -851,6 +967,7 @@ function switchModule(modKey) {
 
     modPackagingBtn.classList.toggle('active', currentModule === 'packaging');
     modDatabaseBtn.classList.toggle('active', currentModule === 'database');
+    if (modAutomationBtn) modAutomationBtn.classList.toggle('active', currentModule === 'automation');
 
     renderTabs();
     loadStageContent();
@@ -900,6 +1017,7 @@ function loadStageContent() {
 
 modPackagingBtn.addEventListener('click', () => switchModule('packaging'));
 modDatabaseBtn.addEventListener('click', () => switchModule('database'));
+if (modAutomationBtn) modAutomationBtn.addEventListener('click', () => switchModule('automation'));
 
 btnNext.addEventListener('click', () => switchStage(currentStage + 1));
 btnPrev.addEventListener('click', () => switchStage(currentStage - 1));
