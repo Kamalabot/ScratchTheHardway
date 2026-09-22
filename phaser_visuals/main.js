@@ -8,6 +8,7 @@ import {
     SceneTemplateEngine,
     SceneBrowserDOM
 } from './automation_scenes.js';
+import { SceneORMDatabaseEngine } from './orm_scenes.js';
 
 // ============================================================================
 // MODULE 1: FILE PACKAGING & FORMATS DATA
@@ -276,7 +277,26 @@ order_id = <span class="token-string">"ORD-9021"</span>    <span class="token-co
         tip: "Watch the typewriter carriage scribe step character-by-character along the ledger tape, followed by the laser platter burn!"
     },
     {
-        badge: "STAGE 04 // TEMPLATE WEAVING LOOM",
+        badge: "STAGE 04 // ORM & RELATIONAL DATABASE",
+        title: "ORM Compiler & Relational Tables",
+        subtitle: "How ORMs inspect heap objects, mint Primary/Foreign Keys, compile SQL wire statements, and persist relational tables.",
+        stats: { s1: "PK #1042 / FK #42", s2: "POSTGRESQL DIALECT", s3: "ACID COMMIT" },
+        fileTitle: "orm_persist.py",
+        code: `<span class="token-comment"># 1. Unstructured heap model instance</span>
+order = Order(customer=<span class="token-string">"Elena"</span>, total=<span class="token-num">2550.00</span>, created_at=now())
+
+<span class="token-comment"># 2. ORM Data Packing &amp; SQL Query Compilation</span>
+<span class="token-comment"># Mint PK #1042, resolve FK #42 -> customers.id</span>
+<span class="token-comment"># Compile: INSERT INTO orders VALUES (1042, 42, 2550.00, '07:15Z')</span>
+db.session.add(order)
+
+<span class="token-comment"># 3. Normalization dispatch &amp; WAL disk commit</span>
+db.session.commit() <span class="token-comment"># Enforces FK integrity, flushes WAL</span>`,
+        takeaway: "An ORM is a compiler between dynamic heap objects and rigid relational disk tables. It generates unique Primary Keys, resolves relational Foreign Keys, enforces normalization constraints, and translates Python method calls into raw SQL dialect queries.",
+        tip: "Watch the laser scanner decouple the Python object, the ORM press stamp the SQL query, and the glowing constraint tether lock the Foreign Key!"
+    },
+    {
+        badge: "STAGE 05 // TEMPLATE WEAVING LOOM",
         title: "Blueprint Stencil & Variable Interpolation",
         subtitle: "How template engines (Jinja2/Django) act as industrial hot-typesetting looms to assemble HTML documents.",
         stats: { s1: "1.2 KB", s2: "JINJA2 / SSR", s3: "THERMAL WELD" },
@@ -295,7 +315,7 @@ rendered_html = template.render(
         tip: "Watch the overhead robotic gantry arm pick values from RAM, snap them into the blueprint stencil, and sweep the thermal fusion bar!"
     },
     {
-        badge: "STAGE 05 // WIRE EXPRESS & DOM PAINTER",
+        badge: "STAGE 06 // WIRE EXPRESS & DOM PAINTER",
         title: "Network Transit & DOM Shelf Chassis",
         subtitle: "Shooting data capsules across fiber pipes and unfolding hierarchical DOM shelves inside the client browser.",
         stats: { s1: "200 OK", s2: "HTTP/2 CONDUIT", s3: "DOM TREE" },
@@ -856,7 +876,7 @@ class SceneAsyncServices extends Phaser.Scene {
 const allScenes = [
     SceneJSON, SceneBinary, ScenePDF, SceneZIP, ScenePLC,
     SceneIngestTransit, SceneDatabaseTables, SceneCacheLayer, SceneAPIQueryTransit, SceneAsyncServices,
-    SceneInputDepot, SceneMemoryALU, SceneDiskPersistence, SceneTemplateEngine, SceneBrowserDOM
+    SceneInputDepot, SceneMemoryALU, SceneDiskPersistence, SceneORMDatabaseEngine, SceneTemplateEngine, SceneBrowserDOM
 ];
 
 const MODULES = {
@@ -874,8 +894,8 @@ const MODULES = {
     },
     automation: {
         name: "SCRIPT AUTOMATION & DATA LABORS",
-        scenes: ['SceneInputDepot', 'SceneMemoryALU', 'SceneDiskPersistence', 'SceneTemplateEngine', 'SceneBrowserDOM'],
-        tabNames: ["01 INPUT/TYPES", "02 MEMORY/ALU", "03 DISK SCRIBE", "04 TEMPLATE LOOM", "05 BROWSER DOM"],
+        scenes: ['SceneInputDepot', 'SceneMemoryALU', 'SceneDiskPersistence', 'SceneORMDatabaseEngine', 'SceneTemplateEngine', 'SceneBrowserDOM'],
+        tabNames: ["01 INPUT/TYPES", "02 MEMORY/ALU", "03 DISK SCRIBE", "04 ORM / SQL DB", "05 TEMPLATE LOOM", "06 BROWSER DOM"],
         data: AUTOMATION_STAGES
     }
 };

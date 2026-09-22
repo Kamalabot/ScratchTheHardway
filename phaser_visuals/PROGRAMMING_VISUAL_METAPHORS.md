@@ -29,6 +29,12 @@ To ensure grand presentation, maximum legibility on high-DPI displays, and clear
 | **Scribe Print Head** | 46 × 38 px | **70 × 56 px** | Rails: `420px`, Needle: `18px`, Hammer: `22×20px` |
 | **Template Blueprint** | 340 × 220 px | **510 × 330 px** | Sockets: `240 × 40 px`, Font: `14px` (`wordWrap: 220px`) |
 | **DOM Shelf Rack** | 340 × 240 px | **510 × 360 px** | Shelves: `466 × 48 px`, Tags: `11px`, Values: `15px` |
+| **Primary Key (PK) Seal** | 54 × 24 px | **80 × 34 px** | Font: `11px` bold, Chamfered hex with notch |
+| **Foreign Key (FK) Shackle** | 60 × 24 px | **90 × 34 px** | Font: `10.5px` bold, Tether anchor carabiner |
+| **Chrono-Capsule (`ts`)** | 86 × 24 px | **130 × 34 px** | Font: `10px` mono, ISO-8601 escapement gear |
+| **ORM Query Stamping Press** | 240 × 180 px | **360 × 260 px** | Parameter ports: `4×24px`, Dialect: `10px` bold |
+| **Relational Table Vault** | 340 × 120 px | **510 × 170 px** | Columns: `10px`, Row slots: `460 × 32 px` |
+| **Normalization Diverter** | 160 × 80 px | **240 × 120 px** | Shunting gate: `22px`, Piston stroke: `32px` |
 
 ### Strict Bounded Typography & Word Wrapping
 All text nodes rendered within rectangular visual boundaries must enforce:
@@ -50,8 +56,14 @@ When text content exceeds the designated rectangle width, the text automatically
 | **Array / List (`list[]`)** | Indexed Series | `#9D4EDD` (Purple) | `#220938` | Linked railroad wagons or segmented ammunition magazine with sequential index bays. |
 | **Dictionary (`dict{}`)** | Hash Map | `#FF7700` (Orange) | `#331800` | Pigeonhole filing rack with hashed key badges and spring-loaded value drawers. |
 | **Memory Address** | Pointer / RAM | `#6272A4` (Slate) | `#111625` | Etched hexadecimal brass plate (`0x7FFE_4A00`) atop a shielded silicon locker. |
+| **Primary Key (`PK`)** | Unique Identity | `#F59E0B` (Amber) | `#451A03` | Solid chamfered brass hex seal with auto-increment gear tooth notch (`#PK_1042`). |
+| **Foreign Key (`FK`)** | Relational Link | `#0284C7` (Cobalt) | `#082F49` | Interlocking mag-lock steel carabiner linking records across normalized tables. |
+| **Timestamp (`datetime`)** | Clockwork Epoch | `#C084FC` (Violet) | `#3B0764` | Dual-escapement chrono-gear capsule locking UTC ISO-8601 temporal stamps. |
 | **ALU Core** | Arithmetic Logic | `#D4A342` (Brass) | `#785318` | Interlocking brass clockwork gears (Leibniz wheel) generating friction sparks. |
+| **ORM Compiler** | Query Foundry | `#10B981` (Emerald) | `#064E3B` | Dual-column hydraulic stamping press compiling objects into parameterized SQL wire dialect. |
 | **File Scribe** | Disk / Storage | `#94A3B8` (Steel) | `#1E2638` | Stepping typewriter carriage arm punching delimiters into continuous ledger tape. |
+| **Relational Table** | Structured Storage | `#38BDF8` (Sky) | `#0F172A` | Multi-tiered steel vault with rigid column headers, row insertion bays, and B-Tree registers. |
+| **Normalization Diverter**| Schema Dispatcher | `#F43F5E` (Rose) | `#4C0519` | Motorized track shunting gate segregating payloads into normalized tables vs denormalized caches. |
 | **Template Loom** | Server Template | `#278EA5` (Cyan) | `#071E3D` | Architectural blueprint stencil with hollow cutouts (`{{ var }}`) and thermal welding bar. |
 | **Network Conduit** | Data Transport | `#38BDF8` (Sky) | `#1E3A5F` | Transparent fiber-optic pneumatic glass tube shooting glowing data capsules. |
 | **Browser DOM** | Layout & UI | `#38BDF8` (Blue) | `#0B0F19` | Modular chassis of collapsible/expandable shelves (`<div>`, `<table>`, `<span>`). |
@@ -121,7 +133,28 @@ When text content exceeds the designated rectangle width, the text automatically
   - **Processor Text Push Stream:** Rather than instantly popping shelves, the processor visibly pushes individual text data tokens (`<header>`, `Elena Rostova`, `Quantum Sensor × 3`, `$2,550.00 USD`) through the conduit directly into their respective shelf slots.
 * **Movement Dynamics:**
   - Text tokens slide into slot positions, causing each shelf to expand smoothly from zero scale (`back.out(1.4)`).
-  - A high-contrast, glowing green "200 OK // PAID" verification stamp impacts onto the finalized receipt card.
+### 4.6 The ORM Compiler, Key Lathe & Relational Database Foundry (`db.session.commit()`)
+* **Visual Representation:**
+  - **In-Memory Object Ingress (Left):** An acrylic inspection tray carrying the raw Python `Order(...)` instance (`customer: "Elena Rostova"`, `item: "Sensor"`, `qty: 3`, `total: 2550.00`, `created_at: 07:15Z`).
+  - **The ORM Compilation Foundry (Center):**
+    - A heavy dual-column hydraulic press with parameter injection conduits (`$1, $2, $3, $4`) and an active dialect badge (`DIALECT: POSTGRESQL`).
+    - **Primary Key (PK) Auto-Increment Lathe:** Mechanical lathe spinning with friction sparks, turning a solid brass hexagonal seal stamped `#PK_1042`.
+    - **Foreign Key (FK) Mag-Lock Carabiner:** Heavy steel carabiner stamped `#FK_CUST_42` with an active magnetic clamping shackle linking the order to `customers.id`.
+    - **Timestamp Chrono-Die:** A dual-escapement clockwork module locking dynamic Python `datetime.utcnow()` into a standardized UTC ISO-8601 string.
+    - **SQL Dialect Stamping Bed:** An illuminated emerald laser platen that stamps the wire-level query:
+      `INSERT INTO orders (id, cust_id, total, ts) VALUES (1042, 42, 2550.00, '07:15Z') RETURNING id;`
+  - **The Normalization / Denormalization Diverter Gantry:**
+    - A motorized pneumatic shunting switch that bifurcates the incoming stream.
+    - **Normalized Route (Upper):** Dispatches customer entity data directly to `TABLE: customers` and attaches the FK carabiner to `orders.customer_id`, eliminating duplicate storage.
+    - **Denormalized Route (Lower):** Stamps a flattened read-optimized snapshot card into a separate cache drawer (`[CACHE: order_summary_denorm]`), demonstrating why architectures trade storage for read speed.
+  - **The Relational Database Table Vaults (Right):**
+    - Dual stacked heavy steel table matrices (`TABLE: customers` and `TABLE: orders`) featuring rigid column headers, B-Tree index registers, and row insertion bays.
+* **Movement Dynamics:**
+  - Laser attribute scanner decouples Python object into modular typed parts.
+  - The ORM hydraulic press descends with a mechanical clank (`sfx.clank()`), compressing tokens into parameterized SQL query text.
+  - Diverter gate swings open with pneumatic hiss (`sfx.whoosh()`), routing normalized tokens into respective table row slots.
+  - Table slots expand to accept rows, and an electric cyan constraint tether line shoots from `orders.customer_id` into `customers.id`, clamping shut with a padlock chime (`sfx.snap()`).
+  - A green WAL laser sweeps across the disk platter (`sfx.dbCommit()`), illuminating the transaction badge: `WAL SYNC // 200 COMMITTED`.
 
 ---
 

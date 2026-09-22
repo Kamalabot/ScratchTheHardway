@@ -219,3 +219,4 @@ const trackBed = this.add.rectangle(0, 0, 680, 32, 0x151c2e, 1);
 2. **Never mutate external state variables inside GSAP timeline callbacks**. Keep all string construction, visibility updates, and progress calculations strictly deterministic using pure functions and array slices.
 3. **Calculate container boundaries in world coordinates** before positioning sibling elements to prevent spatial gaps or visual collisions.
 4. **Decouple structure creation from data hydration** in interactive UI animations so that zero-state / awaiting-stream visuals can be presented accurately before data arrival.
+5. **Maintain strict modularity via dedicated subsystem files**: When introducing new architectural domains (e.g., ORM & Relational DB), implement fresh design system factories (`orm_design_system.js`) and scene modules (`orm_scenes.js`) rather than bloating existing files. This prevents accidental regressions in previously stabilized stages.
