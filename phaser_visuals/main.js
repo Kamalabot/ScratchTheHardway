@@ -9,6 +9,12 @@ import {
     SceneBrowserDOM
 } from './automation_scenes.js';
 import { SceneORMDatabaseEngine } from './orm_scenes.js';
+import {
+    SceneHTTPGet,
+    SceneHTTPPost,
+    SceneHTTPPut,
+    SceneHTTPDelete
+} from './web_client_server_scenes.js';
 
 // ============================================================================
 // MODULE 1: FILE PACKAGING & FORMATS DATA
@@ -333,6 +339,109 @@ fetch(<span class="token-string">"/order/9021"</span>)
   });`,
         takeaway: "The browser doesn't just display text; it constructs an expandable chassis of Document Object Model (DOM) shelves. Arriving network packets unpack structured tags (<header>, <table>, <tr>, <td>) and calculate pixel layouts in real time.",
         tip: "Watch the data capsule shoot through the fiber pneumatic conduit, unfolding the browser DOM shelves in cascade!"
+    }
+];
+
+// ============================================================================
+// MODULE 4: CLIENT-SERVER HTTP REST CYCLE DATA
+// ============================================================================
+const CLIENT_SERVER_STAGES = [
+    {
+        badge: "STAGE 01 // HTTP GET (READ & QUERY DB)",
+        title: "HTTP GET & Query Resolution",
+        subtitle: "How client fetch() compiles URL path parameters, and server @app.get() routes queries directly to SQL ORM lookups.",
+        stats: { s1: "200 OK", s2: "IDEMPOTENT READ", s3: "TLS 1.3 / HTTP/2" },
+        fileTitle: "client_and_server_get.py",
+        code: `<span class="token-comment">// 1. CLIENT-SIDE: Dispatch fetch request</span>
+<span class="token-keyword">const</span> res = <span class="token-keyword">await</span> fetch(<span class="token-string">"/api/v1/orders/1042"</span>, {
+  method: <span class="token-string">"GET"</span>,
+  headers: { <span class="token-string">"Accept"</span>: <span class="token-string">"application/json"</span> }
+});
+<span class="token-keyword">const</span> data = <span class="token-keyword">await</span> res.json();
+
+<span class="token-comment"># 2. SERVER-SIDE: Decorated route handler function</span>
+<span class="token-keyword">@app.get</span>(<span class="token-string">"/api/v1/orders/{order_id}"</span>)
+<span class="token-keyword">async def</span> get_order(order_id: <span class="token-string">int</span>, db: Session = Depends(get_db)):
+    <span class="token-comment"># Path parameter {order_id} unpacked into function argument</span>
+    order = db.query(Order).filter(Order.id == order_id).first()
+    <span class="token-keyword">if not</span> order:
+        <span class="token-keyword">raise</span> HTTPException(status_code=<span class="token-num">404</span>, detail=<span class="token-string">"Order Not Found"</span>)
+    <span class="token-keyword">return</span> order  <span class="token-comment"># FastAPI auto-serializes row into JSON with 200 OK</span>`,
+        takeaway: "HTTP GET is safe and idempotent: it never mutates server state. The server's @app.get() decorator pattern matches the URL path expression, extracts typed parameters into function arguments, and queries the database session.",
+        tip: "Watch the request capsule shoot across the wire, light up the @app.get decorator, query the DB table, and return as a 200 OK payload!"
+    },
+    {
+        badge: "STAGE 02 // HTTP POST (CREATE & INSERT ROW)",
+        title: "HTTP POST & Entity Ingestion",
+        subtitle: "Serializing client JSON payloads, running server-side Pydantic schema validation, and minting persistent DB rows.",
+        stats: { s1: "201 CREATED", s2: "NON-IDEMPOTENT", s3: "JSON PAYLOAD" },
+        fileTitle: "client_and_server_post.py",
+        code: `<span class="token-comment">// 1. CLIENT-SIDE: Pack JSON body & POST</span>
+<span class="token-keyword">const</span> payload = { customer_id: <span class="token-num">42</span>, total: <span class="token-num">2550.00</span> };
+<span class="token-keyword">const</span> res = <span class="token-keyword">await</span> fetch(<span class="token-string">"/api/v1/orders"</span>, {
+  method: <span class="token-string">"POST"</span>,
+  headers: { <span class="token-string">"Content-Type"</span>: <span class="token-string">"application/json"</span> },
+  body: JSON.stringify(payload)
+});
+
+<span class="token-comment"># 2. SERVER-SIDE: Decorated route with Pydantic validation</span>
+<span class="token-keyword">@app.post</span>(<span class="token-string">"/api/v1/orders"</span>, status_code=<span class="token-num">201</span>)
+<span class="token-keyword">async def</span> create_order(payload: OrderCreate, db: Session = Depends(get_db)):
+    <span class="token-comment"># Incoming JSON stream validated against OrderCreate schema</span>
+    new_order = Order(customer_id=payload.customer_id, total=payload.total)
+    db.add(new_order)
+    db.commit()  <span class="token-comment"># Mints PK #1043 & syncs WAL to disk</span>
+    <span class="token-keyword">return</span> new_order  <span class="token-comment"># Returns 201 Created with Location header</span>`,
+        takeaway: "HTTP POST is non-idempotent: submitting it twice creates duplicate records. The @app.post() decorator parses the incoming byte stream, enforces strict schema types via Pydantic, and commits a brand new Primary Key to disk.",
+        tip: "Follow the payload crate as it crosses the network, passes validation, slots into DB Table row 2, and returns 201 Created!"
+    },
+    {
+        badge: "STAGE 03 // HTTP PUT (REPLACE & MUTATE ROW)",
+        title: "HTTP PUT & Full State Mutation",
+        subtitle: "Executing idempotent full-resource replacements, rewriting database table columns, and returning updated representations.",
+        stats: { s1: "200 OK", s2: "IDEMPOTENT PUT", s3: "STATE MUTATION" },
+        fileTitle: "client_and_server_put.py",
+        code: `<span class="token-comment">// 1. CLIENT-SIDE: Dispatch full replacement state</span>
+<span class="token-keyword">const</span> update = { total: <span class="token-num">2890.00</span>, status: <span class="token-string">"EXPEDITED"</span> };
+<span class="token-keyword">const</span> res = <span class="token-keyword">await</span> fetch(<span class="token-string">"/api/v1/orders/1042"</span>, {
+  method: <span class="token-string">"PUT"</span>,
+  headers: { <span class="token-string">"Content-Type"</span>: <span class="token-string">"application/json"</span> },
+  body: JSON.stringify(update)
+});
+
+<span class="token-comment"># 2. SERVER-SIDE: Decorated update route</span>
+<span class="token-keyword">@app.put</span>(<span class="token-string">"/api/v1/orders/{order_id}"</span>)
+<span class="token-keyword">async def</span> update_order(order_id: <span class="token-string">int</span>, p: OrderUpdate, db: Session = Depends(get_db)):
+    order = db.query(Order).get(order_id)
+    <span class="token-comment"># Mutate fields idempotently on disk</span>
+    order.total = p.total
+    order.status = p.status
+    db.commit()  <span class="token-comment"># Flushes UPDATE statement to disk</span>
+    <span class="token-keyword">return</span> order  <span class="token-comment"># Returns updated order state</span>`,
+        takeaway: "HTTP PUT is idempotent: executing it 100 times produces the exact same server state. The @app.put() handler modifies targeted column values on disk and commits the mutation atomically.",
+        tip: "Watch the golden PUT packet trigger the update handler, changing the table total from $2,550 to $2,890 in real time!"
+    },
+    {
+        badge: "STAGE 04 // HTTP DELETE (AUTH & ROW PURGE)",
+        title: "HTTP DELETE & Relational Eviction",
+        subtitle: "Verifying Authorization bearer tokens, enforcing foreign key integrity, and purging database table records.",
+        stats: { s1: "204 NO CONTENT", s2: "IDEMPOTENT DELETE", s3: "ROW EVICTION" },
+        fileTitle: "client_and_server_delete.py",
+        code: `<span class="token-comment">// 1. CLIENT-SIDE: Issue deletion with auth token</span>
+<span class="token-keyword">const</span> res = <span class="token-keyword">await</span> fetch(<span class="token-string">"/api/v1/orders/1042"</span>, {
+  method: <span class="token-string">"DELETE"</span>,
+  headers: { <span class="token-string">"Authorization"</span>: <span class="token-string">"Bearer sec_tok99"</span> }
+});
+
+<span class="token-comment"># 2. SERVER-SIDE: Decorated deletion route with Auth Guard</span>
+<span class="token-keyword">@app.delete</span>(<span class="token-string">"/api/v1/orders/{order_id}"</span>, status_code=<span class="token-num">204</span>)
+<span class="token-keyword">async def</span> delete_order(order_id: <span class="token-string">int</span>, user: User = Depends(get_current_admin), db: Session = Depends(get_db)):
+    order = db.query(Order).get(order_id)
+    db.delete(order)  <span class="token-comment"># Checks FK cascading & purges disk row</span>
+    db.commit()
+    <span class="token-keyword">return</span> Response(status_code=<span class="token-num">204</span>)  <span class="token-comment"># 204 No Content has 0 bytes</span>`,
+        takeaway: "HTTP DELETE requires strict authentication and foreign key constraint validation. When executed, the server purges the record from indexed table pages and returns an empty 204 No Content payload.",
+        tip: "Observe the red warning signal verify admin credentials, purge the row from the database vault, and return 204 No Content!"
     }
 ];
 
@@ -876,7 +985,8 @@ class SceneAsyncServices extends Phaser.Scene {
 const allScenes = [
     SceneJSON, SceneBinary, ScenePDF, SceneZIP, ScenePLC,
     SceneIngestTransit, SceneDatabaseTables, SceneCacheLayer, SceneAPIQueryTransit, SceneAsyncServices,
-    SceneInputDepot, SceneMemoryALU, SceneDiskPersistence, SceneORMDatabaseEngine, SceneTemplateEngine, SceneBrowserDOM
+    SceneInputDepot, SceneMemoryALU, SceneDiskPersistence, SceneORMDatabaseEngine, SceneTemplateEngine, SceneBrowserDOM,
+    SceneHTTPGet, SceneHTTPPost, SceneHTTPPut, SceneHTTPDelete
 ];
 
 const MODULES = {
@@ -897,6 +1007,12 @@ const MODULES = {
         scenes: ['SceneInputDepot', 'SceneMemoryALU', 'SceneDiskPersistence', 'SceneORMDatabaseEngine', 'SceneTemplateEngine', 'SceneBrowserDOM'],
         tabNames: ["01 INPUT/TYPES", "02 MEMORY/ALU", "03 DISK SCRIBE", "04 ORM / SQL DB", "05 TEMPLATE LOOM", "06 BROWSER DOM"],
         data: AUTOMATION_STAGES
+    },
+    webclient: {
+        name: "CLIENT-SERVER HTTP REST CYCLE",
+        scenes: ['SceneHTTPGet', 'SceneHTTPPost', 'SceneHTTPPut', 'SceneHTTPDelete'],
+        tabNames: ["01 HTTP GET", "02 HTTP POST", "03 HTTP PUT", "04 HTTP DELETE"],
+        data: CLIENT_SERVER_STAGES
     }
 };
 
@@ -930,6 +1046,7 @@ let isPlaying = true;
 const modPackagingBtn = document.getElementById('mod-packaging');
 const modDatabaseBtn = document.getElementById('mod-database');
 const modAutomationBtn = document.getElementById('mod-automation');
+const modWebClientBtn = document.getElementById('mod-webclient');
 const stageNav = document.getElementById('stage-tabs');
 const btnPrev = document.getElementById('btn-prev');
 const btnNext = document.getElementById('btn-next');
@@ -988,6 +1105,7 @@ function switchModule(modKey) {
     modPackagingBtn.classList.toggle('active', currentModule === 'packaging');
     modDatabaseBtn.classList.toggle('active', currentModule === 'database');
     if (modAutomationBtn) modAutomationBtn.classList.toggle('active', currentModule === 'automation');
+    if (modWebClientBtn) modWebClientBtn.classList.toggle('active', currentModule === 'webclient');
 
     renderTabs();
     loadStageContent();
@@ -1038,6 +1156,7 @@ function loadStageContent() {
 modPackagingBtn.addEventListener('click', () => switchModule('packaging'));
 modDatabaseBtn.addEventListener('click', () => switchModule('database'));
 if (modAutomationBtn) modAutomationBtn.addEventListener('click', () => switchModule('automation'));
+if (modWebClientBtn) modWebClientBtn.addEventListener('click', () => switchModule('webclient'));
 
 btnNext.addEventListener('click', () => switchStage(currentStage + 1));
 btnPrev.addEventListener('click', () => switchStage(currentStage - 1));

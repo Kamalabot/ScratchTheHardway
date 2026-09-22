@@ -203,6 +203,12 @@ header, aside, footer {
   box-shadow: 0 0 14px rgba(255, 170, 0, 0.45);
 }
 
+#mod-webclient.active {
+  color: #ffffff;
+  background: linear-gradient(135deg, #6366f1, #3b82f6);
+  box-shadow: 0 0 14px rgba(99, 102, 241, 0.5);
+}
+
 /* STAGE TABS */
 .stage-nav {
   display: flex;

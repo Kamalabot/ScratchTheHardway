@@ -95,15 +95,18 @@ export function createPythonModelTray(scene, x, y) {
 export function createPrimaryKeyBadge(scene, x, y, idText = '#PK_1042') {
     const container = scene.add.container(x, y);
 
-    const w = 84;
-    const h = 34;
+    const w = 96;
+    const h = 36;
+
+    // Glowing highlight aura (activated during narrative key inspection)
+    const aura = scene.add.circle(0, 0, 56, 0xffd600, 0.35).setAlpha(0);
 
     // Chamfered Hexagonal Polygon drawn with standard canvas paths
     const graphics = scene.add.graphics();
     graphics.fillStyle(0xd97706, 1);
-    graphics.lineStyle(2, 0xffd600, 1);
+    graphics.lineStyle(2.5, 0xffd600, 1);
 
-    const chamfer = 7;
+    const chamfer = 8;
     const points = [
         { x: -w/2 + chamfer, y: -h/2 },
         { x: w/2 - chamfer, y: -h/2 },
@@ -123,21 +126,33 @@ export function createPrimaryKeyBadge(scene, x, y, idText = '#PK_1042') {
     graphics.strokePath();
 
     // Auto-increment notch / gear tooth icon
-    const notch = scene.add.rectangle(-w/2 + 10, 0, 4, 14, 0x000000, 0.4);
+    const notch = scene.add.rectangle(-w/2 + 10, 0, 4, 16, 0x000000, 0.45);
 
     const text = scene.add.text(4, 0, idText, {
-        fontFamily: 'JetBrains Mono', fontSize: '11px', color: '#000000', fontStyle: 'bold'
+        fontFamily: 'JetBrains Mono', fontSize: '11.5px', color: '#000000', fontStyle: 'bold'
     }).setOrigin(0.5);
 
-    const subTag = scene.add.text(0, -h/2 - 8, 'PRIMARY KEY', {
+    const subTag = scene.add.text(0, -h/2 - 8, 'PRIMARY KEY // IDENTITY', {
         fontFamily: 'JetBrains Mono', fontSize: '7.5px', color: '#ffd600', fontStyle: 'bold'
     }).setOrigin(0.5);
 
-    container.add([graphics, notch, text, subTag]);
+    container.add([aura, graphics, notch, text, subTag]);
 
     container.userData = {
         text,
-        setId: (id) => text.setText(String(id))
+        aura,
+        setId: (id) => text.setText(String(id)),
+        pulseHighlight: (duration = 0.8) => {
+            aura.setAlpha(0.6);
+            scene.tweens.add({
+                targets: aura,
+                scale: 1.6,
+                alpha: 0,
+                duration: duration * 1000,
+                yoyo: true,
+                repeat: 1
+            });
+        }
     };
 
     return container;
@@ -150,30 +165,52 @@ export function createPrimaryKeyBadge(scene, x, y, idText = '#PK_1042') {
 export function createForeignKeyShackle(scene, x, y, fkText = '#FK_CUST_42') {
     const container = scene.add.container(x, y);
 
-    const w = 96;
-    const h = 34;
+    const w = 104;
+    const h = 36;
+
+    // Glowing highlight aura (activated during narrative key inspection)
+    const aura = scene.add.circle(0, 0, 56, 0x38bdf8, 0.35).setAlpha(0);
 
     const body = scene.add.rectangle(0, 0, w, h, 0x0369a1, 1);
-    body.setStrokeStyle(1.5, 0x38bdf8, 1);
+    body.setStrokeStyle(2, 0x38bdf8, 1);
 
     // Carabiner latch shackle ring on the left
-    const shackleRing = scene.add.circle(-w/2 + 8, 0, 8, 0x0f172a);
-    shackleRing.setStrokeStyle(2, 0x38bdf8, 1);
+    const shackleRing = scene.add.circle(-w/2 + 8, 0, 9, 0x0f172a);
+    shackleRing.setStrokeStyle(2.5, 0x38bdf8, 1);
 
     const text = scene.add.text(10, 0, fkText, {
-        fontFamily: 'JetBrains Mono', fontSize: '10.5px', color: '#ffffff', fontStyle: 'bold'
+        fontFamily: 'JetBrains Mono', fontSize: '11px', color: '#ffffff', fontStyle: 'bold'
     }).setOrigin(0.5);
 
-    const subTag = scene.add.text(0, -h/2 - 8, 'FOREIGN KEY (REL)', {
+    const subTag = scene.add.text(0, -h/2 - 8, 'FOREIGN KEY // POINTER', {
         fontFamily: 'JetBrains Mono', fontSize: '7.5px', color: '#38bdf8', fontStyle: 'bold'
     }).setOrigin(0.5);
 
-    container.add([body, shackleRing, text, subTag]);
+    container.add([aura, body, shackleRing, text, subTag]);
 
     container.userData = {
         text,
         shackleRing,
-        setFk: (fk) => text.setText(String(fk))
+        aura,
+        setFk: (fk) => text.setText(String(fk)),
+        pulseHighlight: (duration = 0.8) => {
+            aura.setAlpha(0.6);
+            scene.tweens.add({
+                targets: aura,
+                scale: 1.6,
+                alpha: 0,
+                duration: duration * 1000,
+                yoyo: true,
+                repeat: 1
+            });
+            scene.tweens.add({
+                targets: shackleRing,
+                scale: 1.35,
+                duration: 250,
+                yoyo: true,
+                repeat: 2
+            });
+        }
     };
 
     return container;
@@ -293,13 +330,14 @@ export function createORMCompilerPress(scene, x, y) {
         dieText,
         sqlText,
         stampSQL: (query, onImpact) => {
-            // Mechanical impact downwards
+            // Deliberate, powerful mechanical descent onto the platen bed
             scene.tweens.add({
                 targets: [dieHead, dieText],
                 y: 65,
-                duration: 180,
+                duration: 600,
+                hold: 500,
                 yoyo: true,
-                ease: 'power2.in',
+                ease: 'power2.inOut',
                 onYoyo: () => {
                     sqlText.setText(query);
                     if (onImpact) onImpact();
@@ -308,9 +346,10 @@ export function createORMCompilerPress(scene, x, y) {
             scene.tweens.add({
                 targets: [pistonLeft, pistonRight],
                 y: 0,
-                duration: 180,
+                duration: 600,
+                hold: 500,
                 yoyo: true,
-                ease: 'power2.in'
+                ease: 'power2.inOut'
             });
         }
     };
@@ -464,8 +503,8 @@ export function createNormalizationDiverter(scene, x, y) {
             scene.tweens.add({
                 targets: gateArm,
                 angle: -30,
-                duration: 250,
-                ease: 'power2.out',
+                duration: 700,
+                ease: 'power2.inOut',
                 onComplete
             });
         },
@@ -474,8 +513,8 @@ export function createNormalizationDiverter(scene, x, y) {
             scene.tweens.add({
                 targets: gateArm,
                 angle: 30,
-                duration: 250,
-                ease: 'power2.out',
+                duration: 700,
+                ease: 'power2.inOut',
                 onComplete
             });
         },
